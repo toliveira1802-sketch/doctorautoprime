@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import logo from '@/assets/logo.png';
 import { Button } from '@/components/ui/button';
 import PhoneInput from '@/components/auth/PhoneInput';
 import BiometricPrompt from '@/components/auth/BiometricPrompt';
@@ -56,11 +57,9 @@ const Login: React.FC = () => {
       <div className="relative flex-1 flex flex-col justify-center px-6 py-12">
         {/* Logo */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/20 red-glow mb-6">
-            <Car className="w-10 h-10 text-primary" />
-          </div>
+          <img src={logo} alt="Doctor Auto Prime" className="w-24 h-24 mx-auto mb-6 object-contain" />
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Dr. Prime
+            Doctor Auto Prime
           </h1>
           <p className="text-muted-foreground">
             Seu veículo em boas mãos
