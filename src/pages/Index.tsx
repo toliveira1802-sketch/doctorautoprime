@@ -1,6 +1,5 @@
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
-import { ServiceTimeline } from "@/components/service/ServiceTimeline";
 import { ActionButtons } from "@/components/home/ActionButtons";
 
 const Index = () => {
@@ -22,11 +21,6 @@ const Index = () => {
         {/* Action Buttons */}
         <section>
           <ActionButtons />
-        </section>
-
-        {/* Service Timeline */}
-        <section>
-          <ServiceTimeline />
         </section>
 
         {/* Chatbot Floating Button */}
