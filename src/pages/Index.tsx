@@ -1,32 +1,58 @@
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { ActionButtons } from "@/components/home/ActionButtons";
+import { Youtube, Instagram, BookOpen } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen gradient-bg dark">
+    <div className="h-screen gradient-bg dark flex flex-col overflow-hidden">
       <Header />
 
-      <main className="px-4 pb-28 pt-6 space-y-6">
+      <main className="flex-1 px-4 pt-6 flex flex-col">
         {/* Welcome Section */}
         <section className="animate-fade-in">
-          <h2 className="text-2xl font-bold text-foreground mb-1">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             Olá, Carlos! 👋
           </h2>
-          <p className="text-muted-foreground">
-            Seu veículo está sendo cuidado agora.
-          </p>
         </section>
 
         {/* Action Buttons */}
-        <section>
+        <section className="flex-1">
           <ActionButtons />
         </section>
 
-        {/* Chatbot Floating Button */}
-        <button className="fixed right-4 bottom-28 w-14 h-14 rounded-full gradient-primary shadow-lg flex items-center justify-center animate-bounce-subtle z-40 hover:scale-110 transition-transform">
-          <span className="text-2xl">🤖</span>
-        </button>
+        {/* Social Links */}
+        <section className="py-4">
+          <div className="flex justify-center gap-6">
+            <a
+              href="https://blog.doctorauto.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+            >
+              <BookOpen className="w-5 h-5" strokeWidth={1.5} />
+              <span className="text-xs">Blog</span>
+            </a>
+            <a
+              href="https://youtube.com/@doctorauto"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Youtube className="w-5 h-5" strokeWidth={1.5} />
+              <span className="text-xs">YouTube</span>
+            </a>
+            <a
+              href="https://instagram.com/doctorauto"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Instagram className="w-5 h-5" strokeWidth={1.5} />
+              <span className="text-xs">Instagram</span>
+            </a>
+          </div>
+        </section>
       </main>
 
       <BottomNavigation />
