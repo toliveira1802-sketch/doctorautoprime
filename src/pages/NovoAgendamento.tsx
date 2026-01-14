@@ -14,8 +14,10 @@ import {
   Settings,
   Zap,
   Plus,
-  Search,
-  Stethoscope
+  Stethoscope,
+  Gift,
+  Percent,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,12 +79,32 @@ const NovoAgendamento = () => {
   // Step 4: Date & Time
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  
+  // Step 5: Payment option
+  const [payInAdvance, setPayInAdvance] = useState(false);
 
   const availableServices = selectedType ? services[selectedType as keyof typeof services] : [];
   
   const selectedServiceDetails = availableServices.filter(s => selectedServices.includes(s.id));
   const totalDuration = selectedServiceDetails.reduce((acc, s) => acc + s.duration, 0);
-  const totalPrice = selectedServiceDetails.reduce((acc, s) => acc + s.price, 0);
+  const subtotal = selectedServiceDetails.reduce((acc, s) => acc + s.price, 0);
+  
+  // Desconto progressivo
+  const getDiscount = () => {
+    const count = selectedServices.length;
+    if (count >= 4) return { percent: 15, label: "15% OFF - Combo Master" };
+    if (count >= 3) return { percent: 10, label: "10% OFF - Combo Plus" };
+    if (count >= 2) return { percent: 5, label: "5% OFF - Combo" };
+    return { percent: 0, label: "" };
+  };
+  
+  const discount = getDiscount();
+  const discountAmount = Math.round(subtotal * (discount.percent / 100));
+  const priceAfterDiscount = subtotal - discountAmount;
+  
+  // Bônus por antecipação (5% extra)
+  const advanceBonus = payInAdvance ? Math.round(priceAfterDiscount * 0.05) : 0;
+  const finalPrice = priceAfterDiscount - advanceBonus;
 
   const getVehicleDisplay = () => {
     if (isNewVehicle) {
@@ -364,14 +386,58 @@ const NovoAgendamento = () => {
 
             {/* Summary */}
             {selectedServices.length > 0 && (
-              <div className="glass-card rounded-xl p-4 mt-4">
-                <div className="flex justify-between text-sm text-muted-foreground mb-2">
+              <div className="glass-card rounded-xl p-4 mt-4 space-y-3">
+                <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Duração estimada</span>
                   <span className="font-medium text-foreground">{formatDuration(totalDuration)}</span>
                 </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className={cn(
+                    "font-medium",
+                    discount.percent > 0 ? "line-through text-muted-foreground" : "text-foreground"
+                  )}>
+                    R$ {subtotal}
+                  </span>
+                </div>
+
+                {/* Discount Badge */}
+                {discount.percent > 0 && (
+                  <div className="flex items-center justify-between bg-emerald-500/10 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <Percent className="w-4 h-4 text-emerald-500" />
+                      <span className="text-sm font-medium text-emerald-500">{discount.label}</span>
+                    </div>
+                    <span className="text-sm font-bold text-emerald-500">-R$ {discountAmount}</span>
+                  </div>
+                )}
+
+                {/* Next discount hint */}
+                {selectedServices.length === 1 && (
+                  <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2">
+                    <Gift className="w-4 h-4" />
+                    <span>Adicione mais 1 serviço e ganhe 5% OFF!</span>
+                  </div>
+                )}
+                {selectedServices.length === 2 && (
+                  <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2">
+                    <Gift className="w-4 h-4" />
+                    <span>Mais 1 serviço = 10% OFF!</span>
+                  </div>
+                )}
+                {selectedServices.length === 3 && (
+                  <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2">
+                    <Gift className="w-4 h-4" />
+                    <span>Mais 1 serviço = 15% OFF!</span>
+                  </div>
+                )}
+
+                <div className="h-px bg-border" />
+                
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total</span>
-                  <span className="text-lg font-bold text-primary">R$ {totalPrice}</span>
+                  <span className="text-xl font-bold text-primary">R$ {priceAfterDiscount}</span>
                 </div>
               </div>
             )}
@@ -468,15 +534,72 @@ const NovoAgendamento = () => {
 
               <div className="h-px bg-border" />
 
-              {/* Duration & Total */}
+              {/* Duration */}
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Duração estimada</span>
                 <span className="font-medium text-foreground">{formatDuration(totalDuration)}</span>
               </div>
+
+              {/* Pricing breakdown */}
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className={cn(
+                    discount.percent > 0 ? "line-through text-muted-foreground" : "text-foreground font-medium"
+                  )}>
+                    R$ {subtotal}
+                  </span>
+                </div>
+
+                {discount.percent > 0 && (
+                  <div className="flex items-center justify-between text-sm bg-emerald-500/10 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <Percent className="w-4 h-4 text-emerald-500" />
+                      <span className="font-medium text-emerald-500">{discount.label}</span>
+                    </div>
+                    <span className="font-bold text-emerald-500">-R$ {discountAmount}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="h-px bg-border" />
+
+              {/* Advance Payment Bonus */}
+              <button
+                onClick={() => setPayInAdvance(!payInAdvance)}
+                className={cn(
+                  "w-full flex items-center gap-3 p-3 rounded-xl transition-all",
+                  payInAdvance ? "bg-amber-500/20 ring-2 ring-amber-500" : "bg-muted/50"
+                )}
+              >
+                <Checkbox 
+                  checked={payInAdvance}
+                  className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                />
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-amber-500" />
+                    <span className="font-medium text-foreground">Pagar antecipado</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Ganhe 5% extra de desconto</p>
+                </div>
+                {payInAdvance && (
+                  <span className="text-sm font-bold text-amber-500">-R$ {advanceBonus}</span>
+                )}
+              </button>
+
+              <div className="h-px bg-border" />
               
               <div className="flex items-center justify-between pt-2">
-                <span className="text-muted-foreground">Valor estimado</span>
-                <span className="text-xl font-bold text-primary">R$ {totalPrice}</span>
+                <span className="text-foreground font-medium">Total final</span>
+                <div className="text-right">
+                  {(discount.percent > 0 || payInAdvance) && (
+                    <span className="text-xs text-emerald-500 block">
+                      Economia de R$ {discountAmount + advanceBonus}
+                    </span>
+                  )}
+                  <span className="text-2xl font-bold text-primary">R$ {finalPrice}</span>
+                </div>
               </div>
             </div>
 
