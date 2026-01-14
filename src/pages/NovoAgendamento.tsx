@@ -140,7 +140,11 @@ const NovoAgendamento = () => {
     }
     if (step === 2) return !!selectedType;
     if (step === 3) return selectedServices.length > 0;
-    if (step === 4) return !!selectedDate && !!selectedTime;
+    if (step === 4) {
+      // Diagnóstico ou dia inteiro = só precisa da data
+      if (isDiagnostico || hasFullDayService) return !!selectedDate;
+      return !!selectedDate && !!selectedTime;
+    }
     return false;
   };
 
@@ -492,7 +496,9 @@ const NovoAgendamento = () => {
         {/* Step 4: Date & Time */}
         {step === 4 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-foreground">Escolha data e horário</h2>
+            <h2 className="text-lg font-medium text-foreground">
+              {isDiagnostico || hasFullDayService ? "Escolha o dia" : "Escolha data e horário"}
+            </h2>
             
             <div className="glass-card rounded-2xl p-4">
               <CalendarComponent
@@ -505,27 +511,26 @@ const NovoAgendamento = () => {
               />
             </div>
 
-            {selectedDate && (
+            {/* Mensagem para dia inteiro */}
+            {selectedDate && (isDiagnostico || hasFullDayService) && (
+              <div className="glass-card rounded-xl p-4">
+                <p className="text-sm text-primary bg-primary/10 rounded-lg px-3 py-2">
+                  {isDiagnostico 
+                    ? "Diagnóstico requer pelo menos 1 dia com o veículo. Traga quando puder no dia selecionado."
+                    : "Serviço de dia inteiro. Traga o veículo pela manhã."
+                  }
+                </p>
+              </div>
+            )}
+
+            {/* Horários só para serviços normais */}
+            {selectedDate && !isDiagnostico && !hasFullDayService && (
               <>
-                <h3 className="text-base font-medium text-foreground mt-4">
-                  {isDiagnostico ? "Recebimento do veículo" : "Horários disponíveis"}
-                </h3>
+                <h3 className="text-base font-medium text-foreground mt-4">Horários disponíveis</h3>
                 
-                {selectedServices.length >= 3 && !hasFullDayService && (
+                {selectedServices.length >= 3 && (
                   <p className="text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2 mb-2">
                     Com 3+ serviços, apenas horários da manhã estão disponíveis.
-                  </p>
-                )}
-                
-                {isDiagnostico && (
-                  <p className="text-xs text-primary bg-primary/10 rounded-lg px-3 py-2 mb-2">
-                    Diagnóstico requer pelo menos 1 dia com o veículo. Receba imediatamente se preferir.
-                  </p>
-                )}
-                
-                {hasFullDayService && !isDiagnostico && (
-                  <p className="text-xs text-primary bg-primary/10 rounded-lg px-3 py-2 mb-2">
-                    Serviço de dia inteiro selecionado. Início às 08:00.
                   </p>
                 )}
                 
@@ -536,8 +541,7 @@ const NovoAgendamento = () => {
                       onClick={() => setSelectedTime(time)}
                       className={cn(
                         "glass-card rounded-xl p-4 flex items-center justify-center gap-2 transition-all",
-                        selectedTime === time && "ring-2 ring-primary bg-primary/20",
-                        hasFullDayService && "col-span-2"
+                        selectedTime === time && "ring-2 ring-primary bg-primary/20"
                       )}
                     >
                       <Clock className="w-5 h-5 text-primary" />
@@ -596,10 +600,16 @@ const NovoAgendamento = () => {
                   <Calendar className="w-6 h-6 text-emerald-500" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Data e horário</p>
-                  <p className="font-medium text-foreground">
-                    {selectedDate && format(selectedDate, "dd/MM/yyyy", { locale: ptBR })} às {selectedTime}
+                  <p className="text-sm text-muted-foreground">
+                    {isDiagnostico || hasFullDayService ? "Data" : "Data e horário"}
                   </p>
+                  <p className="font-medium text-foreground">
+                    {selectedDate && format(selectedDate, "EEEE, dd/MM/yyyy", { locale: ptBR })}
+                    {!isDiagnostico && !hasFullDayService && selectedTime && ` às ${selectedTime}`}
+                  </p>
+                  {(isDiagnostico || hasFullDayService) && (
+                    <p className="text-xs text-muted-foreground">Dia inteiro</p>
+                  )}
                 </div>
               </div>
 
@@ -608,7 +618,9 @@ const NovoAgendamento = () => {
               {/* Duration */}
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Duração estimada</span>
-                <span className="font-medium text-foreground">{formatDuration(totalDuration)}</span>
+                <span className="font-medium text-foreground">
+                  {isDiagnostico || hasFullDayService ? "Dia inteiro" : formatDuration(totalDuration)}
+                </span>
               </div>
 
               {/* Pricing breakdown */}
