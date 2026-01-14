@@ -1,4 +1,5 @@
 import { Bell, Settings } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export function Header() {
   return (
@@ -7,12 +8,10 @@ export function Header() {
         <div className="flex items-center justify-between px-5 py-4">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center red-glow">
-              <span className="text-xl">🚗</span>
-            </div>
+            <img src={logo} alt="Doctor Auto Prime" className="w-10 h-10 object-contain" />
             <div>
               <h1 className="font-bold text-lg text-foreground tracking-tight">
-                Dr. Prime
+                Doctor Auto Prime
               </h1>
               <p className="text-xs text-muted-foreground">Auto Cuidado</p>
             </div>
