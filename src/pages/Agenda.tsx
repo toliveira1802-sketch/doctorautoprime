@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, Plus, Clock, Wrench, Star } from "lucide-react";
@@ -73,6 +74,8 @@ const statusLabels = {
 };
 
 const Agenda = () => {
+  const navigate = useNavigate();
+  
   const upcomingAppointments = mockAppointments
     .filter((apt) => apt.date >= new Date())
     .sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -143,7 +146,10 @@ const Agenda = () => {
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              <Button className="w-full gradient-primary text-primary-foreground font-semibold py-6 text-lg rounded-xl">
+              <Button 
+                onClick={() => navigate("/novo-agendamento")}
+                className="w-full gradient-primary text-primary-foreground font-semibold py-6 text-lg rounded-xl"
+              >
                 <Plus className="w-5 h-5 mr-2" />
                 Solicitar Agendamento
               </Button>
