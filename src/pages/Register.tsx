@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, ArrowLeft, User, Mail, CreditCard, ArrowRight } from 'lucide-react';
+import { ArrowLeft, User, Mail, CreditCard, ArrowRight } from 'lucide-react';
+import logo from '@/assets/logo.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -124,9 +125,7 @@ const Register: React.FC = () => {
       <div className="relative flex-1 flex flex-col px-6 py-4">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 red-glow mb-4">
-            <Car className="w-8 h-8 text-primary" />
-          </div>
+          <img src={logo} alt="Doctor Auto Prime" className="w-20 h-20 mx-auto mb-4 object-contain" />
           <h1 className="text-2xl font-bold text-foreground mb-2">
             Crie sua conta
           </h1>
