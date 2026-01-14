@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { 
   ArrowLeft, 
@@ -18,7 +18,9 @@ import {
   Gift,
   Percent,
   CreditCard,
-  Phone
+  Phone,
+  AlertCircle,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,12 +28,17 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { 
+  userVehicles as sharedVehicles, 
+  mockPromotions, 
+  type PrimePromotion 
+} from "@/data/promotions";
 
 // Mock de veículos cadastrados
-const mockVehicles = [
-  { id: "1", model: "VW Golf", plate: "ABC-1234", year: "2020" },
-  { id: "2", model: "Fiat Argo", plate: "XYZ-5678", year: "2022" },
-];
+const mockVehicles = sharedVehicles.map((v, i) => ({
+  ...v,
+  year: i === 0 ? "2020" : "2022"
+}));
 
 // Tipos de atendimento
 const serviceTypes = [
@@ -45,16 +52,16 @@ const services = {
     { id: "troca-oleo", name: "Troca de Óleo", icon: Droplets, duration: 30, price: 150, fullDay: false },
     { id: "filtros", name: "Troca de Filtros", icon: Settings, duration: 20, price: 80, fullDay: false },
     { id: "freios", name: "Revisão de Freios", icon: Car, duration: 60, price: 200, fullDay: false },
-    { id: "suspensao", name: "Revisão de Suspensão", icon: Wrench, duration: 90, price: 0, fullDay: false }, // Preço variável
+    { id: "suspensao", name: "Revisão de Suspensão", icon: Wrench, duration: 90, price: 0, fullDay: false },
     { id: "alinhamento", name: "Alinhamento e Balanceamento", icon: Car, duration: 45, price: 120, fullDay: false },
-    { id: "revisao-completa", name: "Revisão Completa", icon: Settings, duration: 480, price: 0, fullDay: true }, // Preço variável
+    { id: "revisao-completa", name: "Revisão Completa", icon: Settings, duration: 480, price: 0, fullDay: true },
   ],
   diagnostico: [
     { id: "eletrica", name: "Diagnóstico Elétrico", icon: Zap, duration: 480, price: 150, fullDay: true },
-    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 480, price: 0, fullDay: true }, // Preço variável
+    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 480, price: 0, fullDay: true },
     { id: "injecao", name: "Diagnóstico de Injeção", icon: Droplets, duration: 480, price: 180, fullDay: true },
     { id: "geral", name: "Check-up Geral", icon: Stethoscope, duration: 480, price: 250, fullDay: true },
-    { id: "pericia", name: "Perícia Completa", icon: Stethoscope, duration: 480, price: 0, fullDay: true }, // Preço variável
+    { id: "pericia", name: "Perícia Completa", icon: Stethoscope, duration: 480, price: 0, fullDay: true },
   ],
 };
 
@@ -63,9 +70,22 @@ const afternoonSlots = ["14:00", "15:00", "16:00", "17:00"];
 const allTimeSlots = [...morningSlots, ...afternoonSlots];
 const fullDaySlot = ["08:00 (Dia inteiro)"];
 
+interface LocationState {
+  promotion?: PrimePromotion;
+}
+
 const NovoAgendamento = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const location = useLocation();
+  const locationState = location.state as LocationState | null;
+  
+  // Verifica se veio de uma promoção
+  const promotion = locationState?.promotion;
+  const isPromoFlow = !!promotion;
+  
+  // Para fluxo de promoção: pula direto para calendário (step 1 no fluxo reduzido)
+  // Para fluxo normal: começa no veículo (step 1)
+  const [step, setStep] = useState(isPromoFlow ? 1 : 1);
   
   // Step 1: Vehicle
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
@@ -86,14 +106,75 @@ const NovoAgendamento = () => {
   // Step 5: Payment option
   const [payInAdvance, setPayInAdvance] = useState(false);
 
+  // Para fluxo de promoção: filtra veículos elegíveis
+  const eligibleVehicles = useMemo(() => {
+    if (!promotion) return mockVehicles;
+    if (promotion.vehicleModels.length === 0) return mockVehicles;
+    
+    return mockVehicles.filter(v => 
+      promotion.vehicleModels.some(model => 
+        v.model.toLowerCase().includes(model.toLowerCase()) ||
+        model.toLowerCase().includes(v.model.toLowerCase())
+      )
+    );
+  }, [promotion]);
+
+  // Auto-seleciona veículo se só tem um elegível no fluxo de promoção
+  useEffect(() => {
+    if (isPromoFlow && eligibleVehicles.length === 1) {
+      setSelectedVehicle(eligibleVehicles[0].id);
+    }
+  }, [isPromoFlow, eligibleVehicles]);
+
+  // Datas disponíveis para promoção
+  const availablePromoDates = promotion?.availableDates || [];
+  
+  const isDateAvailable = (date: Date) => {
+    if (!isPromoFlow) return true;
+    if (availablePromoDates.length === 0) return true;
+    return availablePromoDates.some(d => isSameDay(d, date));
+  };
+
+  // Define steps baseado no fluxo
+  const promoSteps = [
+    { num: 1, label: "Data" },
+    { num: 2, label: "Confirmar" },
+  ];
+  
+  const normalSteps = [
+    { num: 1, label: "Veículo" },
+    { num: 2, label: "Tipo" },
+    { num: 3, label: "Serviços" },
+    { num: 4, label: "Data" },
+    { num: 5, label: "Confirmar" },
+  ];
+  
+  const steps = isPromoFlow ? promoSteps : normalSteps;
+  const maxSteps = steps.length;
+
   const availableServices = selectedType ? services[selectedType as keyof typeof services] : [];
   
-  const selectedServiceDetails = availableServices.filter(s => selectedServices.includes(s.id));
+  // Para promoção: usa o serviço da promoção
+  const promoService = useMemo(() => {
+    if (!promotion?.serviceId) return null;
+    for (const type in services) {
+      const found = services[type as keyof typeof services].find(s => s.id === promotion.serviceId);
+      if (found) return found;
+    }
+    return null;
+  }, [promotion]);
+  
+  const selectedServiceDetails = isPromoFlow && promoService 
+    ? [promoService] 
+    : availableServices.filter(s => selectedServices.includes(s.id));
   const totalDuration = selectedServiceDetails.reduce((acc, s) => acc + s.duration, 0);
   const subtotal = selectedServiceDetails.reduce((acc, s) => acc + s.price, 0);
   
-  // Desconto progressivo
+  // Desconto da promoção ou progressivo
   const getDiscount = () => {
+    if (isPromoFlow && promotion) {
+      return { percent: promotion.discountPercent, label: promotion.discount };
+    }
     const count = selectedServices.length;
     if (count >= 4) return { percent: 15, label: "15% OFF - Combo Master" };
     if (count >= 3) return { percent: 10, label: "10% OFF - Combo Plus" };
@@ -105,22 +186,18 @@ const NovoAgendamento = () => {
   const discountAmount = Math.round(subtotal * (discount.percent / 100));
   const priceAfterDiscount = subtotal - discountAmount;
   
-  // Bônus por antecipação (5% extra) - só aplica se não tiver serviço sob consulta
   const hasVariablePrice = selectedServiceDetails.some(s => s.price === 0);
   const advanceBonus = (payInAdvance && !hasVariablePrice) ? Math.round(priceAfterDiscount * 0.05) : 0;
   const finalPrice = priceAfterDiscount - advanceBonus;
   
-  // Serviços com preço variável (sob consulta)
   const variablePriceServices = selectedServiceDetails.filter(s => s.price === 0);
 
-  // Verifica se é diagnóstico (sempre dia inteiro) ou serviço de dia inteiro
   const isDiagnostico = selectedType === "diagnostico";
-  const hasFullDayService = selectedServiceDetails.some(s => s.fullDay) || isDiagnostico;
+  const hasFullDayService = selectedServiceDetails.some(s => s.fullDay) || isDiagnostico || (promoService?.fullDay);
   
-  // Horários disponíveis baseado no tipo e quantidade de serviços
   const getAvailableTimeSlots = () => {
     if (isDiagnostico || hasFullDayService) return fullDaySlot;
-    if (selectedServices.length >= 3) return morningSlots; // 3+ serviços = só manhã
+    if (selectedServices.length >= 3) return morningSlots;
     return allTimeSlots;
   };
   
@@ -130,10 +207,16 @@ const NovoAgendamento = () => {
     if (isNewVehicle) {
       return { model: newVehicleModel, plate: newVehiclePlate };
     }
-    return mockVehicles.find(v => v.id === selectedVehicle);
+    const vehicles = isPromoFlow ? eligibleVehicles : mockVehicles;
+    return vehicles.find(v => v.id === selectedVehicle);
   };
 
   const canProceed = () => {
+    if (isPromoFlow) {
+      if (step === 1) return !!selectedDate;
+      return false;
+    }
+    
     if (step === 1) {
       if (isNewVehicle) return newVehicleModel.trim() !== "" && newVehiclePlate.trim() !== "";
       return !!selectedVehicle;
@@ -141,7 +224,6 @@ const NovoAgendamento = () => {
     if (step === 2) return !!selectedType;
     if (step === 3) return selectedServices.length > 0;
     if (step === 4) {
-      // Diagnóstico ou dia inteiro = só precisa da data
       if (isDiagnostico || hasFullDayService) return !!selectedDate;
       return !!selectedDate && !!selectedTime;
     }
@@ -149,7 +231,7 @@ const NovoAgendamento = () => {
   };
 
   const handleNext = () => {
-    if (step < 5) setStep(step + 1);
+    if (step < maxSteps) setStep(step + 1);
   };
 
   const handleBack = () => {
@@ -169,19 +251,17 @@ const NovoAgendamento = () => {
   };
 
   const handleConfirm = () => {
-    toast.success("Agendamento solicitado!", {
-      description: "A oficina receberá sua solicitação por email.",
+    const vehicleDisplay = getVehicleDisplay();
+    const dateStr = selectedDate ? format(selectedDate, "EEEE, dd/MM/yyyy", { locale: ptBR }) : "";
+    
+    navigate("/agendamento-sucesso", {
+      state: {
+        promoTitle: promotion?.title,
+        vehicleModel: vehicleDisplay?.model,
+        date: dateStr,
+      }
     });
-    navigate("/agenda");
   };
-
-  const steps = [
-    { num: 1, label: "Veículo" },
-    { num: 2, label: "Tipo" },
-    { num: 3, label: "Serviços" },
-    { num: 4, label: "Data" },
-    { num: 5, label: "Confirmar" },
-  ];
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -191,6 +271,266 @@ const NovoAgendamento = () => {
     return `${hours}h${mins}min`;
   };
 
+  // =============== RENDER ===============
+
+  // Fluxo de Promoção
+  if (isPromoFlow) {
+    const promoVehicle = eligibleVehicles[0];
+    
+    return (
+      <div className="min-h-screen gradient-bg dark flex flex-col">
+        {/* Header */}
+        <header className="flex items-center gap-4 p-4 pt-12">
+          <button 
+            onClick={handleBack}
+            className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center"
+          >
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <h1 className="text-xl font-semibold text-foreground">Agendar Promoção</h1>
+        </header>
+
+        {/* Promo Banner */}
+        <div className="px-4 mb-4">
+          <div className="bg-gradient-to-r from-amber-500/20 via-primary/20 to-amber-500/20 rounded-xl p-4 border border-amber-500/30">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <Gift className="w-6 h-6 text-amber-500" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-foreground">{promotion.title}</p>
+                  <span className="text-xs font-bold text-amber-500 bg-amber-500/20 px-2 py-0.5 rounded-full">
+                    {promotion.discount}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">{promotion.serviceName}</p>
+              </div>
+            </div>
+            {promoVehicle && (
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-amber-500/20">
+                <Car className="w-4 h-4 text-primary" />
+                <span className="text-sm text-foreground">
+                  {promoVehicle.model} • {promoVehicle.plate}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Progress Steps */}
+        <div className="px-4 py-2">
+          <div className="flex items-center justify-center gap-2">
+            {steps.map((s, idx) => (
+              <div key={s.num} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div 
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all",
+                      step >= s.num 
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {step > s.num ? <Check className="w-4 h-4" /> : s.num}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground mt-1">{s.label}</span>
+                </div>
+                {idx < steps.length - 1 && (
+                  <div 
+                    className={cn(
+                      "w-12 h-0.5 mx-2 transition-all",
+                      step > s.num ? "bg-primary" : "bg-muted"
+                    )}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <main className="flex-1 px-4 overflow-y-auto pb-32">
+          {/* Step 1: Calendário */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-medium text-foreground">Escolha uma data disponível</h2>
+              
+              <div className="glass-card rounded-2xl p-4">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  locale={ptBR}
+                  disabled={(date) => {
+                    const today = startOfDay(new Date());
+                    if (date < today) return true;
+                    if (date.getDay() === 0) return true; // Domingo
+                    return !isDateAvailable(date);
+                  }}
+                  modifiers={{
+                    available: availablePromoDates,
+                  }}
+                  modifiersStyles={{
+                    available: { 
+                      backgroundColor: 'hsl(var(--primary) / 0.2)',
+                      fontWeight: 'bold'
+                    }
+                  }}
+                  className="pointer-events-auto mx-auto"
+                />
+              </div>
+
+              {/* Legenda */}
+              <div className="flex items-center gap-4 justify-center text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-primary/30" />
+                  <span>Disponível</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-muted" />
+                  <span>Indisponível</span>
+                </div>
+              </div>
+
+              {/* Aviso sobre dia inteiro */}
+              {selectedDate && promoService?.fullDay && (
+                <div className="glass-card rounded-xl p-4">
+                  <p className="text-sm text-primary bg-primary/10 rounded-lg px-3 py-2">
+                    Serviço de dia inteiro. Traga o veículo pela manhã.
+                  </p>
+                </div>
+              )}
+
+              {/* Lembrete sobre outros serviços */}
+              <div className="bg-muted/50 rounded-xl p-4 border border-primary/20">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Quer adicionar outros serviços?</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Finalize este agendamento promocional primeiro. Após confirmar, você poderá agendar serviços adicionais.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Confirmação */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-medium text-foreground">Confirme seu agendamento</h2>
+              
+              <div className="glass-card rounded-xl p-5 space-y-4">
+                {/* Promo Badge */}
+                <div className="flex items-center gap-2 bg-amber-500/10 rounded-lg px-3 py-2">
+                  <Gift className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-medium text-amber-500">{promotion.title}</span>
+                  <span className="ml-auto text-sm font-bold text-amber-500">{promotion.discount}</span>
+                </div>
+
+                {/* Vehicle */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                    <Car className="w-6 h-6 text-primary" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Veículo</p>
+                    <p className="font-medium text-foreground">
+                      {promoVehicle?.model} • {promoVehicle?.plate}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="h-px bg-border" />
+
+                {/* Service */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Serviço</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-foreground">{promotion.serviceName}</span>
+                    {promoService && promoService.price > 0 ? (
+                      <div className="text-right">
+                        <span className="text-muted-foreground text-sm line-through mr-2">R$ {promoService.price}</span>
+                        <span className="text-primary font-semibold">R$ {finalPrice}</span>
+                      </div>
+                    ) : (
+                      <span className="text-amber-500 font-medium">{promotion.discount}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="h-px bg-border" />
+
+                {/* Date */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-emerald-500" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Data</p>
+                    <p className="font-medium text-foreground">
+                      {selectedDate && format(selectedDate, "EEEE, dd/MM/yyyy", { locale: ptBR })}
+                    </p>
+                    {promoService?.fullDay && (
+                      <p className="text-xs text-muted-foreground">Dia inteiro</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="h-px bg-border" />
+                
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-foreground font-medium">Total final</span>
+                  <div className="text-right">
+                    {promoService && promoService.price > 0 && (
+                      <span className="text-xs text-emerald-500 block">
+                        Economia de R$ {discountAmount}
+                      </span>
+                    )}
+                    {promoService && promoService.price > 0 ? (
+                      <span className="text-2xl font-bold text-primary">R$ {finalPrice}</span>
+                    ) : (
+                      <span className="text-2xl font-bold text-emerald-500">GRÁTIS</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground text-center">
+                A oficina receberá sua solicitação e confirmará o agendamento.
+              </p>
+            </div>
+          )}
+        </main>
+
+        {/* Footer Button */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background to-transparent pt-8">
+          {step < maxSteps ? (
+            <Button 
+              onClick={handleNext}
+              disabled={!canProceed()}
+              className="w-full gradient-primary text-primary-foreground font-semibold py-6 text-lg disabled:opacity-50"
+            >
+              Continuar
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleConfirm}
+              className="w-full gradient-primary text-primary-foreground font-semibold py-6 text-lg"
+            >
+              <Check className="w-5 h-5 mr-2" />
+              Confirmar Agendamento
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // =============== FLUXO NORMAL ===============
   return (
     <div className="min-h-screen gradient-bg dark flex flex-col">
       {/* Header */}
@@ -242,7 +582,6 @@ const NovoAgendamento = () => {
           <div className="space-y-4">
             <h2 className="text-lg font-medium text-foreground">Selecione o veículo</h2>
             
-            {/* Registered Vehicles */}
             {mockVehicles.length > 0 && !isNewVehicle && (
               <div className="space-y-3">
                 {mockVehicles.map((vehicle) => (
@@ -269,7 +608,6 @@ const NovoAgendamento = () => {
               </div>
             )}
 
-            {/* Divider */}
             {mockVehicles.length > 0 && (
               <div className="flex items-center gap-3 py-2">
                 <div className="flex-1 h-px bg-border" />
@@ -278,7 +616,6 @@ const NovoAgendamento = () => {
               </div>
             )}
 
-            {/* Add New Vehicle */}
             {!isNewVehicle ? (
               <button
                 onClick={() => {
@@ -339,7 +676,7 @@ const NovoAgendamento = () => {
                     key={type.id}
                     onClick={() => {
                       setSelectedType(type.id);
-                      setSelectedServices([]); // Reset services when type changes
+                      setSelectedServices([]);
                     }}
                     className={cn(
                       "w-full glass-card rounded-xl p-4 flex items-center gap-4 transition-all text-left",
@@ -363,7 +700,7 @@ const NovoAgendamento = () => {
           </div>
         )}
 
-        {/* Step 3: Services (Multiple Selection) */}
+        {/* Step 3: Services */}
         {step === 3 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -412,7 +749,6 @@ const NovoAgendamento = () => {
               })}
             </div>
 
-            {/* Summary */}
             {selectedServices.length > 0 && (
               <div className="glass-card rounded-xl p-4 mt-4 space-y-3">
                 <div className="flex justify-between text-sm text-muted-foreground">
@@ -430,7 +766,6 @@ const NovoAgendamento = () => {
                   </span>
                 </div>
 
-                {/* Discount Badge */}
                 {discount.percent > 0 && (
                   <div className="flex items-center justify-between bg-emerald-500/10 rounded-lg px-3 py-2">
                     <div className="flex items-center gap-2">
@@ -441,36 +776,17 @@ const NovoAgendamento = () => {
                   </div>
                 )}
 
-                {/* Next discount hint */}
                 {selectedServices.length === 1 && (
                   <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2">
                     <Gift className="w-4 h-4" />
                     <span>Adicione mais 1 serviço e ganhe 5% OFF!</span>
                   </div>
                 )}
-                {selectedServices.length === 2 && (
-                  <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2">
-                    <Gift className="w-4 h-4" />
-                    <span>Mais 1 serviço = 10% OFF!</span>
-                  </div>
-                )}
-                {selectedServices.length === 3 && (
-                  <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2">
-                    <Gift className="w-4 h-4" />
-                    <span>Mais 1 serviço = 15% OFF!</span>
-                  </div>
-                )}
 
-                {/* Variable Price Warning */}
                 {hasVariablePrice && (
                   <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2">
                     <Phone className="w-4 h-4" />
-                    <span>
-                      {variablePriceServices.length === 1 
-                        ? `"${variablePriceServices[0].name}" tem preço variável. A oficina entrará em contato.`
-                        : `${variablePriceServices.length} serviços com preço variável. A oficina entrará em contato.`
-                      }
-                    </span>
+                    <span>Serviço(s) com preço variável. A oficina entrará em contato.</span>
                   </div>
                 )}
 
@@ -511,7 +827,6 @@ const NovoAgendamento = () => {
               />
             </div>
 
-            {/* Mensagem para dia inteiro */}
             {selectedDate && (isDiagnostico || hasFullDayService) && (
               <div className="glass-card rounded-xl p-4">
                 <p className="text-sm text-primary bg-primary/10 rounded-lg px-3 py-2">
@@ -523,7 +838,6 @@ const NovoAgendamento = () => {
               </div>
             )}
 
-            {/* Horários só para serviços normais */}
             {selectedDate && !isDiagnostico && !hasFullDayService && (
               <>
                 <h3 className="text-base font-medium text-foreground mt-4">Horários disponíveis</h3>
@@ -647,7 +961,7 @@ const NovoAgendamento = () => {
 
               <div className="h-px bg-border" />
 
-              {/* Advance Payment Bonus - only if no variable price */}
+              {/* Advance Payment Bonus */}
               {!hasVariablePrice ? (
                 <button
                   onClick={() => setPayInAdvance(!payInAdvance)}
@@ -677,7 +991,7 @@ const NovoAgendamento = () => {
                   <div className="flex-1">
                     <p className="font-medium text-amber-500">Serviço(s) sob consulta</p>
                     <p className="text-xs text-muted-foreground">
-                      A oficina entrará em contato para informar o valor de: {variablePriceServices.map(s => s.name).join(", ")}
+                      A oficina entrará em contato para informar o valor.
                     </p>
                   </div>
                 </div>
@@ -716,7 +1030,7 @@ const NovoAgendamento = () => {
 
       {/* Footer Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background to-transparent pt-8">
-        {step < 5 ? (
+        {step < maxSteps ? (
           <Button 
             onClick={handleNext}
             disabled={!canProceed()}

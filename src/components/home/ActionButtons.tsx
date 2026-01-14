@@ -33,10 +33,10 @@ export function ActionButtons() {
     }
     
     toast.success("Oferta selecionada!", {
-      description: "Vamos aplicar o desconto no agendamento.",
+      description: "Redirecionando para agendamento...",
     });
     setShowPromos(false);
-    navigate("/novo-agendamento");
+    navigate("/novo-agendamento", { state: { promotion: promo } });
   };
 
   const handleWaitlistClick = () => {

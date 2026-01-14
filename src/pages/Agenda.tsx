@@ -83,18 +83,16 @@ const Agenda = () => {
   const activePromotions = getActivePromotions(userVehicleModels);
   const upcomingEvents = getUpcomingEvents();
 
-  const handlePromoClick = (promoId: string, promoTitle: string) => {
-    // Registra o clique (será enviado ao backend depois)
-    if (!clickedPromoIds.includes(promoId)) {
-      setClickedPromoIds(prev => [...prev, promoId]);
-      console.log(`[TRACKING] Promo clicked: ${promoId} - ${promoTitle}`);
-      // TODO: Enviar para o backend quando tivermos a API
+  const handlePromoClick = (promo: PrimePromotion) => {
+    if (!clickedPromoIds.includes(promo.id)) {
+      setClickedPromoIds(prev => [...prev, promo.id]);
+      console.log(`[TRACKING] Promo clicked: ${promo.id} - ${promo.title}`);
     }
     
     toast.success("Oferta selecionada!", {
-      description: "Vamos aplicar o desconto no agendamento.",
+      description: "Redirecionando para agendamento...",
     });
-    navigate("/novo-agendamento");
+    navigate("/novo-agendamento", { state: { promotion: promo } });
   };
 
   const handleWaitlistClick = () => {
@@ -212,7 +210,7 @@ const Agenda = () => {
                     return (
                       <button
                         key={promo.id}
-                        onClick={() => handlePromoClick(promo.id, promo.title)}
+                        onClick={() => handlePromoClick(promo)}
                         className="w-full bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 rounded-xl p-4 border border-amber-500/20 transition-all hover:border-amber-500/40 hover:scale-[1.01] active:scale-[0.99] text-left"
                       >
                         <div className="flex items-start gap-3">
