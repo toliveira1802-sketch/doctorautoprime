@@ -38,27 +38,29 @@ const serviceTypes = [
   { id: "diagnostico", name: "Diagnóstico", icon: Stethoscope, description: "Identificação de problemas" },
 ];
 
-// Serviços disponíveis por tipo
+// Serviços disponíveis por tipo (fullDay = serviço que leva o dia todo)
 const services = {
   revisao: [
-    { id: "troca-oleo", name: "Troca de Óleo", icon: Droplets, duration: 30, price: 150 },
-    { id: "filtros", name: "Troca de Filtros", icon: Settings, duration: 20, price: 80 },
-    { id: "freios", name: "Revisão de Freios", icon: Car, duration: 60, price: 200 },
-    { id: "suspensao", name: "Revisão de Suspensão", icon: Wrench, duration: 90, price: 350 },
-    { id: "alinhamento", name: "Alinhamento e Balanceamento", icon: Car, duration: 45, price: 120 },
+    { id: "troca-oleo", name: "Troca de Óleo", icon: Droplets, duration: 30, price: 150, fullDay: false },
+    { id: "filtros", name: "Troca de Filtros", icon: Settings, duration: 20, price: 80, fullDay: false },
+    { id: "freios", name: "Revisão de Freios", icon: Car, duration: 60, price: 200, fullDay: false },
+    { id: "suspensao", name: "Revisão de Suspensão", icon: Wrench, duration: 90, price: 350, fullDay: false },
+    { id: "alinhamento", name: "Alinhamento e Balanceamento", icon: Car, duration: 45, price: 120, fullDay: false },
+    { id: "revisao-completa", name: "Revisão Completa", icon: Settings, duration: 480, price: 800, fullDay: true },
   ],
   diagnostico: [
-    { id: "eletrica", name: "Diagnóstico Elétrico", icon: Zap, duration: 60, price: 150 },
-    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 90, price: 200 },
-    { id: "injecao", name: "Diagnóstico de Injeção", icon: Droplets, duration: 60, price: 180 },
-    { id: "geral", name: "Check-up Geral", icon: Stethoscope, duration: 120, price: 250 },
+    { id: "eletrica", name: "Diagnóstico Elétrico", icon: Zap, duration: 60, price: 150, fullDay: false },
+    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 90, price: 200, fullDay: false },
+    { id: "injecao", name: "Diagnóstico de Injeção", icon: Droplets, duration: 60, price: 180, fullDay: false },
+    { id: "geral", name: "Check-up Geral", icon: Stethoscope, duration: 120, price: 250, fullDay: false },
+    { id: "pericia", name: "Perícia Completa", icon: Stethoscope, duration: 480, price: 600, fullDay: true },
   ],
 };
 
-const timeSlots = [
-  "08:00", "09:00", "10:00", "11:00", 
-  "14:00", "15:00", "16:00", "17:00"
-];
+const morningSlots = ["08:00", "09:00", "10:00", "11:00"];
+const afternoonSlots = ["14:00", "15:00", "16:00", "17:00"];
+const allTimeSlots = [...morningSlots, ...afternoonSlots];
+const fullDaySlot = ["08:00 (Dia inteiro)"];
 
 const NovoAgendamento = () => {
   const navigate = useNavigate();
@@ -105,6 +107,18 @@ const NovoAgendamento = () => {
   // Bônus por antecipação (5% extra)
   const advanceBonus = payInAdvance ? Math.round(priceAfterDiscount * 0.05) : 0;
   const finalPrice = priceAfterDiscount - advanceBonus;
+
+  // Verifica se algum serviço é de dia inteiro
+  const hasFullDayService = selectedServiceDetails.some(s => s.fullDay);
+  
+  // Horários disponíveis baseado na quantidade de serviços
+  const getAvailableTimeSlots = () => {
+    if (hasFullDayService) return fullDaySlot;
+    if (selectedServices.length >= 3) return morningSlots; // 3+ serviços = só manhã
+    return allTimeSlots;
+  };
+  
+  const availableTimeSlots = getAvailableTimeSlots();
 
   const getVehicleDisplay = () => {
     if (isNewVehicle) {
@@ -463,14 +477,28 @@ const NovoAgendamento = () => {
             {selectedDate && (
               <>
                 <h3 className="text-base font-medium text-foreground mt-4">Horários disponíveis</h3>
+                
+                {selectedServices.length >= 3 && !hasFullDayService && (
+                  <p className="text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2 mb-2">
+                    Com 3+ serviços, apenas horários da manhã estão disponíveis.
+                  </p>
+                )}
+                
+                {hasFullDayService && (
+                  <p className="text-xs text-primary bg-primary/10 rounded-lg px-3 py-2 mb-2">
+                    Serviço de dia inteiro selecionado. Início às 08:00.
+                  </p>
+                )}
+                
                 <div className="grid grid-cols-2 gap-3">
-                  {timeSlots.map((time) => (
+                  {availableTimeSlots.map((time) => (
                     <button
                       key={time}
                       onClick={() => setSelectedTime(time)}
                       className={cn(
                         "glass-card rounded-xl p-4 flex items-center justify-center gap-2 transition-all",
-                        selectedTime === time && "ring-2 ring-primary bg-primary/20"
+                        selectedTime === time && "ring-2 ring-primary bg-primary/20",
+                        hasFullDayService && "col-span-2"
                       )}
                     >
                       <Clock className="w-5 h-5 text-primary" />
