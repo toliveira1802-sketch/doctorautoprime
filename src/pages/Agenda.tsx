@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { format, isAfter, isBefore, isWithinInterval } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Plus, Clock, Wrench, Star, Gift, Sparkles, ChevronRight } from "lucide-react";
+import { Calendar, Plus, Clock, Wrench, Star, Gift, Sparkles, ChevronRight, MapPin, Users, Droplets, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -14,6 +14,14 @@ import {
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  userVehicles,
+  getActivePromotions,
+  getUpcomingEvents,
+  eventTypeLabels,
+  type PrimePromotion,
+  type PrimeEvent,
+} from "@/data/promotions";
 
 interface Appointment {
   id: string;
@@ -22,23 +30,6 @@ interface Appointment {
   service: string;
   status: "confirmado" | "pendente" | "concluido";
 }
-
-interface PrimePromotion {
-  id: string;
-  title: string;
-  description: string;
-  discount: string;
-  validFrom: Date;
-  validTo: Date;
-  vehicleModels: string[]; // Modelos elegíveis (ex: "VW Golf", "Fiat Argo")
-  image?: string;
-}
-
-// Mock de veículos do usuário
-const userVehicles = [
-  { id: "1", model: "VW Golf", plate: "ABC-1234" },
-  { id: "2", model: "Fiat Argo", plate: "XYZ-5678" },
-];
 
 // Mock data - será substituído por dados do backend
 const mockAppointments: Appointment[] = [
@@ -58,37 +49,6 @@ const mockAppointments: Appointment[] = [
   },
 ];
 
-// Promoções Prime exclusivas por modelo
-const mockPromotions: PrimePromotion[] = [
-  {
-    id: "1",
-    title: "Troca de Óleo VW",
-    description: "Troca de óleo sintético com 30% OFF para veículos VW",
-    discount: "30% OFF",
-    validFrom: new Date(2026, 0, 1),
-    validTo: new Date(2026, 1, 28),
-    vehicleModels: ["VW Golf", "VW Polo", "VW T-Cross", "VW Virtus"],
-  },
-  {
-    id: "2",
-    title: "Revisão Fiat Argo",
-    description: "Revisão completa com preço especial exclusivo",
-    discount: "25% OFF",
-    validFrom: new Date(2026, 0, 15),
-    validTo: new Date(2026, 2, 15),
-    vehicleModels: ["Fiat Argo", "Fiat Cronos", "Fiat Mobi"],
-  },
-  {
-    id: "3",
-    title: "Check-up Grátis Premium",
-    description: "Diagnóstico completo gratuito para todos os modelos",
-    discount: "GRÁTIS",
-    validFrom: new Date(2026, 1, 1),
-    validTo: new Date(2026, 1, 15),
-    vehicleModels: [], // Vazio = todos os modelos
-  },
-];
-
 const statusColors = {
   confirmado: "bg-emerald-500/20 text-emerald-500",
   pendente: "bg-amber-500/20 text-amber-500",
@@ -101,34 +61,27 @@ const statusLabels = {
   concluido: "Concluído",
 };
 
+const eventIcons: Record<PrimeEvent["type"], React.ElementType> = {
+  workshop: GraduationCap,
+  meetup: Users,
+  carwash: Droplets,
+  training: GraduationCap,
+  other: Star,
+};
+
 const Agenda = () => {
   const navigate = useNavigate();
   const [clickedPromoIds, setClickedPromoIds] = useState<string[]>([]);
+  const [clickedEventIds, setClickedEventIds] = useState<string[]>([]);
   
   const upcomingAppointments = mockAppointments
     .filter((apt) => apt.date >= new Date())
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  // Filtra promoções ativas e relevantes para os veículos do usuário
-  const now = new Date();
+  // Usa os dados centralizados
   const userVehicleModels = userVehicles.map(v => v.model);
-  
-  const activePromotions = mockPromotions.filter(promo => {
-    // Verifica se está no período válido
-    const isActive = isWithinInterval(now, { start: promo.validFrom, end: promo.validTo });
-    if (!isActive) return false;
-    
-    // Se não tem modelos específicos, vale para todos
-    if (promo.vehicleModels.length === 0) return true;
-    
-    // Verifica se algum veículo do usuário é elegível
-    return promo.vehicleModels.some(model => 
-      userVehicleModels.some(userModel => 
-        userModel.toLowerCase().includes(model.toLowerCase()) ||
-        model.toLowerCase().includes(userModel.toLowerCase())
-      )
-    );
-  });
+  const activePromotions = getActivePromotions(userVehicleModels);
+  const upcomingEvents = getUpcomingEvents();
 
   const handlePromoClick = (promoId: string, promoTitle: string) => {
     // Registra o clique (será enviado ao backend depois)
@@ -157,7 +110,7 @@ const Agenda = () => {
       <Header />
 
       <main className="flex-1 px-4 pt-4 overflow-y-auto pb-24">
-        <Accordion type="multiple" defaultValue={["agendamentos", "agendar", "eventos"]} className="space-y-3">
+        <Accordion type="multiple" defaultValue={["agendamentos", "agendar", "promos", "eventos"]} className="space-y-3">
           {/* 1. SEUS AGENDAMENTOS */}
           <AccordionItem value="agendamentos" className="glass-card rounded-xl border-none">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -229,7 +182,7 @@ const Agenda = () => {
           </AccordionItem>
 
           {/* 3. PROMOÇÕES PRIME EXCLUSIVAS */}
-          <AccordionItem value="eventos" className="glass-card rounded-xl border-none">
+          <AccordionItem value="promos" className="glass-card rounded-xl border-none">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/30 to-primary/30 flex items-center justify-center">
@@ -314,6 +267,86 @@ const Agenda = () => {
                     </span>
                   </div>
                 </button>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* 4. EVENTOS PRIME */}
+          <AccordionItem value="eventos" className="glass-card rounded-xl border-none">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <Star className="w-5 h-5 text-purple-500" />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-base font-semibold text-foreground">Eventos Prime</span>
+                  {upcomingEvents.length > 0 && (
+                    <span className="text-xs text-purple-500 font-medium">
+                      {upcomingEvents.length} evento{upcomingEvents.length > 1 ? "s" : ""} próximo{upcomingEvents.length > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              {upcomingEvents.length > 0 ? (
+                <div className="space-y-3">
+                  {upcomingEvents.map((event) => {
+                    const EventIcon = eventIcons[event.type];
+                    const typeInfo = eventTypeLabels[event.type];
+                    
+                    return (
+                      <button
+                        key={event.id}
+                        onClick={() => {
+                          if (!clickedEventIds.includes(event.id)) {
+                            setClickedEventIds(prev => [...prev, event.id]);
+                            console.log(`[TRACKING] Event clicked: ${event.id} - ${event.title}`);
+                          }
+                          toast.info("Evento selecionado!", {
+                            description: "Detalhes do evento em breve.",
+                          });
+                        }}
+                        className="w-full bg-background/50 rounded-xl p-4 border-l-4 border-purple-500 transition-all hover:bg-background/70 text-left"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                            <EventIcon className="w-5 h-5 text-purple-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-medium text-foreground">{event.title}</p>
+                              <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", typeInfo.color)}>
+                                {typeInfo.label}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {event.description}
+                            </p>
+                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                <span>{format(event.date, "dd MMM", { locale: ptBR })}</span>
+                              </div>
+                              {event.location && (
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  <span className="truncate max-w-[120px]">{event.location}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground text-sm">Nenhum evento programado</p>
+                  <p className="text-xs text-muted-foreground mt-1">Fique atento às novidades!</p>
+                </div>
               )}
             </AccordionContent>
           </AccordionItem>
