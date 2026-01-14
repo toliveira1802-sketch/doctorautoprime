@@ -8,7 +8,7 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full gradient-bg dark">
         <AppSidebar variant="admin" />
         <SidebarInset className="flex-1 flex flex-col">
