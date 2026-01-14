@@ -1,4 +1,4 @@
-import { Bell, User } from "lucide-react";
+import { MessageCircle, User } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 export function Header() {
@@ -16,10 +16,8 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <button className="relative w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors touch-target">
-              <Bell className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
-              {/* Notification badge */}
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-destructive" />
+            <button className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors touch-target">
+              <MessageCircle className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
             </button>
             <button className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors touch-target">
               <User className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
