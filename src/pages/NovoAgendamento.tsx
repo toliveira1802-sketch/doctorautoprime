@@ -17,7 +17,8 @@ import {
   Stethoscope,
   Gift,
   Percent,
-  CreditCard
+  CreditCard,
+  Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,22 +39,22 @@ const serviceTypes = [
   { id: "diagnostico", name: "Diagnóstico", icon: Stethoscope, description: "Requer 1 dia com o veículo", fullDay: true },
 ];
 
-// Serviços disponíveis por tipo (fullDay = serviço que leva o dia todo)
+// Serviços disponíveis por tipo (fullDay = dia todo, price = 0 = sob consulta)
 const services = {
   revisao: [
     { id: "troca-oleo", name: "Troca de Óleo", icon: Droplets, duration: 30, price: 150, fullDay: false },
     { id: "filtros", name: "Troca de Filtros", icon: Settings, duration: 20, price: 80, fullDay: false },
     { id: "freios", name: "Revisão de Freios", icon: Car, duration: 60, price: 200, fullDay: false },
-    { id: "suspensao", name: "Revisão de Suspensão", icon: Wrench, duration: 90, price: 350, fullDay: false },
+    { id: "suspensao", name: "Revisão de Suspensão", icon: Wrench, duration: 90, price: 0, fullDay: false }, // Preço variável
     { id: "alinhamento", name: "Alinhamento e Balanceamento", icon: Car, duration: 45, price: 120, fullDay: false },
-    { id: "revisao-completa", name: "Revisão Completa", icon: Settings, duration: 480, price: 800, fullDay: true },
+    { id: "revisao-completa", name: "Revisão Completa", icon: Settings, duration: 480, price: 0, fullDay: true }, // Preço variável
   ],
   diagnostico: [
     { id: "eletrica", name: "Diagnóstico Elétrico", icon: Zap, duration: 480, price: 150, fullDay: true },
-    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 480, price: 200, fullDay: true },
+    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 480, price: 0, fullDay: true }, // Preço variável
     { id: "injecao", name: "Diagnóstico de Injeção", icon: Droplets, duration: 480, price: 180, fullDay: true },
     { id: "geral", name: "Check-up Geral", icon: Stethoscope, duration: 480, price: 250, fullDay: true },
-    { id: "pericia", name: "Perícia Completa", icon: Stethoscope, duration: 480, price: 600, fullDay: true },
+    { id: "pericia", name: "Perícia Completa", icon: Stethoscope, duration: 480, price: 0, fullDay: true }, // Preço variável
   ],
 };
 
@@ -104,9 +105,13 @@ const NovoAgendamento = () => {
   const discountAmount = Math.round(subtotal * (discount.percent / 100));
   const priceAfterDiscount = subtotal - discountAmount;
   
-  // Bônus por antecipação (5% extra)
-  const advanceBonus = payInAdvance ? Math.round(priceAfterDiscount * 0.05) : 0;
+  // Bônus por antecipação (5% extra) - só aplica se não tiver serviço sob consulta
+  const hasVariablePrice = selectedServiceDetails.some(s => s.price === 0);
+  const advanceBonus = (payInAdvance && !hasVariablePrice) ? Math.round(priceAfterDiscount * 0.05) : 0;
   const finalPrice = priceAfterDiscount - advanceBonus;
+  
+  // Serviços com preço variável (sob consulta)
+  const variablePriceServices = selectedServiceDetails.filter(s => s.price === 0);
 
   // Verifica se é diagnóstico (sempre dia inteiro) ou serviço de dia inteiro
   const isDiagnostico = selectedType === "diagnostico";
@@ -393,7 +398,11 @@ const NovoAgendamento = () => {
                       <p className="font-medium text-foreground">{service.name}</p>
                       <p className="text-sm text-muted-foreground">{formatDuration(service.duration)}</p>
                     </div>
-                    <span className="text-primary font-semibold">R$ {service.price}</span>
+                    {service.price > 0 ? (
+                      <span className="text-primary font-semibold">R$ {service.price}</span>
+                    ) : (
+                      <span className="text-amber-500 font-medium text-sm">Sob consulta</span>
+                    )}
                   </button>
                 );
               })}
@@ -448,11 +457,32 @@ const NovoAgendamento = () => {
                   </div>
                 )}
 
+                {/* Variable Price Warning */}
+                {hasVariablePrice && (
+                  <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2">
+                    <Phone className="w-4 h-4" />
+                    <span>
+                      {variablePriceServices.length === 1 
+                        ? `"${variablePriceServices[0].name}" tem preço variável. A oficina entrará em contato.`
+                        : `${variablePriceServices.length} serviços com preço variável. A oficina entrará em contato.`
+                      }
+                    </span>
+                  </div>
+                )}
+
                 <div className="h-px bg-border" />
                 
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total</span>
-                  <span className="text-xl font-bold text-primary">R$ {priceAfterDiscount}</span>
+                  <div className="text-right">
+                    {hasVariablePrice ? (
+                      <span className="text-lg font-bold text-foreground">
+                        R$ {priceAfterDiscount} <span className="text-sm text-amber-500">+ sob consulta</span>
+                      </span>
+                    ) : (
+                      <span className="text-xl font-bold text-primary">R$ {priceAfterDiscount}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -548,7 +578,11 @@ const NovoAgendamento = () => {
                   {selectedServiceDetails.map(service => (
                     <div key={service.id} className="flex items-center justify-between">
                       <span className="text-foreground">{service.name}</span>
-                      <span className="text-muted-foreground text-sm">R$ {service.price}</span>
+                      {service.price > 0 ? (
+                        <span className="text-muted-foreground text-sm">R$ {service.price}</span>
+                      ) : (
+                        <span className="text-amber-500 text-sm font-medium">Sob consulta</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -601,47 +635,68 @@ const NovoAgendamento = () => {
 
               <div className="h-px bg-border" />
 
-              {/* Advance Payment Bonus */}
-              <button
-                onClick={() => setPayInAdvance(!payInAdvance)}
-                className={cn(
-                  "w-full flex items-center gap-3 p-3 rounded-xl transition-all",
-                  payInAdvance ? "bg-amber-500/20 ring-2 ring-amber-500" : "bg-muted/50"
-                )}
-              >
-                <Checkbox 
-                  checked={payInAdvance}
-                  className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
-                />
-                <div className="flex-1 text-left">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-amber-500" />
-                    <span className="font-medium text-foreground">Pagar antecipado</span>
+              {/* Advance Payment Bonus - only if no variable price */}
+              {!hasVariablePrice ? (
+                <button
+                  onClick={() => setPayInAdvance(!payInAdvance)}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-3 rounded-xl transition-all",
+                    payInAdvance ? "bg-amber-500/20 ring-2 ring-amber-500" : "bg-muted/50"
+                  )}
+                >
+                  <Checkbox 
+                    checked={payInAdvance}
+                    className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                  />
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-amber-500" />
+                      <span className="font-medium text-foreground">Pagar antecipado</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Ganhe 5% extra de desconto</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">Ganhe 5% extra de desconto</p>
+                  {payInAdvance && (
+                    <span className="text-sm font-bold text-amber-500">-R$ {advanceBonus}</span>
+                  )}
+                </button>
+              ) : (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10">
+                  <Phone className="w-5 h-5 text-amber-500" />
+                  <div className="flex-1">
+                    <p className="font-medium text-amber-500">Serviço(s) sob consulta</p>
+                    <p className="text-xs text-muted-foreground">
+                      A oficina entrará em contato para informar o valor de: {variablePriceServices.map(s => s.name).join(", ")}
+                    </p>
+                  </div>
                 </div>
-                {payInAdvance && (
-                  <span className="text-sm font-bold text-amber-500">-R$ {advanceBonus}</span>
-                )}
-              </button>
+              )}
 
               <div className="h-px bg-border" />
               
               <div className="flex items-center justify-between pt-2">
                 <span className="text-foreground font-medium">Total final</span>
                 <div className="text-right">
-                  {(discount.percent > 0 || payInAdvance) && (
+                  {(discount.percent > 0 || payInAdvance) && !hasVariablePrice && (
                     <span className="text-xs text-emerald-500 block">
                       Economia de R$ {discountAmount + advanceBonus}
                     </span>
                   )}
-                  <span className="text-2xl font-bold text-primary">R$ {finalPrice}</span>
+                  {hasVariablePrice ? (
+                    <span className="text-xl font-bold text-foreground">
+                      R$ {finalPrice} <span className="text-sm text-amber-500">+ consulta</span>
+                    </span>
+                  ) : (
+                    <span className="text-2xl font-bold text-primary">R$ {finalPrice}</span>
+                  )}
                 </div>
               </div>
             </div>
 
             <p className="text-sm text-muted-foreground text-center">
-              A oficina receberá sua solicitação por email e confirmará o agendamento.
+              {hasVariablePrice 
+                ? "A oficina entrará em contato para confirmar valores e o agendamento."
+                : "A oficina receberá sua solicitação por email e confirmará o agendamento."
+              }
             </p>
           </div>
         )}
