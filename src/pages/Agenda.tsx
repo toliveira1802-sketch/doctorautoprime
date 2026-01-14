@@ -123,7 +123,7 @@ const Agenda = () => {
               {upcomingAppointments.length > 0 ? (
                 <div className="space-y-3">
                   {upcomingAppointments.map((apt) => {
-                    const canReschedule = apt.status === "pendente" || apt.status === "confirmado";
+                    const canReschedule = apt.status === "confirmado";
                     
                     return (
                       <button
