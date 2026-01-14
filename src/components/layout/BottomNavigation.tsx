@@ -1,4 +1,4 @@
-import { Home, Calendar, FileText, User } from "lucide-react";
+import { Home, Calendar, FileSearch } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -10,8 +10,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { icon: Home, label: "Home", active: true },
   { icon: Calendar, label: "Agenda" },
-  { icon: FileText, label: "Documentos" },
-  { icon: User, label: "Perfil" },
+  { icon: FileSearch, label: "Histórico" },
 ];
 
 export function BottomNavigation() {
