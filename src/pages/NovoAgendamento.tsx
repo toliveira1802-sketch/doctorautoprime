@@ -33,6 +33,12 @@ import {
   mockPromotions, 
   type PrimePromotion 
 } from "@/data/promotions";
+import {
+  trackFunnelEvent,
+  generateSessionId,
+  clearSession,
+  type FlowType,
+} from "@/utils/analytics";
 
 // Mock de veículos cadastrados
 const mockVehicles = sharedVehicles.map((v, i) => ({
@@ -125,6 +131,30 @@ const NovoAgendamento = () => {
       setSelectedVehicle(eligibleVehicles[0].id);
     }
   }, [isPromoFlow, eligibleVehicles]);
+
+  // Tracking: inicia sessão ao entrar no fluxo
+  useEffect(() => {
+    const flowType: FlowType = isPromoFlow ? "promo" : "normal";
+    const vehicleModel = isPromoFlow && eligibleVehicles.length === 1 
+      ? eligibleVehicles[0].model 
+      : undefined;
+    
+    generateSessionId();
+    trackFunnelEvent({
+      eventType: "flow_started",
+      flowType,
+      promoId: promotion?.id,
+      promoTitle: promotion?.title,
+      vehicleModel,
+      stepNumber: 1,
+      totalSteps: isPromoFlow ? 2 : 5,
+    });
+
+    // Cleanup: rastreia abandono quando sai da página
+    return () => {
+      // Não marca como abandonado se completou
+    };
+  }, []);
 
   // Datas disponíveis para promoção
   const availablePromoDates = promotion?.availableDates || [];
@@ -231,6 +261,26 @@ const NovoAgendamento = () => {
   };
 
   const handleNext = () => {
+    const flowType: FlowType = isPromoFlow ? "promo" : "normal";
+    const vehicleDisplay = getVehicleDisplay();
+    
+    // Track step completion
+    const stepLabels = isPromoFlow 
+      ? ["date_selected"] 
+      : ["vehicle_selected", "type_selected", "services_selected", "date_selected"];
+    
+    if (step <= stepLabels.length) {
+      trackFunnelEvent({
+        eventType: stepLabels[step - 1] as any,
+        flowType,
+        promoId: promotion?.id,
+        promoTitle: promotion?.title,
+        vehicleModel: vehicleDisplay?.model,
+        stepNumber: step,
+        totalSteps: maxSteps,
+      });
+    }
+    
     if (step < maxSteps) setStep(step + 1);
   };
 
@@ -238,6 +288,17 @@ const NovoAgendamento = () => {
     if (step > 1) {
       setStep(step - 1);
     } else {
+      // Abandonou no primeiro step
+      const flowType: FlowType = isPromoFlow ? "promo" : "normal";
+      trackFunnelEvent({
+        eventType: "flow_abandoned",
+        flowType,
+        promoId: promotion?.id,
+        promoTitle: promotion?.title,
+        stepNumber: step,
+        totalSteps: maxSteps,
+      });
+      clearSession();
       navigate("/agenda");
     }
   };
@@ -253,6 +314,19 @@ const NovoAgendamento = () => {
   const handleConfirm = () => {
     const vehicleDisplay = getVehicleDisplay();
     const dateStr = selectedDate ? format(selectedDate, "EEEE, dd/MM/yyyy", { locale: ptBR }) : "";
+    const flowType: FlowType = isPromoFlow ? "promo" : "normal";
+    
+    // Track completion
+    trackFunnelEvent({
+      eventType: "flow_completed",
+      flowType,
+      promoId: promotion?.id,
+      promoTitle: promotion?.title,
+      vehicleModel: vehicleDisplay?.model,
+      stepNumber: maxSteps,
+      totalSteps: maxSteps,
+    });
+    clearSession();
     
     navigate("/agendamento-sucesso", {
       state: {
