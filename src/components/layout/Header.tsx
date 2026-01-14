@@ -1,4 +1,4 @@
-import { Bell, Settings } from "lucide-react";
+import { Bell, User } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 export function Header() {
@@ -22,7 +22,7 @@ export function Header() {
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-destructive" />
             </button>
             <button className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors touch-target">
-              <Settings className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
+              <User className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
             </button>
           </div>
         </div>
