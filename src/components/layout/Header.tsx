@@ -7,8 +7,8 @@ export function Header() {
         <div className="flex items-center justify-between px-5 py-4">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-              <span className="text-xl">🏥</span>
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center red-glow">
+              <span className="text-xl">🚗</span>
             </div>
             <div>
               <h1 className="font-bold text-lg text-foreground tracking-tight">

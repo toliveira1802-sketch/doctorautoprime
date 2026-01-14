@@ -13,25 +13,25 @@ const actions: QuickAction[] = [
     icon: CalendarPlus,
     label: "Agendar",
     color: "text-primary",
-    bgColor: "bg-primary/10",
+    bgColor: "bg-primary/15",
   },
   {
     icon: FileSearch,
     label: "Histórico",
-    color: "text-success",
-    bgColor: "bg-success/10",
+    color: "text-foreground",
+    bgColor: "bg-secondary",
   },
   {
     icon: MessageCircle,
     label: "Chat",
-    color: "text-violet",
-    bgColor: "bg-violet/10",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
   },
   {
     icon: Phone,
     label: "Ligar",
-    color: "text-warning",
-    bgColor: "bg-warning/10",
+    color: "text-foreground",
+    bgColor: "bg-secondary",
   },
 ];
 
