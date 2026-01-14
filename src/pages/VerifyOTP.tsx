@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
+import logo from '@/assets/logo.png';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useAuth } from '@/contexts/AuthContext';
@@ -90,6 +91,7 @@ const VerifyOTP: React.FC = () => {
       {/* Content */}
       <div className="relative flex-1 flex flex-col justify-center px-6 py-12">
         <div className="text-center mb-10">
+          <img src={logo} alt="Doctor Auto Prime" className="w-20 h-20 mx-auto mb-4 object-contain" />
           <h1 className="text-2xl font-bold text-foreground mb-2">
             Verificação
           </h1>
