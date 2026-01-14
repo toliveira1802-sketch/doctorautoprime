@@ -122,33 +122,62 @@ const Agenda = () => {
             <AccordionContent className="px-4 pb-4">
               {upcomingAppointments.length > 0 ? (
                 <div className="space-y-3">
-                  {upcomingAppointments.map((apt) => (
-                    <div
-                      key={apt.id}
-                      className="bg-background/50 rounded-xl p-4 flex items-center gap-4"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Wrench className="w-5 h-5 text-primary" strokeWidth={1.5} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground">{apt.service}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          <span>
-                            {format(apt.date, "dd/MM", { locale: ptBR })} às {apt.time}
-                          </span>
-                        </div>
-                      </div>
-                      <span
+                  {upcomingAppointments.map((apt) => {
+                    const canReschedule = apt.status === "pendente" || apt.status === "confirmado";
+                    
+                    return (
+                      <button
+                        key={apt.id}
+                        onClick={() => {
+                          if (canReschedule) {
+                            navigate("/reagendamento", {
+                              state: {
+                                appointment: {
+                                  id: apt.id,
+                                  vehicleModel: "Volkswagen Polo", // Mock - será do backend
+                                  vehiclePlate: "ABC-1234", // Mock - será do backend
+                                  service: apt.service,
+                                  currentDate: apt.date,
+                                  currentTime: apt.time,
+                                  isFullDay: false,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                        disabled={!canReschedule}
                         className={cn(
-                          "text-xs font-medium px-2 py-1 rounded-full",
-                          statusColors[apt.status]
+                          "w-full bg-background/50 rounded-xl p-4 flex items-center gap-4 text-left transition-all",
+                          canReschedule && "hover:bg-background/70 hover:ring-1 hover:ring-primary/30 cursor-pointer",
+                          !canReschedule && "opacity-60 cursor-not-allowed"
                         )}
                       >
-                        {statusLabels[apt.status]}
-                      </span>
-                    </div>
-                  ))}
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Wrench className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground">{apt.service}</p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              {format(apt.date, "dd/MM", { locale: ptBR })} às {apt.time}
+                            </span>
+                          </div>
+                          {canReschedule && (
+                            <p className="text-xs text-primary mt-1">Toque para reagendar</p>
+                          )}
+                        </div>
+                        <span
+                          className={cn(
+                            "text-xs font-medium px-2 py-1 rounded-full",
+                            statusColors[apt.status]
+                          )}
+                        >
+                          {statusLabels[apt.status]}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-4">
