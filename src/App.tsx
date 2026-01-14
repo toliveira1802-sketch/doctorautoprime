@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import VerifyOTP from "./pages/VerifyOTP";
 import BiometricSetup from "./pages/BiometricSetup";
 import NotFound from "./pages/NotFound";
@@ -27,6 +28,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/verify-otp" element={<VerifyOTP />} />
       <Route path="/biometric-setup" element={<BiometricSetup />} />
       <Route 

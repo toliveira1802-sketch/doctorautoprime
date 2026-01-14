@@ -117,7 +117,10 @@ const Login: React.FC = () => {
         <div className="mt-12 text-center">
           <p className="text-muted-foreground text-sm">
             Primeiro acesso?{' '}
-            <button className="text-primary hover:underline font-medium">
+            <button 
+              onClick={() => navigate('/register')}
+              className="text-primary hover:underline font-medium"
+            >
               Cadastre-se
             </button>
           </p>
