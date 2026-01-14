@@ -14,16 +14,500 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointment_services: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          id: string
+          price_at_booking: number
+          service_id: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          id?: string
+          price_at_booking?: number
+          service_id: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          id?: string
+          price_at_booking?: number
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_services_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string | null
+          created_at: string
+          discount_amount: number
+          final_price: number
+          id: string
+          is_full_day: boolean
+          notes: string | null
+          pay_in_advance: boolean
+          promotion_id: string | null
+          status: Database["public"]["Enums"]["appointment_status"]
+          subtotal: number
+          updated_at: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time?: string | null
+          created_at?: string
+          discount_amount?: number
+          final_price?: number
+          id?: string
+          is_full_day?: boolean
+          notes?: string | null
+          pay_in_advance?: boolean
+          promotion_id?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"]
+          subtotal?: number
+          updated_at?: string
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string | null
+          created_at?: string
+          discount_amount?: number
+          final_price?: number
+          id?: string
+          is_full_day?: boolean
+          notes?: string | null
+          pay_in_advance?: boolean
+          promotion_id?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"]
+          subtotal?: number
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_clicks: {
+        Row: {
+          clicked_at: string
+          event_id: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          event_id: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_clicks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_date: string
+          event_time: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          is_active: boolean
+          location: string | null
+          max_participants: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_date: string
+          event_time?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          max_participants?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_date?: string
+          event_time?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          max_participants?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      funnel_events: {
+        Row: {
+          created_at: string
+          event_type: Database["public"]["Enums"]["funnel_step"]
+          flow_type: string
+          id: string
+          promotion_id: string | null
+          session_id: string
+          step_number: number
+          total_steps: number
+          user_id: string | null
+          vehicle_model: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: Database["public"]["Enums"]["funnel_step"]
+          flow_type: string
+          id?: string
+          promotion_id?: string | null
+          session_id: string
+          step_number: number
+          total_steps: number
+          user_id?: string | null
+          vehicle_model?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["funnel_step"]
+          flow_type?: string
+          id?: string
+          promotion_id?: string | null
+          session_id?: string
+          step_number?: number
+          total_steps?: number
+          user_id?: string | null
+          vehicle_model?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_events_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      promo_clicks: {
+        Row: {
+          clicked_at: string
+          id: string
+          promotion_id: string
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          promotion_id: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          promotion_id?: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_clicks_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotions: {
+        Row: {
+          available_dates: string[] | null
+          created_at: string
+          description: string | null
+          discount_label: string
+          discount_percent: number
+          id: string
+          is_active: boolean
+          service_id: string | null
+          title: string
+          updated_at: string
+          valid_from: string
+          valid_to: string
+          vehicle_models: string[] | null
+        }
+        Insert: {
+          available_dates?: string[] | null
+          created_at?: string
+          description?: string | null
+          discount_label: string
+          discount_percent?: number
+          id?: string
+          is_active?: boolean
+          service_id?: string | null
+          title: string
+          updated_at?: string
+          valid_from: string
+          valid_to: string
+          vehicle_models?: string[] | null
+        }
+        Update: {
+          available_dates?: string[] | null
+          created_at?: string
+          description?: string | null
+          discount_label?: string
+          discount_percent?: number
+          id?: string
+          is_active?: boolean
+          service_id?: string | null
+          title?: string
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string
+          vehicle_models?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          is_full_day: boolean
+          name: string
+          price: number
+          service_type: Database["public"]["Enums"]["service_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          is_full_day?: boolean
+          name: string
+          price?: number
+          service_type: Database["public"]["Enums"]["service_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          is_full_day?: boolean
+          name?: string
+          price?: number
+          service_type?: Database["public"]["Enums"]["service_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          brand: string | null
+          color: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          model: string
+          plate: string
+          updated_at: string
+          user_id: string
+          year: string | null
+        }
+        Insert: {
+          brand?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model: string
+          plate: string
+          updated_at?: string
+          user_id: string
+          year?: string | null
+        }
+        Update: {
+          brand?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model?: string
+          plate?: string
+          updated_at?: string
+          user_id?: string
+          year?: string | null
+        }
+        Relationships: []
+      }
+      waitlist_interests: {
+        Row: {
+          created_at: string
+          id: string
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      appointment_status: "pendente" | "confirmado" | "concluido" | "cancelado"
+      event_type: "workshop" | "meetup" | "carwash" | "training" | "other"
+      funnel_step:
+        | "flow_started"
+        | "vehicle_selected"
+        | "type_selected"
+        | "services_selected"
+        | "date_selected"
+        | "flow_completed"
+        | "flow_abandoned"
+      service_type: "revisao" | "diagnostico"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +634,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      appointment_status: ["pendente", "confirmado", "concluido", "cancelado"],
+      event_type: ["workshop", "meetup", "carwash", "training", "other"],
+      funnel_step: [
+        "flow_started",
+        "vehicle_selected",
+        "type_selected",
+        "services_selected",
+        "date_selected",
+        "flow_completed",
+        "flow_abandoned",
+      ],
+      service_type: ["revisao", "diagnostico"],
+    },
   },
 } as const
