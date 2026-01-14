@@ -1,8 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
-import { VehicleCard } from "@/components/vehicle/VehicleCard";
 import { ServiceTimeline } from "@/components/service/ServiceTimeline";
-import vehicleImage from "@/assets/vehicle-suv.jpg";
+import { ActionButtons } from "@/components/home/ActionButtons";
 
 const Index = () => {
   return (
@@ -20,25 +19,9 @@ const Index = () => {
           </p>
         </section>
 
-        {/* Active Vehicle */}
+        {/* Action Buttons */}
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Veículo Ativo
-            </h3>
-            <button className="text-sm text-primary hover:underline">
-              Ver todos
-            </button>
-          </div>
-          <VehicleCard
-            brand="Honda"
-            model="HR-V"
-            year={2022}
-            plate="ABC-1D23"
-            status="diagnosis"
-            nextService="5.000 km"
-            imageUrl={vehicleImage}
-          />
+          <ActionButtons />
         </section>
 
         {/* Service Timeline */}
