@@ -34,8 +34,8 @@ const mockVehicles = [
 
 // Tipos de atendimento
 const serviceTypes = [
-  { id: "revisao", name: "Revisão", icon: Settings, description: "Manutenção preventiva completa" },
-  { id: "diagnostico", name: "Diagnóstico", icon: Stethoscope, description: "Identificação de problemas" },
+  { id: "revisao", name: "Revisão", icon: Settings, description: "Manutenção preventiva completa", fullDay: false },
+  { id: "diagnostico", name: "Diagnóstico", icon: Stethoscope, description: "Requer 1 dia com o veículo", fullDay: true },
 ];
 
 // Serviços disponíveis por tipo (fullDay = serviço que leva o dia todo)
@@ -49,10 +49,10 @@ const services = {
     { id: "revisao-completa", name: "Revisão Completa", icon: Settings, duration: 480, price: 800, fullDay: true },
   ],
   diagnostico: [
-    { id: "eletrica", name: "Diagnóstico Elétrico", icon: Zap, duration: 60, price: 150, fullDay: false },
-    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 90, price: 200, fullDay: false },
-    { id: "injecao", name: "Diagnóstico de Injeção", icon: Droplets, duration: 60, price: 180, fullDay: false },
-    { id: "geral", name: "Check-up Geral", icon: Stethoscope, duration: 120, price: 250, fullDay: false },
+    { id: "eletrica", name: "Diagnóstico Elétrico", icon: Zap, duration: 480, price: 150, fullDay: true },
+    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 480, price: 200, fullDay: true },
+    { id: "injecao", name: "Diagnóstico de Injeção", icon: Droplets, duration: 480, price: 180, fullDay: true },
+    { id: "geral", name: "Check-up Geral", icon: Stethoscope, duration: 480, price: 250, fullDay: true },
     { id: "pericia", name: "Perícia Completa", icon: Stethoscope, duration: 480, price: 600, fullDay: true },
   ],
 };
@@ -108,12 +108,13 @@ const NovoAgendamento = () => {
   const advanceBonus = payInAdvance ? Math.round(priceAfterDiscount * 0.05) : 0;
   const finalPrice = priceAfterDiscount - advanceBonus;
 
-  // Verifica se algum serviço é de dia inteiro
-  const hasFullDayService = selectedServiceDetails.some(s => s.fullDay);
+  // Verifica se é diagnóstico (sempre dia inteiro) ou serviço de dia inteiro
+  const isDiagnostico = selectedType === "diagnostico";
+  const hasFullDayService = selectedServiceDetails.some(s => s.fullDay) || isDiagnostico;
   
-  // Horários disponíveis baseado na quantidade de serviços
+  // Horários disponíveis baseado no tipo e quantidade de serviços
   const getAvailableTimeSlots = () => {
-    if (hasFullDayService) return fullDaySlot;
+    if (isDiagnostico || hasFullDayService) return fullDaySlot;
     if (selectedServices.length >= 3) return morningSlots; // 3+ serviços = só manhã
     return allTimeSlots;
   };
@@ -476,7 +477,9 @@ const NovoAgendamento = () => {
 
             {selectedDate && (
               <>
-                <h3 className="text-base font-medium text-foreground mt-4">Horários disponíveis</h3>
+                <h3 className="text-base font-medium text-foreground mt-4">
+                  {isDiagnostico ? "Recebimento do veículo" : "Horários disponíveis"}
+                </h3>
                 
                 {selectedServices.length >= 3 && !hasFullDayService && (
                   <p className="text-xs text-amber-500 bg-amber-500/10 rounded-lg px-3 py-2 mb-2">
@@ -484,7 +487,13 @@ const NovoAgendamento = () => {
                   </p>
                 )}
                 
-                {hasFullDayService && (
+                {isDiagnostico && (
+                  <p className="text-xs text-primary bg-primary/10 rounded-lg px-3 py-2 mb-2">
+                    Diagnóstico requer pelo menos 1 dia com o veículo. Receba imediatamente se preferir.
+                  </p>
+                )}
+                
+                {hasFullDayService && !isDiagnostico && (
                   <p className="text-xs text-primary bg-primary/10 rounded-lg px-3 py-2 mb-2">
                     Serviço de dia inteiro selecionado. Início às 08:00.
                   </p>
