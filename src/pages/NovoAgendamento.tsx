@@ -1037,28 +1037,40 @@ const NovoAgendamento = () => {
 
               {/* Advance Payment Bonus */}
               {!hasVariablePrice ? (
-                <button
-                  onClick={() => setPayInAdvance(!payInAdvance)}
-                  className={cn(
-                    "w-full flex items-center gap-3 p-3 rounded-xl transition-all",
-                    payInAdvance ? "bg-amber-500/20 ring-2 ring-amber-500" : "bg-muted/50"
-                  )}
-                >
-                  <Checkbox 
-                    checked={payInAdvance}
-                    className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
-                  />
-                  <div className="flex-1 text-left">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-amber-500" />
-                      <span className="font-medium text-foreground">Pagar antecipado</span>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setPayInAdvance(!payInAdvance)}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-3 rounded-xl transition-all",
+                      payInAdvance ? "bg-amber-500/20 ring-2 ring-amber-500" : "bg-muted/50"
+                    )}
+                  >
+                    <Checkbox 
+                      checked={payInAdvance}
+                      className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                    />
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-amber-500" />
+                        <span className="font-medium text-foreground">Pagar antecipado</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Ganhe 5% extra de desconto</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">Ganhe 5% extra de desconto</p>
-                  </div>
+                    {payInAdvance && (
+                      <span className="text-sm font-bold text-amber-500">-R$ {advanceBonus}</span>
+                    )}
+                  </button>
+                  
                   {payInAdvance && (
-                    <span className="text-sm font-bold text-amber-500">-R$ {advanceBonus}</span>
+                    <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                      <Calendar className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                        <span className="font-medium">Reagendamento garantido:</span> Precisou remarcar? Sem problema! 
+                        Reagende pelo app ou entre em contato conosco.
+                      </p>
+                    </div>
                   )}
-                </button>
+                </div>
               ) : (
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10">
                   <Phone className="w-5 h-5 text-amber-500" />
