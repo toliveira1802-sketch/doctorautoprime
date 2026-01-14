@@ -9,12 +9,9 @@ export function Header() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <img src={logo} alt="Doctor Auto Prime" className="w-10 h-10 object-contain" />
-            <div>
-              <h1 className="font-bold text-lg text-foreground tracking-tight">
-                Doctor Auto Prime
-              </h1>
-              <p className="text-xs text-muted-foreground">Auto Cuidado</p>
-            </div>
+            <h1 className="font-bold text-lg text-foreground tracking-tight">
+              Doctor Auto Prime
+            </h1>
           </div>
 
           {/* Actions */}
