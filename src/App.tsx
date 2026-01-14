@@ -11,6 +11,7 @@ import VerifyOTP from "./pages/VerifyOTP";
 import BiometricSetup from "./pages/BiometricSetup";
 import Agenda from "./pages/Agenda";
 import NovoAgendamento from "./pages/NovoAgendamento";
+import AgendamentoSucesso from "./pages/AgendamentoSucesso";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <NovoAgendamento />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/agendamento-sucesso" 
+        element={
+          <ProtectedRoute>
+            <AgendamentoSucesso />
           </ProtectedRoute>
         } 
       />

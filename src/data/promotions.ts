@@ -1,14 +1,18 @@
 // Dados compartilhados de promoções e eventos Prime
-import { isWithinInterval } from "date-fns";
+import { isWithinInterval, addDays, startOfDay } from "date-fns";
 
 export interface PrimePromotion {
   id: string;
   title: string;
   description: string;
   discount: string;
+  discountPercent: number; // Percentual real do desconto
   validFrom: Date;
   validTo: Date;
   vehicleModels: string[]; // Modelos elegíveis (vazio = todos)
+  serviceId?: string; // Serviço específico da promoção (opcional)
+  serviceName?: string; // Nome do serviço
+  availableDates?: Date[]; // Datas específicas disponíveis (opcional)
 }
 
 export interface PrimeEvent {
@@ -33,27 +37,57 @@ export const mockPromotions: PrimePromotion[] = [
     title: "Troca de Óleo VW",
     description: "Troca de óleo sintético com 30% OFF para veículos VW",
     discount: "30% OFF",
+    discountPercent: 30,
     validFrom: new Date(2026, 0, 1),
     validTo: new Date(2026, 1, 28),
     vehicleModels: ["VW Golf", "VW Polo", "VW T-Cross", "VW Virtus"],
+    serviceId: "troca-oleo",
+    serviceName: "Troca de Óleo",
+    // Datas disponíveis específicas para esta promoção
+    availableDates: [
+      addDays(startOfDay(new Date()), 2),
+      addDays(startOfDay(new Date()), 3),
+      addDays(startOfDay(new Date()), 5),
+      addDays(startOfDay(new Date()), 8),
+      addDays(startOfDay(new Date()), 10),
+      addDays(startOfDay(new Date()), 12),
+      addDays(startOfDay(new Date()), 15),
+    ],
   },
   {
     id: "2",
     title: "Revisão Fiat Argo",
     description: "Revisão completa com preço especial exclusivo",
     discount: "25% OFF",
+    discountPercent: 25,
     validFrom: new Date(2026, 0, 15),
     validTo: new Date(2026, 2, 15),
     vehicleModels: ["Fiat Argo", "Fiat Cronos", "Fiat Mobi"],
+    serviceId: "revisao-completa",
+    serviceName: "Revisão Completa",
+    availableDates: [
+      addDays(startOfDay(new Date()), 4),
+      addDays(startOfDay(new Date()), 7),
+      addDays(startOfDay(new Date()), 11),
+      addDays(startOfDay(new Date()), 14),
+    ],
   },
   {
     id: "3",
     title: "Check-up Grátis Premium",
     description: "Diagnóstico completo gratuito para todos os modelos",
     discount: "GRÁTIS",
+    discountPercent: 100,
     validFrom: new Date(2026, 1, 1),
     validTo: new Date(2026, 1, 15),
     vehicleModels: [], // Vazio = todos os modelos
+    serviceId: "geral",
+    serviceName: "Check-up Geral",
+    availableDates: [
+      addDays(startOfDay(new Date()), 6),
+      addDays(startOfDay(new Date()), 9),
+      addDays(startOfDay(new Date()), 13),
+    ],
   },
 ];
 
