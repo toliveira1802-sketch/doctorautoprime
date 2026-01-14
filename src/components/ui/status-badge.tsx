@@ -10,22 +10,22 @@ interface StatusBadgeProps {
 const statusConfig: Record<StatusType, { label: string; colors: string; icon: string }> = {
   received: {
     label: "Recebido",
-    colors: "bg-primary/20 text-primary border-primary/30",
+    colors: "bg-secondary text-foreground border-border",
     icon: "📥",
   },
   diagnosis: {
     label: "Em Diagnóstico",
-    colors: "bg-warning/20 text-warning border-warning/30",
+    colors: "bg-primary/20 text-primary border-primary/30",
     icon: "🔍",
   },
   pending: {
     label: "Aguardando Aprovação",
-    colors: "bg-violet/20 text-violet border-violet/30",
+    colors: "bg-warning/20 text-warning border-warning/30",
     icon: "⏳",
   },
   executing: {
     label: "Em Execução",
-    colors: "bg-brand-light/20 text-brand-light border-brand-light/30",
+    colors: "bg-primary/15 text-primary border-primary/25",
     icon: "🔧",
   },
   ready: {
