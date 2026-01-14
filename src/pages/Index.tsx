@@ -2,7 +2,6 @@ import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { VehicleCard } from "@/components/vehicle/VehicleCard";
 import { ServiceTimeline } from "@/components/service/ServiceTimeline";
-import { QuickActions } from "@/components/home/QuickActions";
 import vehicleImage from "@/assets/vehicle-suv.jpg";
 
 const Index = () => {
@@ -19,11 +18,6 @@ const Index = () => {
           <p className="text-muted-foreground">
             Seu veículo está sendo cuidado agora.
           </p>
-        </section>
-
-        {/* Quick Actions */}
-        <section>
-          <QuickActions />
         </section>
 
         {/* Active Vehicle */}
