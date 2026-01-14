@@ -13,6 +13,8 @@ import Agenda from "./pages/Agenda";
 import NovoAgendamento from "./pages/NovoAgendamento";
 import AgendamentoSucesso from "./pages/AgendamentoSucesso";
 import Reagendamento from "./pages/Reagendamento";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +74,23 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Reagendamento />
+          </ProtectedRoute>
+        } 
+      />
+      {/* Admin Routes */}
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/agendamentos" 
+        element={
+          <ProtectedRoute>
+            <AdminAgendamentos />
           </ProtectedRoute>
         } 
       />
