@@ -5,7 +5,7 @@ import {
   ClipboardCheck, Package, Wrench, ChevronDown, ChevronUp,
   Camera, X, Image, Gauge, Zap, Activity, ShieldCheck, FileSearch, 
   Cog, Compass, AlertTriangle, CheckCircle, XCircle, AlertCircle,
-  Target, TrendingUp, Trash2, ChevronRight
+  Target, TrendingUp, Trash2, ChevronRight, History, Calendar
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -59,6 +59,24 @@ export default function AdminNovaOS() {
   const [statusVeiculo, setStatusVeiculo] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showHistorico, setShowHistorico] = useState(false);
+
+  // Fetch vehicle history
+  const { data: historicoVeiculo = [] } = useQuery({
+    queryKey: ["historico-veiculo", selectedClient?.plate],
+    queryFn: async () => {
+      if (!selectedClient?.plate) return [];
+      const { data, error } = await supabase
+        .from("ordens_servico")
+        .select("*")
+        .eq("plate", selectedClient.plate)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!selectedClient?.plate,
+  });
 
   // Expandable sections state
   const [checklistOpen, setChecklistOpen] = useState(true);
@@ -609,6 +627,21 @@ export default function AdminNovaOS() {
                     </Select>
                   </div>
                 </div>
+
+                {/* Botão Histórico */}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowHistorico(true)}
+                  className="w-full gap-2"
+                >
+                  <History className="w-4 h-4" />
+                  Ver Histórico do Veículo
+                  {historicoVeiculo.length > 0 && (
+                    <Badge variant="secondary" className="ml-auto">
+                      {historicoVeiculo.length} OS
+                    </Badge>
+                  )}
+                </Button>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1478,6 +1511,88 @@ export default function AdminNovaOS() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Histórico do Veículo */}
+      <Dialog open={showHistorico} onOpenChange={setShowHistorico}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-5 h-5" />
+              Histórico do Veículo
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedClient && (
+            <div className="space-y-4">
+              {/* Info do Veículo */}
+              <div className="p-4 bg-muted/50 rounded-lg border">
+                <div className="flex items-center gap-4">
+                  <Car className="w-10 h-10 text-primary" />
+                  <div>
+                    <p className="font-mono text-lg font-bold">{selectedClient.plate}</p>
+                    <p className="text-muted-foreground">
+                      {selectedClient.brand} {selectedClient.model} {selectedClient.year && `• ${selectedClient.year}`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de OS */}
+              {historicoVeiculo.length > 0 ? (
+                <div className="space-y-3">
+                  {historicoVeiculo.map((os: any) => (
+                    <div 
+                      key={os.id} 
+                      className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/admin/os/${os.id}`)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-mono">
+                              {os.numero_os || 'S/N'}
+                            </Badge>
+                            <Badge 
+                              variant={
+                                os.status === 'concluido' ? 'default' :
+                                os.status === 'em_execucao' ? 'secondary' :
+                                'outline'
+                              }
+                            >
+                              {os.status}
+                            </Badge>
+                          </div>
+                          {os.descricao_problema && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {os.descricao_problema}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(os.created_at).toLocaleDateString('pt-BR')}
+                          </div>
+                          {os.valor_final && (
+                            <p className="font-medium text-foreground mt-1">
+                              R$ {os.valor_final.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>Nenhum histórico encontrado para este veículo</p>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AdminLayout>
