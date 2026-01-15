@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Search, Filter, Check, X, Clock, Phone, MessageSquare, Eye, ChevronDown } from "lucide-react";
+import { Calendar, Search, Check, X, Clock, Phone, MessageSquare, Eye, ChevronDown, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -155,7 +155,7 @@ const AdminAgendamentos = () => {
     <AdminLayout>
       <div className="p-6 space-y-6">
         {/* Header & Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -165,22 +165,13 @@ const AdminAgendamentos = () => {
               className="pl-10 bg-background/50"
             />
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {["all", "pendente", "diagnostico", "em_execucao", "pronto_retirada", "concluido"].map((status) => (
-              <Button
-                key={status}
-                variant={statusFilter === status ? "default" : "outline"}
-                size="sm"
-                onClick={() => setStatusFilter(status)}
-                className={cn(
-                  "text-xs",
-                  statusFilter === status && "gradient-primary text-primary-foreground"
-                )}
-              >
-                {status === "all" ? "Todos" : statusConfig[status as keyof typeof statusConfig]?.label}
-              </Button>
-            ))}
-          </div>
+          <Button
+            onClick={() => navigate("/admin/nova-os")}
+            className="gradient-primary text-primary-foreground shrink-0"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Agendamento
+          </Button>
         </div>
 
         {/* Appointments List */}
