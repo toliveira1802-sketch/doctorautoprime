@@ -1,19 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface User {
-  phone: string;
-  name: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  biometricEnabled: boolean;
-  login: (phone: string) => void;
-  verifyOTP: (otp: string) => boolean;
-  enableBiometric: () => void;
-  skipBiometric: () => void;
-  logout: () => void;
+  session: Session | null;
+  isLoading: boolean;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,72 +27,91 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check localStorage for existing session
-    const savedUser = localStorage.getItem('drprime_user');
-    const savedBiometric = localStorage.getItem('drprime_biometric');
-    
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-    }
-    if (savedBiometric === 'true') {
-      setBiometricEnabled(true);
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (phone: string) => {
-    // Store phone temporarily for OTP verification
-    localStorage.setItem('drprime_pending_phone', phone);
-  };
+  const signUp = async (email: string, password: string, fullName: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: window.location.origin,
+        },
+      });
 
-  const verifyOTP = (otp: string): boolean => {
-    // Mock verification - accepts any 6-digit code
-    if (otp.length === 6) {
-      const phone = localStorage.getItem('drprime_pending_phone') || '';
-      const newUser = { phone, name: 'Usuário' };
-      setUser(newUser);
-      localStorage.setItem('drprime_user', JSON.stringify(newUser));
-      localStorage.removeItem('drprime_pending_phone');
-      return true;
+      if (error) {
+        console.error('SignUp error:', error);
+        return { error };
+      }
+
+      return { error: null };
+    } catch (err) {
+      console.error('SignUp exception:', err);
+      return { error: err as Error };
     }
-    return false;
   };
 
-  const enableBiometric = () => {
-    setBiometricEnabled(true);
-    setIsAuthenticated(true);
-    localStorage.setItem('drprime_biometric', 'true');
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('SignIn error:', error);
+        return { error };
+      }
+
+      return { error: null };
+    } catch (err) {
+      console.error('SignIn exception:', err);
+      return { error: err as Error };
+    }
   };
 
-  const skipBiometric = () => {
-    setIsAuthenticated(true);
-  };
-
-  const logout = () => {
-    setIsAuthenticated(false);
+  const signOut = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    setBiometricEnabled(false);
-    localStorage.removeItem('drprime_user');
-    localStorage.removeItem('drprime_biometric');
-    localStorage.removeItem('drprime_pending_phone');
+    setSession(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated,
+        isAuthenticated: !!session,
         user,
-        biometricEnabled,
-        login,
-        verifyOTP,
-        enableBiometric,
-        skipBiometric,
-        logout,
+        session,
+        isLoading,
+        signUp,
+        signIn,
+        signOut,
       }}
     >
       {children}

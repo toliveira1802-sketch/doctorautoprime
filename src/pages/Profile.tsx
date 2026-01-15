@@ -35,7 +35,7 @@ const loyaltyConfig = {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -61,7 +61,7 @@ export default function Profile() {
         // Mock data for demo
         setProfile({
           id: "1",
-          full_name: user?.name || "João Silva",
+          full_name: user?.user_metadata?.full_name || "Usuário",
           phone: user?.phone || "(11) 99999-9999",
           cpf: "***.***.***-00",
           avatar_url: null,
@@ -75,7 +75,7 @@ export default function Profile() {
       // Use mock data on error
       setProfile({
         id: "1",
-        full_name: user?.name || "João Silva",
+        full_name: user?.user_metadata?.full_name || "Usuário",
         phone: user?.phone || "(11) 99999-9999",
         cpf: "***.***.***-00",
         avatar_url: null,
@@ -88,8 +88,8 @@ export default function Profile() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
     toast.success("Você saiu da sua conta");
   };
