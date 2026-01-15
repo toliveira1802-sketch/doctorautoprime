@@ -25,6 +25,9 @@ import AdminPatioDetalhes from "./pages/admin/AdminPatioDetalhes";
 import AdminPatio from "./pages/admin/AdminPatio";
 import AdminMechanicFeedback from "./pages/admin/AdminMechanicFeedback";
 import AdminMechanicAnalytics from "./pages/admin/AdminMechanicAnalytics";
+import AdminClientes from "./pages/admin/AdminClientes";
+import AdminServicos from "./pages/admin/AdminServicos";
+import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
 import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
@@ -217,6 +220,36 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <AdminMechanicAnalytics />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/clientes" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminClientes />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/servicos" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminServicos />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/configuracoes" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminConfiguracoes />
             </AdminRoute>
           </ProtectedRoute>
         } 
