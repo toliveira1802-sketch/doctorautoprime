@@ -74,9 +74,9 @@ const dashboardModule: AdminMenuGroup = {
   roles: ["admin", "oficina"],
   items: [
     { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["admin", "oficina"] },
-    { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "oficina"] },
-    { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["admin"] },
     { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["admin"] },
+    { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["admin"] },
+    { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "oficina"] },
   ],
 };
 
