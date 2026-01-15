@@ -55,13 +55,12 @@ type AdminMenuGroup = {
   items: AdminMenuItem[];
 };
 
-// MODULE: Operacional (admin + oficina)
+// MODULE: Operacional (oficina, gestao, direcao)
 const operacionalModule: AdminMenuGroup = {
   label: "Operacional",
   icon: Gauge,
   roles: ["admin", "oficina"],
   items: [
-    { title: "Dashboard", url: "/admin", icon: BarChart3, roles: ["admin", "oficina"] },
     { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "oficina"] },
     { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "oficina"] },
     { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "oficina"] },
