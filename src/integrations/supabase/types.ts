@@ -365,6 +365,8 @@ export type Database = {
           loyalty_points: number | null
           phone: string | null
           priority_score: number | null
+          referral_cashback_applied: boolean | null
+          referral_source: string | null
           tags: string[] | null
           updated_at: string
           user_id: string
@@ -383,6 +385,8 @@ export type Database = {
           loyalty_points?: number | null
           phone?: string | null
           priority_score?: number | null
+          referral_cashback_applied?: boolean | null
+          referral_source?: string | null
           tags?: string[] | null
           updated_at?: string
           user_id: string
@@ -401,6 +405,8 @@ export type Database = {
           loyalty_points?: number | null
           phone?: string | null
           priority_score?: number | null
+          referral_cashback_applied?: boolean | null
+          referral_source?: string | null
           tags?: string[] | null
           updated_at?: string
           user_id?: string
@@ -494,6 +500,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referral_campaigns: {
+        Row: {
+          cashback_points: number
+          code: string
+          created_at: string
+          current_uses: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          name: string
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          cashback_points?: number
+          code: string
+          created_at?: string
+          current_uses?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          name: string
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          cashback_points?: number
+          code?: string
+          created_at?: string
+          current_uses?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          name?: string
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: []
       }
       services: {
         Row: {
