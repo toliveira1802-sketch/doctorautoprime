@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Car, User, Phone, FileText, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Save, Car, User, Phone, FileText, Loader2, Search, Zap } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -129,17 +129,14 @@ export default function AdminNovaOS() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, quickCreate = false) => {
     e.preventDefault();
+    await createOS(quickCreate);
+  };
 
-    if (!formData.plate.trim() || !formData.vehicle.trim()) {
-      toast.error("Placa e veículo são obrigatórios");
-      return;
-    }
-
+  const createOS = async (quickCreate = false) => {
     setIsSubmitting(true);
     try {
-      // Gerar número da OS
       const now = new Date();
       const numeroOS = `OS-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
 
@@ -147,8 +144,8 @@ export default function AdminNovaOS() {
         .from("ordens_servico")
         .insert([{
           numero_os: numeroOS,
-          plate: formData.plate.trim().toUpperCase(),
-          vehicle: formData.vehicle.trim(),
+          plate: formData.plate.trim().toUpperCase() || "PENDENTE",
+          vehicle: formData.vehicle.trim() || "A identificar",
           client_name: formData.client_name.trim() || null,
           client_phone: formData.client_phone.trim() || null,
           km_atual: formData.km_atual.trim() || null,
@@ -336,14 +333,27 @@ export default function AdminNovaOS() {
             </CardContent>
           </Card>
 
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <Button 
               type="button" 
               variant="outline" 
-              className="flex-1"
               onClick={() => navigate(-1)}
             >
               Cancelar
+            </Button>
+            <Button 
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              disabled={isSubmitting}
+              onClick={() => createOS(true)}
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Zap className="w-4 h-4 mr-2" />
+              )}
+              Criar Rápido
             </Button>
             <Button 
               type="submit" 
