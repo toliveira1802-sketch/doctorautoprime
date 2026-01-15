@@ -4,10 +4,12 @@ import {
   Search, Plus, User, Car, Loader2, FileText, 
   ClipboardCheck, Package, Wrench, ChevronDown, ChevronUp,
   Camera, X, Image, Gauge, Zap, Activity, ShieldCheck, FileSearch, 
-  Cog, Compass, AlertTriangle, CheckCircle, XCircle, AlertCircle
+  Cog, Compass, AlertTriangle, CheckCircle, XCircle, AlertCircle,
+  Target, TrendingUp, Trash2, ChevronRight
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,6 +134,100 @@ export default function AdminNovaOS() {
 
   // Parecer pré-compra
   const [parecerPreCompra, setParecerPreCompra] = useState<'recomendada' | 'ressalvas' | 'nao_comprar' | ''>('');
+
+  // Produtos Isca com Upsell
+  interface ProdutoIsca {
+    id: string;
+    nome: string;
+    preco: number;
+    upsells: { id: string; nome: string; preco: number; selecionado: boolean }[];
+  }
+
+  const produtosIscaDisponiveis: ProdutoIsca[] = [
+    {
+      id: '1',
+      nome: 'Troca de Óleo',
+      preco: 150,
+      upsells: [
+        { id: '1a', nome: 'Filtro de Óleo Premium', preco: 45, selecionado: false },
+        { id: '1b', nome: 'Aditivo para Motor', preco: 35, selecionado: false },
+        { id: '1c', nome: 'Limpeza de Cárter', preco: 80, selecionado: false },
+      ]
+    },
+    {
+      id: '2',
+      nome: 'Alinhamento',
+      preco: 120,
+      upsells: [
+        { id: '2a', nome: 'Balanceamento', preco: 80, selecionado: false },
+        { id: '2b', nome: 'Rodízio de Pneus', preco: 40, selecionado: false },
+        { id: '2c', nome: 'Geometria Completa', preco: 150, selecionado: false },
+      ]
+    },
+    {
+      id: '3',
+      nome: 'Diagnóstico Eletrônico',
+      preco: 80,
+      upsells: [
+        { id: '3a', nome: 'Limpeza de Bicos', preco: 180, selecionado: false },
+        { id: '3b', nome: 'Reset de ECU', preco: 60, selecionado: false },
+        { id: '3c', nome: 'Atualização de Software', preco: 120, selecionado: false },
+      ]
+    },
+    {
+      id: '4',
+      nome: 'Revisão de Freios',
+      preco: 100,
+      upsells: [
+        { id: '4a', nome: 'Pastilhas Cerâmicas', preco: 250, selecionado: false },
+        { id: '4b', nome: 'Troca de Fluido', preco: 80, selecionado: false },
+        { id: '4c', nome: 'Discos Ventilados', preco: 450, selecionado: false },
+      ]
+    },
+    {
+      id: '5',
+      nome: 'Check-up Completo',
+      preco: 200,
+      upsells: [
+        { id: '5a', nome: 'Higienização A/C', preco: 120, selecionado: false },
+        { id: '5b', nome: 'Troca de Filtros', preco: 150, selecionado: false },
+        { id: '5c', nome: 'Limpeza de Radiador', preco: 90, selecionado: false },
+      ]
+    },
+  ];
+
+  const [produtosSelecionados, setProdutosSelecionados] = useState<ProdutoIsca[]>([]);
+  const [produtosOpen, setProdutosOpen] = useState(false);
+
+  const adicionarProdutoIsca = (produto: ProdutoIsca) => {
+    if (!produtosSelecionados.find(p => p.id === produto.id)) {
+      setProdutosSelecionados([...produtosSelecionados, { ...produto, upsells: produto.upsells.map(u => ({ ...u })) }]);
+    }
+  };
+
+  const removerProdutoIsca = (produtoId: string) => {
+    setProdutosSelecionados(produtosSelecionados.filter(p => p.id !== produtoId));
+  };
+
+  const toggleUpsell = (produtoId: string, upsellId: string) => {
+    setProdutosSelecionados(produtosSelecionados.map(p => {
+      if (p.id === produtoId) {
+        return {
+          ...p,
+          upsells: p.upsells.map(u => u.id === upsellId ? { ...u, selecionado: !u.selecionado } : u)
+        };
+      }
+      return p;
+    }));
+  };
+
+  const calcularTotalProdutos = () => {
+    return produtosSelecionados.reduce((total, p) => {
+      const upsellsTotal = p.upsells.filter(u => u.selecionado).reduce((t, u) => t + u.preco, 0);
+      return total + p.preco + upsellsTotal;
+    }, 0);
+  };
+
   // Photos state
   const [photos, setPhotos] = useState<File[]>([]);
   const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
@@ -1033,6 +1129,135 @@ export default function AdminNovaOS() {
                     </div>
                   </TabsContent>
                 </Tabs>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
+        {/* Produtos Isca com Upsell */}
+        <Collapsible open={produtosOpen} onOpenChange={setProdutosOpen}>
+          <Card className="bg-card/50 border-border/50">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardTitle className="flex items-center justify-between text-lg">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-5 h-5" />
+                    Produtos Isca
+                    {produtosSelecionados.length > 0 && (
+                      <Badge variant="secondary" className="ml-2">
+                        {produtosSelecionados.length} | R$ {calcularTotalProdutos().toFixed(2)}
+                      </Badge>
+                    )}
+                  </div>
+                  {produtosOpen ? (
+                    <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0 space-y-4">
+                {/* Produtos Disponíveis */}
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground font-medium">Adicionar produto:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {produtosIscaDisponiveis
+                      .filter(p => !produtosSelecionados.find(ps => ps.id === p.id))
+                      .map(produto => (
+                        <Button
+                          key={produto.id}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => adicionarProdutoIsca(produto)}
+                          className="gap-2"
+                        >
+                          <Plus className="w-3 h-3" />
+                          {produto.nome}
+                          <span className="text-muted-foreground">R$ {produto.preco}</span>
+                        </Button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Produtos Selecionados com Upsells */}
+                {produtosSelecionados.length > 0 ? (
+                  <div className="space-y-3">
+                    {produtosSelecionados.map(produto => (
+                      <div key={produto.id} className="border border-border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Target className="w-5 h-5 text-primary" />
+                            <div>
+                              <p className="font-semibold">{produto.nome}</p>
+                              <p className="text-sm text-muted-foreground">R$ {produto.preco.toFixed(2)}</p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removerProdutoIsca(produto.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Upsells */}
+                        <div className="pl-8 space-y-2">
+                          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <TrendingUp className="w-3 h-3" />
+                            Sugestões de Upsell:
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            {produto.upsells.map(upsell => (
+                              <button
+                                key={upsell.id}
+                                onClick={() => toggleUpsell(produto.id, upsell.id)}
+                                className={`p-2 rounded-lg border text-left transition-all ${
+                                  upsell.selecionado 
+                                    ? 'border-primary bg-primary/10 ring-1 ring-primary' 
+                                    : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">{upsell.nome}</span>
+                                  {upsell.selecionado && <CheckCircle className="w-4 h-4 text-primary" />}
+                                </div>
+                                <span className="text-xs text-muted-foreground">+ R$ {upsell.preco.toFixed(2)}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Subtotal do Produto */}
+                        {produto.upsells.some(u => u.selecionado) && (
+                          <div className="pl-8 pt-2 border-t border-dashed">
+                            <p className="text-sm">
+                              Subtotal: <span className="font-semibold">
+                                R$ {(produto.preco + produto.upsells.filter(u => u.selecionado).reduce((t, u) => t + u.preco, 0)).toFixed(2)}
+                              </span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Total Geral */}
+                    <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold">Total Produtos Isca:</span>
+                        <span className="text-xl font-bold text-primary">R$ {calcularTotalProdutos().toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Target className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Selecione produtos isca para sugerir ao cliente</p>
+                  </div>
+                )}
               </CardContent>
             </CollapsibleContent>
           </Card>
