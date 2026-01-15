@@ -1,35 +1,101 @@
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Car, Phone, Camera, FileText } from "lucide-react";
+import { ArrowLeft, Car, Phone, Camera, FileText, Loader2 } from "lucide-react";
 import { ServiceTimeline } from "@/components/service/ServiceTimeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface Vehicle {
+  id: string;
+  model: string;
+  brand: string | null;
+  plate: string;
+  year: string | null;
+}
+
+interface Appointment {
+  id: string;
+  appointment_date: string;
+  estimated_completion: string | null;
+  checklist_photos: string[] | null;
+  notes: string | null;
+  mechanic_notes: string | null;
+  status: string;
+}
 
 const ServicoDetalhes = () => {
   const navigate = useNavigate();
   const { vehicleId } = useParams();
 
-  // Mock data - será substituído por dados reais do banco
-  const vehicle = {
-    id: vehicleId,
-    model: "Civic",
-    brand: "Honda",
-    plate: "ABC-1234",
-    year: "2022",
-  };
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const service = {
-    status: "diagnosis" as const,
-    checkin_date: "15/01/2025",
-    estimated_completion: "17/01/2025",
-    mechanic: "João Silva",
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!vehicleId) {
+        setLoading(false);
+        return;
+      }
 
-  // Mock fotos do checklist
-  const checklistPhotos = [
-    "/placeholder.svg",
-    "/placeholder.svg",
-    "/placeholder.svg",
-  ];
+      try {
+        // Buscar veículo
+        const { data: vehicleData, error: vehicleError } = await supabase
+          .from("vehicles")
+          .select("id, model, brand, plate, year")
+          .eq("id", vehicleId)
+          .single();
+
+        if (vehicleError) throw vehicleError;
+        setVehicle(vehicleData);
+
+        // Buscar agendamento ativo mais recente para este veículo
+        const { data: appointmentData, error: appointmentError } = await supabase
+          .from("appointments")
+          .select("id, appointment_date, estimated_completion, checklist_photos, notes, mechanic_notes, status")
+          .eq("vehicle_id", vehicleId)
+          .in("status", ["pendente", "confirmado", "em_execucao"])
+          .order("appointment_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!appointmentError && appointmentData) {
+          setAppointment(appointmentData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [vehicleId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen gradient-bg dark flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!vehicle) {
+    return (
+      <div className="min-h-screen gradient-bg dark flex flex-col items-center justify-center p-6">
+        <Car className="w-16 h-16 text-muted-foreground mb-4" />
+        <h1 className="text-xl font-bold text-foreground mb-2">Veículo não encontrado</h1>
+        <Button onClick={() => navigate(-1)} variant="outline">
+          Voltar
+        </Button>
+      </div>
+    );
+  }
+
+  const checklistPhotos = appointment?.checklist_photos || [];
 
   return (
     <div className="min-h-screen gradient-bg dark flex flex-col">
@@ -69,16 +135,24 @@ const ServicoDetalhes = () => {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Entrada</p>
-                <p className="font-medium text-foreground">{service.checkin_date}</p>
+            {appointment && (
+              <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Entrada</p>
+                  <p className="font-medium text-foreground">
+                    {format(new Date(appointment.appointment_date), "dd/MM/yyyy", { locale: ptBR })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Previsão</p>
+                  <p className="font-medium text-foreground">
+                    {appointment.estimated_completion
+                      ? format(new Date(appointment.estimated_completion), "dd/MM/yyyy", { locale: ptBR })
+                      : "A definir"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-muted-foreground">Previsão</p>
-                <p className="font-medium text-foreground">{service.estimated_completion}</p>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
@@ -117,7 +191,7 @@ const ServicoDetalhes = () => {
           </CardContent>
         </Card>
 
-        {/* Notes/Observations - simplified for client */}
+        {/* Notes/Observations */}
         <Card className="glass-card border-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -127,7 +201,7 @@ const ServicoDetalhes = () => {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <p className="text-sm text-muted-foreground">
-              Veículo recebido em bom estado. Diagnóstico em andamento.
+              {appointment?.mechanic_notes || appointment?.notes || "Nenhuma observação registrada."}
             </p>
           </CardContent>
         </Card>

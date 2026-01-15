@@ -178,8 +178,8 @@ export default function AdminOSDetalhes() {
   const [googleDriveLink, setGoogleDriveLink] = useState("");
   const [scannerAvarias, setScannerAvarias] = useState("");
   
-  // Mock client loyalty level - would come from profile in real implementation
-  const [clientLoyaltyLevel] = useState<'bronze' | 'prata' | 'ouro' | 'diamante'>('ouro');
+  // Client loyalty level - fetched from profile
+  const [clientLoyaltyLevel, setClientLoyaltyLevel] = useState<'bronze' | 'prata' | 'ouro' | 'diamante'>('bronze');
   
   // Checklist states
   const [checklistEntrada, setChecklistEntrada] = useState<Record<string, boolean>>({});

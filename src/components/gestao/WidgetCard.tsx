@@ -144,15 +144,8 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
         setChartData(chartPoints);
       }
     } else {
-      // Dados mock para demonstração
-      setChartData([
-        { name: "Seg", value: Math.floor(Math.random() * 50) + 10 },
-        { name: "Ter", value: Math.floor(Math.random() * 50) + 10 },
-        { name: "Qua", value: Math.floor(Math.random() * 50) + 10 },
-        { name: "Qui", value: Math.floor(Math.random() * 50) + 10 },
-        { name: "Sex", value: Math.floor(Math.random() * 50) + 10 },
-        { name: "Sab", value: Math.floor(Math.random() * 50) + 10 },
-      ]);
+      // Sem dados disponíveis para esta fonte
+      setChartData([]);
     }
   }
 

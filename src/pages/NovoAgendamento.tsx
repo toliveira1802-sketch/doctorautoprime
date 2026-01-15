@@ -30,10 +30,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { 
-  mockPromotions, 
-  type PrimePromotion 
-} from "@/data/promotions";
+import { type PrimePromotion } from "@/data/promotions";
 import {
   trackFunnelEvent,
   generateSessionId,
@@ -121,9 +118,33 @@ const NovoAgendamento = () => {
   // Step 5: Payment option
   const [payInAdvance, setPayInAdvance] = useState(false);
   
-  // Cashback
+  // Cashback - buscar do perfil do usuário
   const [useCashback, setUseCashback] = useState(false);
-  const availableCashback = 298.50; // Mock - seria buscado do banco de dados
+  const [availableCashback, setAvailableCashback] = useState(0);
+
+  // Fetch cashback from user profile
+  useEffect(() => {
+    const fetchCashback = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("loyalty_points")
+          .eq("user_id", user.id)
+          .single();
+
+        if (profile?.loyalty_points) {
+          setAvailableCashback(profile.loyalty_points);
+        }
+      } catch (error) {
+        console.error("Error fetching cashback:", error);
+      }
+    };
+
+    fetchCashback();
+  }, []);
 
   // Fetch vehicles from database
   useEffect(() => {
