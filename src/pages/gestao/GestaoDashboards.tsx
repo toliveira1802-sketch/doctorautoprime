@@ -158,22 +158,6 @@ export default function GestaoDashboards() {
           );
         })}
 
-        {/* Add New Card */}
-        <AddDirectoryDialog onSuccess={refetch}>
-          <Card className="group relative overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col border-dashed border-2 hover:border-primary">
-            <CardContent className="p-6 flex flex-col items-center justify-center h-full text-center">
-              <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mb-4 group-hover:bg-primary/10 transition-colors">
-                <Plus className="w-7 h-7 text-muted-foreground group-hover:text-primary transition-colors" />
-              </div>
-              <h3 className="text-xl font-semibold text-muted-foreground mb-2 group-hover:text-primary transition-colors">
-                Novo Diretório
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Adicionar documentos, planilhas ou listas
-              </p>
-            </CardContent>
-          </Card>
-        </AddDirectoryDialog>
       </div>
     </div>
   );
