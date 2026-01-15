@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { Instagram, Youtube, ChevronDown, ChevronUp, Wrench, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronUp, Wrench, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 
@@ -62,24 +60,6 @@ const mockHistory: ServiceItem[] = [
   },
 ];
 
-const socialLinks = [
-  {
-    icon: Instagram,
-    label: "Instagram",
-    handle: "@drprime_oficial",
-    url: "https://instagram.com/drprime_oficial",
-    color: "from-purple-500 via-pink-500 to-orange-500",
-    bgColor: "bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10",
-  },
-  {
-    icon: Youtube,
-    label: "YouTube",
-    handle: "Dr. Prime",
-    url: "https://youtube.com/@drprime",
-    color: "from-red-600 to-red-500",
-    bgColor: "bg-red-500/10",
-  },
-];
 
 export default function Historico() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -204,36 +184,6 @@ export default function Historico() {
             )}
           </CardContent>
         </Card>
-
-        <Separator />
-
-        {/* Social Links */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold px-1">Siga a Dr. Prime</h2>
-          
-          {socialLinks.map((social) => (
-            <a
-              key={social.label}
-              href={social.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block"
-            >
-              <Card className={`border-0 shadow-md overflow-hidden hover:shadow-lg transition-shadow ${social.bgColor}`}>
-                <CardContent className="flex items-center gap-4 py-4">
-                  <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${social.color} flex items-center justify-center shadow-lg`}>
-                    <social.icon className="h-7 w-7 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">{social.label}</p>
-                    <p className="text-sm text-muted-foreground">{social.handle}</p>
-                  </div>
-                  <ExternalLink className="h-5 w-5 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </a>
-          ))}
-        </div>
 
         {/* Extra space for bottom nav */}
         <div className="h-4" />
