@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Menu } from "lucide-react";
+import { ViewSwitcher } from "./ViewSwitcher";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex-1">
               <h1 className="text-lg font-semibold text-foreground">Painel Gestão</h1>
             </div>
+            {/* View Switcher - Only for thales */}
+            <ViewSwitcher />
           </header>
           <main className="flex-1 overflow-y-auto">
             {children}
