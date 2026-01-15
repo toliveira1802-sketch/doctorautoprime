@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Search, Plus, User, Car } from "lucide-react";
+import { CalendarIcon, Search, Plus, User, Car, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,13 +24,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
-// Mock clients for search
-const mockClients = [
-  { id: "1", name: "João Silva", phone: "(11) 99999-1234", plate: "ABC-1234" },
-  { id: "2", name: "Maria Santos", phone: "(11) 98888-5678", plate: "XYZ-5678" },
-  { id: "3", name: "Pedro Oliveira", phone: "(11) 97777-9012", plate: "DEF-9012" },
-];
+interface ClientWithVehicle {
+  id: string;
+  user_id: string;
+  name: string;
+  phone: string;
+  plate: string;
+  vehicle_id: string;
+}
 
 const timeSlots = [
   "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
@@ -41,26 +45,79 @@ const timeSlots = [
 export default function AdminNovaOS() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedClient, setSelectedClient] = useState<typeof mockClients[0] | null>(null);
+  const [selectedClient, setSelectedClient] = useState<ClientWithVehicle | null>(null);
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredClients = mockClients.filter(
+  // Fetch clients with vehicles for search
+  const { data: clients = [] } = useQuery({
+    queryKey: ["admin-clients-vehicles"],
+    queryFn: async () => {
+      // Get all profiles (admin can see all)
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, user_id, full_name, phone");
+
+      if (profilesError) throw profilesError;
+
+      // Get all vehicles (admin can see all)
+      const { data: vehicles, error: vehiclesError } = await supabase
+        .from("vehicles")
+        .select("id, user_id, plate, model, brand");
+
+      if (vehiclesError) throw vehiclesError;
+
+      // Combine profiles with their vehicles
+      const clientsWithVehicles: ClientWithVehicle[] = [];
+      
+      for (const profile of profiles || []) {
+        const userVehicles = (vehicles || []).filter(v => v.user_id === profile.user_id);
+        
+        if (userVehicles.length > 0) {
+          for (const vehicle of userVehicles) {
+            clientsWithVehicles.push({
+              id: `${profile.id}-${vehicle.id}`,
+              user_id: profile.user_id,
+              name: profile.full_name || "Sem nome",
+              phone: profile.phone || "",
+              plate: vehicle.plate,
+              vehicle_id: vehicle.id,
+            });
+          }
+        } else {
+          // Client without vehicle
+          clientsWithVehicles.push({
+            id: profile.id,
+            user_id: profile.user_id,
+            name: profile.full_name || "Sem nome",
+            phone: profile.phone || "",
+            plate: "Sem veículo",
+            vehicle_id: "",
+          });
+        }
+      }
+
+      return clientsWithVehicles;
+    },
+  });
+
+  const filteredClients = clients.filter(
     (client) =>
       client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       client.phone.includes(searchQuery) ||
       client.plate.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelectClient = (client: typeof mockClients[0]) => {
+  const handleSelectClient = (client: ClientWithVehicle) => {
     setSelectedClient(client);
     setSearchQuery("");
     setIsSearching(false);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedClient) {
       toast.error("Selecione um cliente");
       return;
@@ -74,9 +131,28 @@ export default function AdminNovaOS() {
       return;
     }
 
-    // TODO: Save to database
-    toast.success("OS criada com sucesso!");
-    navigate("/admin/agendamentos");
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase.from("appointments").insert({
+        user_id: selectedClient.user_id,
+        vehicle_id: selectedClient.vehicle_id || null,
+        appointment_date: format(date, "yyyy-MM-dd"),
+        appointment_time: time,
+        notes: notes || null,
+        status: "pendente",
+      });
+
+      if (error) throw error;
+
+      toast.success("OS criada com sucesso!");
+      navigate("/admin/agendamentos");
+    } catch (error) {
+      console.error("Error creating OS:", error);
+      toast.error("Erro ao criar OS. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -132,7 +208,7 @@ export default function AdminNovaOS() {
                   </div>
 
                   {isSearching && searchQuery && (
-                    <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="border border-border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
                       {filteredClients.length > 0 ? (
                         filteredClients.map((client) => (
                           <button
@@ -238,11 +314,19 @@ export default function AdminNovaOS() {
           <Button
             variant="outline"
             onClick={() => navigate("/admin/agendamentos")}
+            disabled={isSubmitting}
           >
             Cancelar
           </Button>
-          <Button onClick={handleSubmit}>
-            Criar OS
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Criando...
+              </>
+            ) : (
+              "Criar OS"
+            )}
           </Button>
         </div>
       </div>
