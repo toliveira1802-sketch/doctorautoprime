@@ -15,7 +15,7 @@ interface ServiceItem {
   services: string[];
   total: number;
   status: "completed" | "cancelled";
-  pointsEarned: number;
+  cashback: number; // 15% do total
 }
 
 // Mock data - will be replaced with real data
@@ -28,7 +28,7 @@ const mockHistory: ServiceItem[] = [
     services: ["Revisão 30.000km", "Troca de óleo"],
     total: 890,
     status: "completed",
-    pointsEarned: 890,
+    cashback: 133.50, // 15% de 890
   },
   {
     id: "2",
@@ -38,7 +38,7 @@ const mockHistory: ServiceItem[] = [
     services: ["Revisão 20.000km"],
     total: 650,
     status: "completed",
-    pointsEarned: 650,
+    cashback: 97.50, // 15% de 650
   },
   {
     id: "3",
@@ -48,7 +48,7 @@ const mockHistory: ServiceItem[] = [
     services: ["Diagnóstico", "Troca de pastilhas"],
     total: 450,
     status: "completed",
-    pointsEarned: 450,
+    cashback: 67.50, // 15% de 450
   },
   {
     id: "4",
@@ -58,7 +58,7 @@ const mockHistory: ServiceItem[] = [
     services: ["Revisão 10.000km"],
     total: 420,
     status: "cancelled",
-    pointsEarned: 0,
+    cashback: 0,
   },
 ];
 
@@ -94,8 +94,7 @@ export default function Historico() {
   };
 
   const completedServices = mockHistory.filter(s => s.status === "completed");
-  const totalSpent = completedServices.reduce((acc, item) => acc + item.total, 0);
-  const totalPoints = completedServices.reduce((acc, item) => acc + item.pointsEarned, 0);
+  const totalCashback = completedServices.reduce((acc, item) => acc + item.cashback, 0);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -104,15 +103,19 @@ export default function Historico() {
         <h1 className="text-2xl font-bold text-white">Histórico</h1>
         <p className="text-white/80 mt-1">Seus serviços realizados</p>
         
-        {/* Stats */}
-        <div className="flex gap-4 mt-6">
-          <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-white/70 text-sm">Total gasto</p>
-            <p className="text-white text-xl font-bold">R$ {totalSpent.toLocaleString()}</p>
-          </div>
-          <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-white/70 text-sm">Pontos ganhos</p>
-            <p className="text-white text-xl font-bold">{totalPoints.toLocaleString()}</p>
+        {/* Cashback Card */}
+        <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white/70 text-sm">Seu cashback disponível</p>
+              <p className="text-white text-2xl font-bold">R$ {totalCashback.toFixed(2).replace('.', ',')}</p>
+            </div>
+            <div className="text-right">
+              <Badge className="bg-white/20 text-white border-0">
+                15% de volta
+              </Badge>
+              <p className="text-white/70 text-xs mt-1">para usar em serviços</p>
+            </div>
           </div>
         </div>
       </div>
@@ -184,7 +187,7 @@ export default function Historico() {
                     </ul>
                     {item.status === "completed" && (
                       <p className="text-sm text-green-600 font-medium">
-                        +{item.pointsEarned} pontos de fidelidade
+                        +R$ {item.cashback.toFixed(2).replace('.', ',')} de cashback
                       </p>
                     )}
                   </div>

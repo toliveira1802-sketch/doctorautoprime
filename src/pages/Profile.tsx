@@ -206,7 +206,7 @@ export default function Profile() {
 
         {/* Loyalty Card */}
         <LoyaltyCard 
-          points={profile?.loyalty_points || 0}
+          cashback={(profile?.loyalty_points || 0) * 0.15}
           level={profile?.loyalty_level || "bronze"}
           progress={progressToNext}
         />
