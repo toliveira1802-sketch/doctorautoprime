@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format, differenceInDays, parseISO } from "date-fns";
@@ -233,7 +232,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <BottomNavigation />
+      
 
       <EditProfileDialog 
         open={editDialogOpen} 
