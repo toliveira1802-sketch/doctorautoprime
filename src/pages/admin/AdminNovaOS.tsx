@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { 
   Search, Plus, User, Car, Loader2, FileText, 
   ClipboardCheck, Package, Wrench, ChevronDown, ChevronUp,
-  Camera, X, Image, Gauge, Zap, Activity
+  Camera, X, Image, Gauge, Zap, Activity, ShieldCheck, FileSearch, 
+  Cog, Compass, AlertTriangle, CheckCircle, XCircle, AlertCircle
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +55,7 @@ export default function AdminNovaOS() {
   const [servicosOpen, setServicosOpen] = useState(false);
 
   // Checklist type selection
-  const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro'>('entrada');
+  const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro' | 'precompra'>('entrada');
 
   // Checklist Entrada state
   const [checklistEntrada, setChecklistEntrada] = useState({
@@ -100,6 +102,36 @@ export default function AdminNovaOS() {
     torqueDepois: '',
   });
 
+  // Checklist Pré-Compra state
+  const [checklistPreCompra, setChecklistPreCompra] = useState({
+    // Histórico
+    manualRevisoes: false,
+    recallPendente: false,
+    sinaisLeilaoSinistro: false,
+    modificacoesNaoDeclaradas: false,
+    // Estrutura
+    longarinas: false,
+    colunas: false,
+    alinhamentoPortasCapo: false,
+    soldasForaPadrao: false,
+    // Mecânica profunda
+    compressaoMotor: false,
+    consumoOleo: false,
+    fumacaEscape: false,
+    temperaturaTrabalho: false,
+    // Eletrônica
+    scannerCompleto: false,
+    modulosFalhaHistorica: false,
+    kmRealCruzamento: false,
+    // Test drive
+    direcaoPuxa: false,
+    vibracoes: false,
+    trocasMarcha: false,
+    freadaAlta: false,
+  });
+
+  // Parecer pré-compra
+  const [parecerPreCompra, setParecerPreCompra] = useState<'recomendada' | 'ressalvas' | 'nao_comprar' | ''>('');
   // Photos state
   const [photos, setPhotos] = useState<File[]>([]);
   const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
@@ -597,15 +629,19 @@ export default function AdminNovaOS() {
             <CollapsibleContent>
               <CardContent className="pt-0 space-y-6">
                 {/* Checklist Type Selector */}
-                <Tabs value={checklistType} onValueChange={(v) => setChecklistType(v as 'entrada' | 'dinamometro')}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="entrada" className="flex items-center gap-2">
+                <Tabs value={checklistType} onValueChange={(v) => setChecklistType(v as 'entrada' | 'dinamometro' | 'precompra')}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="entrada" className="flex items-center gap-1 text-xs md:text-sm">
                       <ClipboardCheck className="w-4 h-4" />
-                      Entrada
+                      <span className="hidden sm:inline">Entrada</span>
                     </TabsTrigger>
-                    <TabsTrigger value="dinamometro" className="flex items-center gap-2">
+                    <TabsTrigger value="dinamometro" className="flex items-center gap-1 text-xs md:text-sm">
                       <Gauge className="w-4 h-4" />
-                      Dinamômetro
+                      <span className="hidden sm:inline">Dinamômetro</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="precompra" className="flex items-center gap-1 text-xs md:text-sm">
+                      <ShieldCheck className="w-4 h-4" />
+                      <span className="hidden sm:inline">Pré-Compra</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -813,6 +849,187 @@ export default function AdminNovaOS() {
                           </p>
                         </div>
                       )}
+                    </div>
+                  </TabsContent>
+
+                  {/* Checklist Pré-Compra */}
+                  <TabsContent value="precompra" className="mt-4 space-y-6">
+                    {/* Histórico */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <FileSearch className="w-4 h-4" />
+                        Histórico
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                        {[
+                          { key: "manualRevisoes", label: "Manual / revisões" },
+                          { key: "recallPendente", label: "Recall pendente" },
+                          { key: "sinaisLeilaoSinistro", label: "Sinais de leilão / sinistro" },
+                          { key: "modificacoesNaoDeclaradas", label: "Modificações não declaradas" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`precompra-${item.key}`}
+                              checked={checklistPreCompra[item.key as keyof typeof checklistPreCompra]}
+                              onCheckedChange={(checked) =>
+                                setChecklistPreCompra({ ...checklistPreCompra, [item.key]: checked === true })
+                              }
+                            />
+                            <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Estrutura */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <Car className="w-4 h-4" />
+                        Estrutura
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                        {[
+                          { key: "longarinas", label: "Longarinas" },
+                          { key: "colunas", label: "Colunas" },
+                          { key: "alinhamentoPortasCapo", label: "Alinhamento de portas e capô" },
+                          { key: "soldasForaPadrao", label: "Soldas fora do padrão" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`precompra-${item.key}`}
+                              checked={checklistPreCompra[item.key as keyof typeof checklistPreCompra]}
+                              onCheckedChange={(checked) =>
+                                setChecklistPreCompra({ ...checklistPreCompra, [item.key]: checked === true })
+                              }
+                            />
+                            <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Mecânica profunda */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <Cog className="w-4 h-4" />
+                        Mecânica profunda
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                        {[
+                          { key: "compressaoMotor", label: "Compressão do motor" },
+                          { key: "consumoOleo", label: "Consumo de óleo" },
+                          { key: "fumacaEscape", label: "Fumaça no escape" },
+                          { key: "temperaturaTrabalho", label: "Temperatura de trabalho" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`precompra-${item.key}`}
+                              checked={checklistPreCompra[item.key as keyof typeof checklistPreCompra]}
+                              onCheckedChange={(checked) =>
+                                setChecklistPreCompra({ ...checklistPreCompra, [item.key]: checked === true })
+                              }
+                            />
+                            <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Eletrônica */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <Zap className="w-4 h-4" />
+                        Eletrônica
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                        {[
+                          { key: "scannerCompleto", label: "Scanner completo" },
+                          { key: "modulosFalhaHistorica", label: "Módulos com falha histórica" },
+                          { key: "kmRealCruzamento", label: "Km real (cruzamento de módulos)" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`precompra-${item.key}`}
+                              checked={checklistPreCompra[item.key as keyof typeof checklistPreCompra]}
+                              onCheckedChange={(checked) =>
+                                setChecklistPreCompra({ ...checklistPreCompra, [item.key]: checked === true })
+                              }
+                            />
+                            <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Test drive */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <Compass className="w-4 h-4" />
+                        Test drive
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                        {[
+                          { key: "direcaoPuxa", label: "Direção puxa?" },
+                          { key: "vibracoes", label: "Vibrações" },
+                          { key: "trocasMarcha", label: "Trocas de marcha" },
+                          { key: "freadaAlta", label: "Freada em alta" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`precompra-${item.key}`}
+                              checked={checklistPreCompra[item.key as keyof typeof checklistPreCompra]}
+                              onCheckedChange={(checked) =>
+                                setChecklistPreCompra({ ...checklistPreCompra, [item.key]: checked === true })
+                              }
+                            />
+                            <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Parecer Final */}
+                    <div className="space-y-3 border-t border-border pt-4">
+                      <h4 className="font-semibold text-sm flex items-center gap-2">
+                        📌 Parecer final
+                      </h4>
+                      <RadioGroup
+                        value={parecerPreCompra}
+                        onValueChange={(v) => setParecerPreCompra(v as typeof parecerPreCompra)}
+                        className="space-y-2"
+                      >
+                        <div className="flex items-center space-x-3 p-3 rounded-lg border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 transition-colors cursor-pointer">
+                          <RadioGroupItem value="recomendada" id="parecer-recomendada" />
+                          <label htmlFor="parecer-recomendada" className="flex items-center gap-2 cursor-pointer flex-1">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <span className="font-medium text-green-700">Compra recomendada</span>
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 transition-colors cursor-pointer">
+                          <RadioGroupItem value="ressalvas" id="parecer-ressalvas" />
+                          <label htmlFor="parecer-ressalvas" className="flex items-center gap-2 cursor-pointer flex-1">
+                            <AlertCircle className="w-5 h-5 text-yellow-600" />
+                            <span className="font-medium text-yellow-700">Compra com ressalvas</span>
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 transition-colors cursor-pointer">
+                          <RadioGroupItem value="nao_comprar" id="parecer-nao-comprar" />
+                          <label htmlFor="parecer-nao-comprar" className="flex items-center gap-2 cursor-pointer flex-1">
+                            <XCircle className="w-5 h-5 text-red-600" />
+                            <span className="font-medium text-red-700">NÃO COMPRAR</span>
+                          </label>
+                        </div>
+                      </RadioGroup>
                     </div>
                   </TabsContent>
                 </Tabs>
