@@ -1,4 +1,4 @@
-import { MessageCircle, User } from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { ViewSwitcher } from "./ViewSwitcher";
@@ -21,18 +21,8 @@ export function Header() {
           {/* View Switcher - Only for thales */}
           <ViewSwitcher />
 
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <button className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors touch-target">
-              <MessageCircle className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
-            </button>
-            <button 
-              onClick={() => navigate("/perfil")}
-              className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors touch-target"
-            >
-              <User className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
-            </button>
-          </div>
+          {/* Spacer to balance layout */}
+          <div className="w-10" />
         </div>
       </div>
     </header>

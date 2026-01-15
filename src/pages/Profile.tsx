@@ -131,8 +131,8 @@ export default function Profile() {
       {/* Header */}
       <div className="relative">
         <div className="absolute inset-0 h-48 gradient-primary opacity-90" />
-        <div className="relative z-10 p-4 pt-12">
-          <div className="flex items-center justify-between mb-8">
+        <div className="relative z-10 p-4 pt-6">
+          <div className="flex items-center justify-between mb-6">
             <Button 
               variant="ghost" 
               size="icon" 
