@@ -497,6 +497,11 @@ export default function AdminNovaOS() {
       return;
     }
 
+    if (!tipoOS) {
+      toast.error("Selecione o tipo de atendimento (Diagnóstico ou Orçamento)");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -509,7 +514,7 @@ export default function AdminNovaOS() {
           client_name: selectedClient.name,
           client_phone: selectedClient.phone,
           descricao_problema: notes || null,
-          status: "orcamento",
+          status: tipoOS,
           data_entrada: new Date().toISOString(),
         }])
         .select()
@@ -518,7 +523,7 @@ export default function AdminNovaOS() {
       if (osError) throw osError;
 
       toast.success("OS aberta com sucesso!");
-      navigate(`/admin/ordens-servico/${osData.id}`);
+      navigate(`/admin/os/${osData.id}`);
     } catch (error) {
       console.error("Error creating OS:", error);
       toast.error("Erro ao abrir OS. Tente novamente.");
@@ -803,6 +808,42 @@ export default function AdminNovaOS() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Botão Abrir OS */}
+        {selectedClient && (
+          <Card className="bg-primary/5 border-primary/20">
+            <CardContent className="p-6">
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !tipoOS}
+                className="w-full h-14 text-lg font-semibold gap-3"
+                size="lg"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Abrindo OS...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-5 h-5" />
+                    Abrir Ordem de Serviço
+                    {tipoOS && (
+                      <Badge variant="secondary" className="ml-2">
+                        {tipoOS === 'diagnostico' ? 'Diagnóstico' : 'Orçamento'}
+                      </Badge>
+                    )}
+                  </>
+                )}
+              </Button>
+              {!tipoOS && (
+                <p className="text-sm text-muted-foreground text-center mt-2">
+                  Selecione o tipo de atendimento acima para continuar
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Checklist Section */}
         <Collapsible open={checklistOpen} onOpenChange={setChecklistOpen}>
