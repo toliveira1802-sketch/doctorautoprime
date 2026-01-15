@@ -516,6 +516,11 @@ export default function AdminNovaOS() {
           descricao_problema: notes || null,
           status: tipoOS,
           data_entrada: new Date().toISOString(),
+          checklist_entrada: checklistEntrada,
+          checklist_dinamometro: checklistDyno,
+          checklist_precompra: checklistPreCompra,
+          fotos_entrada: photosPreviews,
+          km_atual: null,
         }])
         .select()
         .single();
@@ -523,7 +528,7 @@ export default function AdminNovaOS() {
       if (osError) throw osError;
 
       toast.success("OS aberta com sucesso!");
-      navigate(`/admin/os/${osData.id}`);
+      navigate(`/admin/ordens-servico/${osData.id}`);
     } catch (error) {
       console.error("Error creating OS:", error);
       toast.error("Erro ao abrir OS. Tente novamente.");
