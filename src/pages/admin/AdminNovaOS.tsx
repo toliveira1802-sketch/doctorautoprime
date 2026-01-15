@@ -82,6 +82,9 @@ export default function AdminNovaOS() {
   const [checklistOpen, setChecklistOpen] = useState(true);
   const [pecasOpen, setPecasOpen] = useState(false);
   const [servicosOpen, setServicosOpen] = useState(false);
+  
+  // Tipo de OS (diagnostico ou orçamento)
+  const [tipoOS, setTipoOS] = useState<'diagnostico' | 'orcamento' | ''>('');
 
   // Checklist type selection
   const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro' | 'precompra'>('entrada');
@@ -549,99 +552,114 @@ export default function AdminNovaOS() {
           </CardHeader>
           <CardContent className="space-y-4">
             {selectedClient ? (
-              <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="font-semibold text-foreground text-lg">{selectedClient.name}</p>
-                    <p className="text-sm text-muted-foreground">{selectedClient.phone}</p>
+              <div className="space-y-4">
+                {/* Cliente Info */}
+                <div className="flex items-start justify-between p-4 bg-muted/30 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-lg">{selectedClient.name}</p>
+                      <p className="text-sm text-muted-foreground">{selectedClient.phone}</p>
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedClient(null)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedClient(null)}>
                     Trocar
                   </Button>
                 </div>
-                
-                {/* Vehicle Data Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-background/50 rounded-lg">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Placa</p>
-                    <p className="font-mono font-semibold text-foreground">{selectedClient.plate}</p>
+
+                {/* Veículo Info */}
+                <div className="p-4 bg-background border rounded-lg space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Car className="w-5 h-5 text-primary" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-lg">{selectedClient.plate}</span>
+                        <span className="text-muted-foreground">•</span>
+                        <span className="font-medium">
+                          {selectedClient.brand} {selectedClient.model}
+                        </span>
+                        {selectedClient.year && (
+                          <>
+                            <span className="text-muted-foreground">•</span>
+                            <span className="text-muted-foreground">{selectedClient.year}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Marca</p>
-                    <p className="font-medium text-foreground">{selectedClient.brand || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Modelo</p>
-                    <p className="font-medium text-foreground">{selectedClient.model || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Ano</p>
-                    <p className="font-medium text-foreground">{selectedClient.year || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Cor</p>
-                    <p className="font-medium text-foreground">{selectedClient.color || "-"}</p>
+                  
+                  {/* Flag de Retorno + Histórico */}
+                  <div className="flex items-center gap-3 pt-2 border-t">
+                    {historicoVeiculo.length > 0 ? (
+                      <Badge className="bg-green-500/10 text-green-600 border-green-500/30 gap-1">
+                        <History className="w-3 h-3" />
+                        Cliente Retorno ({historicoVeiculo.length} OS)
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="gap-1">
+                        <User className="w-3 h-3" />
+                        Primeira Visita
+                      </Badge>
+                    )}
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => setShowHistorico(true)}
+                      className="text-primary p-0 h-auto"
+                    >
+                      Ver Histórico Completo →
+                    </Button>
                   </div>
                 </div>
 
-                {/* KM e Status do Veículo */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                  <div className="space-y-2">
-                    <Label htmlFor="km-atual" className="text-sm font-medium flex items-center gap-2">
-                      <Gauge className="w-4 h-4" />
-                      KM Atual
-                    </Label>
-                    <Input
-                      id="km-atual"
-                      placeholder="Ex: 45.000"
-                      value={kmAtual}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '');
-                        const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                        setKmAtual(formatted);
-                      }}
-                      className="h-11"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="status-veiculo" className="text-sm font-medium flex items-center gap-2">
-                      <Activity className="w-4 h-4" />
-                      Status do Veículo
-                    </Label>
-                    <Select value={statusVeiculo} onValueChange={setStatusVeiculo}>
-                      <SelectTrigger id="status-veiculo" className="h-11">
-                        <SelectValue placeholder="Selecione o status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="funcionando">✅ Funcionando normalmente</SelectItem>
-                        <SelectItem value="problema_leve">⚠️ Problema leve</SelectItem>
-                        <SelectItem value="problema_grave">🔴 Problema grave</SelectItem>
-                        <SelectItem value="nao_liga">❌ Não liga</SelectItem>
-                        <SelectItem value="guincho">🚛 Chegou de guincho</SelectItem>
-                        <SelectItem value="preventiva">🔧 Manutenção preventiva</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {/* Tipo de OS */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Tipo de Atendimento</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setTipoOS('diagnostico')}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        tipoOS === 'diagnostico'
+                          ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          tipoOS === 'diagnostico' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        }`}>
+                          <FileSearch className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">Diagnóstico</p>
+                          <p className="text-xs text-muted-foreground">Avaliação técnica</p>
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setTipoOS('orcamento')}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        tipoOS === 'orcamento'
+                          ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          tipoOS === 'orcamento' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        }`}>
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">Orçamento</p>
+                          <p className="text-xs text-muted-foreground">Serviço já definido</p>
+                        </div>
+                      </div>
+                    </button>
                   </div>
                 </div>
-
-                {/* Botão Histórico */}
-                <Button
-                  variant="outline"
-                  onClick={() => setShowHistorico(true)}
-                  className="w-full gap-2"
-                >
-                  <History className="w-4 h-4" />
-                  Ver Histórico do Veículo
-                  {historicoVeiculo.length > 0 && (
-                    <Badge variant="secondary" className="ml-auto">
-                      {historicoVeiculo.length} OS
-                    </Badge>
-                  )}
-                </Button>
               </div>
             ) : (
               <div className="space-y-3">
