@@ -1,10 +1,10 @@
-import { Award, Star, Crown, TrendingUp, Gift } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Award, Star, Crown, Percent, Gift } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
 interface LoyaltyCardProps {
-  points: number;
+  cashback: number;
   level: string;
   progress: number;
 }
@@ -16,9 +16,9 @@ const loyaltyConfig = {
     textColor: "text-amber-700",
     bgColor: "bg-amber-50",
     nextLevel: "Prata", 
-    pointsNeeded: 500, 
+    spendNeeded: 2000, // R$ 2000 para próximo nível
     icon: Award,
-    benefits: ["5% de desconto em revisões", "Prioridade básica no agendamento"]
+    benefits: ["15% de cashback em serviços", "Prioridade básica no agendamento"]
   },
   silver: { 
     label: "Prata", 
@@ -26,9 +26,9 @@ const loyaltyConfig = {
     textColor: "text-slate-600",
     bgColor: "bg-slate-50",
     nextLevel: "Ouro", 
-    pointsNeeded: 1500, 
+    spendNeeded: 5000,
     icon: Award,
-    benefits: ["10% de desconto em revisões", "Lavagem cortesia", "Prioridade no agendamento"]
+    benefits: ["15% de cashback", "Lavagem cortesia", "Prioridade no agendamento"]
   },
   gold: { 
     label: "Ouro", 
@@ -36,9 +36,9 @@ const loyaltyConfig = {
     textColor: "text-yellow-600",
     bgColor: "bg-yellow-50",
     nextLevel: "Platinum", 
-    pointsNeeded: 3000, 
+    spendNeeded: 10000,
     icon: Star,
-    benefits: ["15% de desconto em revisões", "Lavagem + higienização grátis", "Carro reserva", "Atendimento VIP"]
+    benefits: ["15% de cashback", "Lavagem + higienização grátis", "Carro reserva", "Atendimento VIP"]
   },
   platinum: { 
     label: "Platinum", 
@@ -46,13 +46,13 @@ const loyaltyConfig = {
     textColor: "text-slate-700",
     bgColor: "bg-slate-100",
     nextLevel: null, 
-    pointsNeeded: null, 
+    spendNeeded: null,
     icon: Crown,
-    benefits: ["20% de desconto em tudo", "Serviços exclusivos", "Eventos VIP", "Gerente dedicado", "Brindes exclusivos"]
+    benefits: ["15% de cashback + bônus", "Serviços exclusivos", "Eventos VIP", "Gerente dedicado"]
   },
 };
 
-export function LoyaltyCard({ points, level, progress }: LoyaltyCardProps) {
+export function LoyaltyCard({ cashback, level, progress }: LoyaltyCardProps) {
   const config = loyaltyConfig[level as keyof typeof loyaltyConfig] || loyaltyConfig.bronze;
   const Icon = config.icon;
 
@@ -62,28 +62,36 @@ export function LoyaltyCard({ points, level, progress }: LoyaltyCardProps) {
       <div className={`bg-gradient-to-r ${config.color} p-6 text-white`}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm opacity-80">Programa de Fidelidade</p>
+            <p className="text-sm opacity-80">Programa Cashback</p>
             <h3 className="text-2xl font-bold flex items-center gap-2 mt-1">
               <Icon className="h-6 w-6" />
               Cliente {config.label}
             </h3>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-bold">{points.toLocaleString()}</p>
-            <p className="text-sm opacity-80">pontos</p>
+            <div className="flex items-center gap-1 justify-end">
+              <Percent className="h-5 w-5" />
+              <span className="text-3xl font-bold">15</span>
+            </div>
+            <p className="text-sm opacity-80">de cashback</p>
           </div>
         </div>
 
+        <div className="mt-4 p-3 bg-white/15 rounded-xl">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Saldo disponível</span>
+            <span className="text-xl font-bold">R$ {cashback.toFixed(2).replace('.', ',')}</span>
+          </div>
+          <p className="text-xs opacity-80 mt-1">Use para pagar serviços aqui</p>
+        </div>
+
         {config.nextLevel && (
-          <div className="mt-6">
+          <div className="mt-4">
             <div className="flex justify-between text-sm mb-2">
               <span>Progresso para {config.nextLevel}</span>
-              <span>{points} / {config.pointsNeeded}</span>
+              <span>{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2 bg-white/20" />
-            <p className="text-xs mt-2 opacity-80">
-              Faltam {(config.pointsNeeded! - points).toLocaleString()} pontos para o próximo nível
-            </p>
           </div>
         )}
       </div>
@@ -100,17 +108,6 @@ export function LoyaltyCard({ points, level, progress }: LoyaltyCardProps) {
               <span>{benefit}</span>
             </div>
           ))}
-        </div>
-
-        {/* How to earn points */}
-        <div className={`mt-4 p-3 rounded-lg ${config.bgColor}`}>
-          <div className="flex items-center gap-2">
-            <TrendingUp className={`h-4 w-4 ${config.textColor}`} />
-            <span className="text-sm font-medium">Como ganhar pontos?</span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Cada R$1 gasto em serviços = 1 ponto. Avaliações e indicações também valem pontos!
-          </p>
         </div>
       </CardContent>
     </Card>
