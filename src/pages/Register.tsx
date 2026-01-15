@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, User, Mail, Lock, CreditCard, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ const formatPlate = (value: string): string => {
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signUp } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -51,6 +52,16 @@ const Register: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  // Capture referral code from URL on mount
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref.toUpperCase());
+      console.log('Referral code captured:', ref);
+    }
+  }, [searchParams]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -126,6 +137,20 @@ const Register: React.FC = () => {
       if (vehicleError) {
         console.error('Error creating vehicle:', vehicleError);
         // Don't fail registration, vehicle can be added later
+      }
+
+      // 5. Save referral source if present (for lead tracking)
+      if (referralCode) {
+        const { error: referralError } = await supabase
+          .from('profiles')
+          .update({ referral_source: referralCode })
+          .eq('user_id', user.id);
+
+        if (referralError) {
+          console.error('Error saving referral source:', referralError);
+        } else {
+          console.log('Referral source saved:', referralCode);
+        }
       }
     }
 
