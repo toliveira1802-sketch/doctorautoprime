@@ -61,11 +61,18 @@ export default function GestaoDashboards() {
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
       const { error } = await supabase.from("gestao_dashboards").insert({
         nome: newDashboard.nome,
         descricao: newDashboard.descricao || null,
         cor: newDashboard.cor,
         ordem: dashboards.length,
+        user_id: user.id,
       });
 
       if (error) throw error;

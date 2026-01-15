@@ -605,6 +605,7 @@ export type Database = {
           nome: string
           ordem: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           ativo?: boolean | null
@@ -616,6 +617,7 @@ export type Database = {
           nome: string
           ordem?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           ativo?: boolean | null
@@ -627,6 +629,7 @@ export type Database = {
           nome?: string
           ordem?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
