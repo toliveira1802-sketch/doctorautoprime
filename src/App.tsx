@@ -16,6 +16,7 @@ import Reagendamento from "./pages/Reagendamento";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
 import AdminNovaOS from "./pages/admin/AdminNovaOS";
+import ServicoDetalhes from "./pages/ServicoDetalhes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Reagendamento />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/servico/:vehicleId" 
+        element={
+          <ProtectedRoute>
+            <ServicoDetalhes />
           </ProtectedRoute>
         } 
       />
