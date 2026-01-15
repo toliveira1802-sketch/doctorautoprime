@@ -1,20 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { 
   ArrowLeft, 
   Car, 
   Phone, 
-  Camera, 
   FileText, 
   User, 
   Clock,
   Check,
   Wrench,
-  AlertCircle,
-  CarFront,
   MessageSquare,
   Save,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +29,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type OSStatus = 
   | "diagnostico"
@@ -47,6 +47,17 @@ interface TimelineStep {
   completed: boolean;
   current: boolean;
   timestamp?: string;
+}
+
+interface PatioData {
+  id: string;
+  status: OSStatus;
+  client_name: string | null;
+  client_phone: string | null;
+  vehicle: string;
+  plate: string;
+  observacoes: string | null;
+  created_at: string;
 }
 
 const statusConfig: Record<OSStatus, { label: string; icon: string; color: string }> = {
@@ -94,56 +105,62 @@ const statusOrder: OSStatus[] = [
 const AdminPatioDetalhes = () => {
   const navigate = useNavigate();
   const { patioId } = useParams();
+  const queryClient = useQueryClient();
 
-  // Mock data - será substituído por dados reais
-  const [patio, setPatio] = useState({
-    id: patioId,
-    status: "diagnostico" as OSStatus,
-    client: {
-      name: "João Silva",
-      phone: "(11) 99999-1234",
-      cpf: "123.456.789-00",
+  const [notes, setNotes] = useState("");
+  const [trelloWebhook, setTrelloWebhook] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [statusHistory, setStatusHistory] = useState<Array<{ status: string; timestamp: string; user: string }>>([]);
+
+  // Fetch patio data from ordens_servico table
+  const { data: patio, isLoading, error } = useQuery({
+    queryKey: ["patio", patioId],
+    queryFn: async () => {
+      if (!patioId) throw new Error("ID não fornecido");
+      
+      const { data, error } = await supabase
+        .from("ordens_servico")
+        .select("id, status, client_name, client_phone, vehicle, plate, observacoes, created_at")
+        .eq("id", patioId)
+        .single();
+
+      if (error) throw error;
+      return data as PatioData;
     },
-    vehicle: {
-      model: "Civic",
-      brand: "Honda",
-      plate: "ABC-1234",
-      year: "2022",
-      color: "Prata",
-    },
-    notes: "Cliente relatou barulho no motor. Verificar sistema de injeção.",
-    createdAt: "15/01/2026 09:30",
-    trelloWebhook: "",
-    statusHistory: [
-      { status: "diagnostico", timestamp: "15/01/2026 09:30", user: "Admin" },
-    ],
+    enabled: !!patioId,
   });
 
-  const [notes, setNotes] = useState(patio.notes);
-  const [trelloWebhook, setTrelloWebhook] = useState(patio.trelloWebhook);
-  const [isSaving, setIsSaving] = useState(false);
+  useEffect(() => {
+    if (patio) {
+      setNotes(patio.observacoes || "");
+      // Initialize status history with current status
+      setStatusHistory([
+        { 
+          status: patio.status, 
+          timestamp: new Date(patio.created_at).toLocaleString("pt-BR"), 
+          user: "Sistema" 
+        }
+      ]);
+    }
+  }, [patio]);
 
-  const handleStatusChange = async (newStatus: OSStatus) => {
-    setIsSaving(true);
-    
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
-    const timestamp = new Date().toLocaleString("pt-BR");
-    
-    setPatio((prev) => ({
-      ...prev,
-      status: newStatus,
-      statusHistory: [
-        ...prev.statusHistory,
-        { status: newStatus, timestamp, user: "Admin" },
-      ],
-    }));
-
-    // Trigger Trello webhook if configured
-    if (trelloWebhook) {
-      try {
-        await fetch(trelloWebhook, {
+  const updateStatusMutation = useMutation({
+    mutationFn: async (newStatus: OSStatus) => {
+      const { error } = await supabase
+        .from("ordens_servico")
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq("id", patioId);
+      if (error) throw error;
+      return newStatus;
+    },
+    onSuccess: (newStatus) => {
+      queryClient.invalidateQueries({ queryKey: ["patio", patioId] });
+      const timestamp = new Date().toLocaleString("pt-BR");
+      setStatusHistory(prev => [...prev, { status: newStatus, timestamp, user: "Admin" }]);
+      
+      // Trigger Trello webhook if configured
+      if (trelloWebhook && patio) {
+        fetch(trelloWebhook, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           mode: "no-cors",
@@ -151,44 +168,57 @@ const AdminPatioDetalhes = () => {
             patioId: patio.id,
             newStatus,
             statusLabel: statusConfig[newStatus].label,
-            vehicle: `${patio.vehicle.brand} ${patio.vehicle.model} - ${patio.vehicle.plate}`,
-            client: patio.client.name,
+            vehicle: `${patio.vehicle} - ${patio.plate}`,
+            client: patio.client_name,
             timestamp,
           }),
-        });
-        toast.success("Status atualizado e sincronizado com Trello!");
-      } catch (error) {
-        toast.success("Status atualizado!");
-        toast.error("Erro ao sincronizar com Trello");
+        }).catch(console.error);
       }
-    } else {
+      
       toast.success("Status atualizado!");
-    }
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar status");
+    },
+  });
 
+  const handleStatusChange = async (newStatus: OSStatus) => {
+    setIsSaving(true);
+    await updateStatusMutation.mutateAsync(newStatus);
     setIsSaving(false);
   };
 
   const handleSaveNotes = async () => {
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setPatio((prev) => ({ ...prev, notes }));
-    toast.success("Observações salvas!");
-    setIsSaving(false);
+    try {
+      const { error } = await supabase
+        .from("ordens_servico")
+        .update({ observacoes: notes })
+        .eq("id", patioId);
+      
+      if (error) throw error;
+      toast.success("Observações salvas!");
+    } catch (error) {
+      toast.error("Erro ao salvar observações");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveTrelloWebhook = async () => {
     setIsSaving(true);
+    // Webhook is stored locally for now
     await new Promise((resolve) => setTimeout(resolve, 500));
-    setPatio((prev) => ({ ...prev, trelloWebhook }));
     toast.success("Webhook do Trello configurado!");
     setIsSaving(false);
   };
 
   const getTimelineSteps = (): TimelineStep[] => {
-    const currentIndex = statusOrder.indexOf(patio.status);
+    if (!patio) return [];
+    const currentIndex = statusOrder.indexOf(patio.status as OSStatus);
     
     return statusOrder.map((status, index) => {
-      const historyEntry = patio.statusHistory.find((h) => h.status === status);
+      const historyEntry = statusHistory.find((h) => h.status === status);
       
       return {
         id: status,
@@ -200,6 +230,32 @@ const AdminPatioDetalhes = () => {
       };
     });
   };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error || !patio) {
+    return (
+      <AdminLayout>
+        <div className="p-6 text-center">
+          <h2 className="text-xl font-bold text-foreground mb-2">Pátio não encontrado</h2>
+          <Button onClick={() => navigate("/admin/patio")}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const currentStatus = patio.status as OSStatus;
 
   return (
     <AdminLayout>
@@ -216,7 +272,9 @@ const AdminPatioDetalhes = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-foreground">Pátio #{patio.id?.slice(0, 8)}</h1>
-            <p className="text-sm text-muted-foreground">Criada em {patio.createdAt}</p>
+            <p className="text-sm text-muted-foreground">
+              Criada em {new Date(patio.created_at).toLocaleString("pt-BR")}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <Button 
@@ -228,9 +286,9 @@ const AdminPatioDetalhes = () => {
             </Button>
             <div className={cn(
               "px-4 py-2 rounded-full text-sm font-medium border",
-              statusConfig[patio.status].color
+              statusConfig[currentStatus].color
             )}>
-              {statusConfig[patio.status].label}
+              {statusConfig[currentStatus].label}
             </div>
           </div>
         </div>
@@ -249,23 +307,24 @@ const AdminPatioDetalhes = () => {
                       Cliente
                     </h3>
                     <div className="space-y-2 text-sm">
-                      <p className="font-medium text-foreground">{patio.client.name}</p>
+                      <p className="font-medium text-foreground">{patio.client_name || "Não informado"}</p>
                       <p className="text-muted-foreground flex items-center gap-2">
                         <Phone className="w-3 h-3" />
-                        {patio.client.phone}
+                        {patio.client_phone || "Não informado"}
                       </p>
-                      <p className="text-muted-foreground">CPF: {patio.client.cpf}</p>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        window.open(`https://wa.me/55${patio.client.phone.replace(/\D/g, "")}`, "_blank");
-                      }}
-                    >
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      WhatsApp
-                    </Button>
+                    {patio.client_phone && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          window.open(`https://wa.me/55${patio.client_phone?.replace(/\D/g, "")}`, "_blank");
+                        }}
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        WhatsApp
+                      </Button>
+                    )}
                   </div>
 
                   {/* Vehicle */}
@@ -275,13 +334,8 @@ const AdminPatioDetalhes = () => {
                       Veículo
                     </h3>
                     <div className="space-y-2 text-sm">
-                      <p className="font-medium text-foreground">
-                        {patio.vehicle.brand} {patio.vehicle.model}
-                      </p>
-                      <p className="text-muted-foreground">Placa: {patio.vehicle.plate}</p>
-                      <p className="text-muted-foreground">
-                        Ano: {patio.vehicle.year} • Cor: {patio.vehicle.color}
-                      </p>
+                      <p className="font-medium text-foreground">{patio.vehicle}</p>
+                      <p className="text-muted-foreground">Placa: {patio.plate}</p>
                     </div>
                   </div>
                 </div>
@@ -391,7 +445,7 @@ const AdminPatioDetalhes = () => {
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-4">
                 <Select
-                  value={patio.status}
+                  value={currentStatus}
                   onValueChange={(value) => handleStatusChange(value as OSStatus)}
                   disabled={isSaving}
                 >
@@ -411,13 +465,13 @@ const AdminPatioDetalhes = () => {
                   {statusOrder.map((status) => (
                     <Button
                       key={status}
-                      variant={patio.status === status ? "default" : "outline"}
+                      variant={currentStatus === status ? "default" : "outline"}
                       size="sm"
                       onClick={() => handleStatusChange(status)}
-                      disabled={isSaving || patio.status === status}
+                      disabled={isSaving || currentStatus === status}
                       className={cn(
                         "text-xs h-auto py-2 px-3",
-                        patio.status === status && "gradient-primary"
+                        currentStatus === status && "gradient-primary"
                       )}
                     >
                       {statusConfig[status].icon}
@@ -469,7 +523,7 @@ const AdminPatioDetalhes = () => {
               </CardHeader>
               <CardContent className="p-6 pt-0">
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {patio.statusHistory.slice().reverse().map((entry, index) => (
+                  {statusHistory.slice().reverse().map((entry, index) => (
                     <div 
                       key={index} 
                       className="flex items-start gap-3 text-sm border-b border-border/50 pb-3 last:border-0"

@@ -2,11 +2,12 @@ import { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format, addDays, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, Calendar, Clock, Car, Check, AlertCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Car, Check, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AppointmentData {
   id: string;
@@ -22,7 +23,7 @@ interface LocationState {
   appointment: AppointmentData;
 }
 
-// Horários disponíveis (mock - será substituído por dados do backend)
+// Horários disponíveis (serão buscados do backend no futuro)
 const morningSlots = ["08:00", "09:00", "10:00", "11:00"];
 const afternoonSlots = ["13:00", "14:00", "15:00", "16:00", "17:00"];
 const allTimeSlots = [...morningSlots, ...afternoonSlots];
@@ -73,22 +74,30 @@ const Reagendamento = () => {
     
     setIsSubmitting(true);
     
-    // Simular chamada ao backend
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // TODO: Integrar com Supabase para atualizar o agendamento
-    console.log("[REAGENDAMENTO]", {
-      appointmentId: appointment.id,
-      newDate: selectedDate,
-      newTime: selectedTime,
-    });
-    
-    toast.success("Reagendamento confirmado!", {
-      description: `Novo horário: ${format(selectedDate!, "dd/MM/yyyy", { locale: ptBR })}${!appointment.isFullDay && selectedTime ? ` às ${selectedTime}` : ""}`,
-    });
-    
-    setIsSubmitting(false);
-    navigate("/agenda");
+    try {
+      // Atualizar agendamento no banco
+      const { error } = await supabase
+        .from("appointments")
+        .update({
+          appointment_date: selectedDate?.toISOString().split("T")[0],
+          appointment_time: selectedTime && !appointment.isFullDay ? selectedTime : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", appointment.id);
+
+      if (error) throw error;
+      
+      toast.success("Reagendamento confirmado!", {
+        description: `Novo horário: ${format(selectedDate!, "dd/MM/yyyy", { locale: ptBR })}${!appointment.isFullDay && selectedTime ? ` às ${selectedTime}` : ""}`,
+      });
+      
+      navigate("/agenda");
+    } catch (error) {
+      console.error("Error rescheduling:", error);
+      toast.error("Erro ao reagendar. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!appointment) {
@@ -225,7 +234,7 @@ const Reagendamento = () => {
         >
           {isSubmitting ? (
             <>
-              <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               Reagendando...
             </>
           ) : (
