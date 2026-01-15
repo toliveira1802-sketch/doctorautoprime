@@ -75,29 +75,29 @@ const gestaoModule: AdminMenuGroup = {
 const painelAdmModule: AdminMenuGroup = {
   label: "Painel ADM",
   icon: Gauge,
-  roles: ["admin", "oficina"],
+  roles: ["admin", "gestao"],
   items: [
-    { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "oficina"] },
-    { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "oficina"] },
-    { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "oficina"] },
-    { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "oficina"] },
-    { title: "Cronograma", url: "/admin/agenda-mecanicos", icon: ClipboardList, roles: ["admin", "oficina"] },
-    { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["admin", "oficina"] },
+    { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "gestao"] },
+    { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "gestao"] },
+    { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "gestao"] },
+    { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "gestao"] },
+    { title: "Cronograma", url: "/admin/agenda-mecanicos", icon: ClipboardList, roles: ["admin", "gestao"] },
+    { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["admin", "gestao"] },
     { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["admin"] },
     { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["admin"] },
-    { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "oficina"] },
+    { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "gestao"] },
   ],
 };
 
-// MODULE: Sistema (admin + oficina)
+// MODULE: Sistema (admin + gestao)
 const sistemaModule: AdminMenuGroup = {
   label: "Sistema",
   icon: Settings,
-  roles: ["admin", "oficina"],
+  roles: ["admin", "gestao"],
   items: [
-    { title: "Melhorias", url: "/gestao/melhorias", icon: Lightbulb, roles: ["admin", "oficina"] },
-    { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["admin", "oficina"] },
-    { title: "Documentação", url: "/admin/documentacao", icon: FileText, roles: ["admin", "oficina"] },
+    { title: "Melhorias", url: "/gestao/melhorias", icon: Lightbulb, roles: ["admin", "gestao"] },
+    { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["admin", "gestao"] },
+    { title: "Documentação", url: "/admin/documentacao", icon: FileText, roles: ["admin", "gestao"] },
   ],
 };
 
