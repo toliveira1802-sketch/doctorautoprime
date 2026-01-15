@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { 
   ArrowLeft, Save, Plus, Trash2, Phone, Car, User, 
   Calendar, DollarSign, FileText, Wrench, CheckCircle,
   XCircle, AlertTriangle, Clock, Loader2, Edit2,
-  ClipboardCheck, Camera, ChevronDown, ChevronUp, Gauge, ShieldCheck, Activity, Image
+  ClipboardCheck, Camera, ChevronDown, ChevronUp, Gauge, ShieldCheck, Activity, Image,
+  TrendingUp, Sparkles, Calculator, Gift, Video, Zap
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -107,12 +108,15 @@ const itemStatusConfig: Record<string, { label: string; color: string }> = {
 
 export default function AdminOSDetalhes() {
   const { osId } = useParams<{ osId: string }>();
+  const [searchParams] = useSearchParams();
+  const isNewOS = searchParams.get("new") === "true";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
   const [isEditing, setIsEditing] = useState(false);
   const [editedOS, setEditedOS] = useState<Partial<OrdemServico>>({});
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
   const [newItem, setNewItem] = useState({
     descricao: "",
     tipo: "servico",
@@ -120,9 +124,11 @@ export default function AdminOSDetalhes() {
     valor_unitario: 0,
   });
   
-  // Collapsible sections
-  const [checklistOpen, setChecklistOpen] = useState(false);
-  const [fotosOpen, setFotosOpen] = useState(false);
+  // Collapsible sections - open by default if new OS
+  const [checklistOpen, setChecklistOpen] = useState(isNewOS);
+  const [fotosOpen, setFotosOpen] = useState(isNewOS);
+  const [servicosOpen, setServicosOpen] = useState(isNewOS);
+  const [upsellOpen, setUpsellOpen] = useState(isNewOS);
   const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro' | 'precompra'>('entrada');
   
   // Checklist states
@@ -676,7 +682,121 @@ export default function AdminOSDetalhes() {
               </Card>
             </Collapsible>
 
-            {/* Fotos de Entrada */}
+            {/* AI Proactive Sales Assistant - Internal Only */}
+            <Card className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10 border-purple-500/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Sparkles className="w-5 h-5 text-purple-500" />
+                  Assistente de Vendas IA
+                  <Badge variant="outline" className="ml-auto bg-purple-500/20 text-purple-600 border-purple-500/30 text-xs">
+                    Interno
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {/* Cashback incentive */}
+                {(() => {
+                  const currentTotal = totalAprovado || totalOrcado || 0;
+                  const nextTier = currentTotal < 500 ? 500 : currentTotal < 1000 ? 1000 : currentTotal < 2000 ? 2000 : 5000;
+                  const remaining = nextTier - currentTotal;
+                  const cashbackPercent = nextTier >= 2000 ? 10 : nextTier >= 1000 ? 7 : 5;
+                  
+                  if (remaining > 0 && remaining < nextTier) {
+                    return (
+                      <div className="p-3 rounded-lg bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Gift className="w-4 h-4 text-green-600" />
+                          <span className="font-semibold text-green-700 text-sm">Oportunidade de Cashback!</span>
+                        </div>
+                        <p className="text-sm text-foreground">
+                          Faltam apenas <strong className="text-green-600">{formatCurrency(remaining)}</strong> para o cliente ganhar{" "}
+                          <strong className="text-green-600">{cashbackPercent}% de cashback</strong> na próxima visita!
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          💡 Sugira: troca de filtros, alinhamento, ou revisão de ar-condicionado
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Upsell suggestions based on vehicle/km */}
+                <div className="p-3 rounded-lg bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-4 h-4 text-blue-600" />
+                    <span className="font-semibold text-blue-700 text-sm">Sugestões de Venda</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm p-2 bg-background/50 rounded">
+                      <span>Higienização do A/C</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600 font-medium">R$ 189</span>
+                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => {
+                          setNewItem({ descricao: "Higienização do Ar Condicionado", tipo: "servico", quantidade: 1, valor_unitario: 189 });
+                          setShowAddItemDialog(true);
+                        }}>
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm p-2 bg-background/50 rounded">
+                      <span>Limpeza de Bicos</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600 font-medium">R$ 280</span>
+                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => {
+                          setNewItem({ descricao: "Limpeza de Bicos Injetores", tipo: "servico", quantidade: 1, valor_unitario: 280 });
+                          setShowAddItemDialog(true);
+                        }}>
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm p-2 bg-background/50 rounded">
+                      <span>Cristalização de Faróis</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600 font-medium">R$ 150</span>
+                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => {
+                          setNewItem({ descricao: "Cristalização de Faróis", tipo: "servico", quantidade: 1, valor_unitario: 150 });
+                          setShowAddItemDialog(true);
+                        }}>
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick actions */}
+                <div className="flex gap-2 flex-wrap">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1"
+                    onClick={() => setShowCalculator(true)}
+                  >
+                    <Calculator className="w-4 h-4" />
+                    Calculadora
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1"
+                    onClick={() => {
+                      toast.info("Funcionalidade em desenvolvimento");
+                    }}
+                  >
+                    <Zap className="w-4 h-4" />
+                    Simular Desconto
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Fotos e Vídeos Section */}
             <Collapsible open={fotosOpen} onOpenChange={setFotosOpen}>
               <Card className="bg-card/50 border-border/50">
                 <CollapsibleTrigger asChild>
@@ -684,9 +804,9 @@ export default function AdminOSDetalhes() {
                     <CardTitle className="flex items-center justify-between text-lg">
                       <div className="flex items-center gap-2">
                         <Camera className="w-5 h-5" />
-                        Fotos de Entrada
+                        Fotos e Vídeos
                         {os.fotos_entrada && os.fotos_entrada.length > 0 && (
-                          <Badge variant="secondary" className="ml-2">{os.fotos_entrada.length} fotos</Badge>
+                          <Badge variant="secondary" className="ml-2">{os.fotos_entrada.length} arquivos</Badge>
                         )}
                       </div>
                       {fotosOpen ? (
@@ -698,7 +818,19 @@ export default function AdminOSDetalhes() {
                   </CardHeader>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent className="pt-0">
+                  <CardContent className="pt-0 space-y-4">
+                    {/* Upload buttons */}
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Camera className="w-4 h-4" />
+                        Adicionar Foto
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Video className="w-4 h-4" />
+                        Adicionar Vídeo
+                      </Button>
+                    </div>
+                    
                     {os.fotos_entrada && os.fotos_entrada.length > 0 ? (
                       <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                         {os.fotos_entrada.map((foto, index) => (
@@ -715,7 +847,7 @@ export default function AdminOSDetalhes() {
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
                         <Image className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>Nenhuma foto registrada na entrada</p>
+                        <p>Nenhuma foto ou vídeo registrado</p>
                       </div>
                     )}
                   </CardContent>
@@ -723,7 +855,7 @@ export default function AdminOSDetalhes() {
               </Card>
             </Collapsible>
 
-            {/* Items / Budget */}
+            {/* Items / Budget - Serviços e Peças */}
             <Card className="bg-card/50 border-border/50">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -1064,6 +1196,49 @@ export default function AdminOSDetalhes() {
                 <Plus className="w-4 h-4 mr-2" />
               )}
               Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Calculator Dialog */}
+      <Dialog open={showCalculator} onOpenChange={setShowCalculator}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="w-5 h-5" />
+              Calculadora Rápida
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-muted/50 rounded-lg text-center">
+              <p className="text-muted-foreground text-sm mb-2">Calculadora em desenvolvimento</p>
+              <p className="text-2xl font-mono font-bold">0.00</p>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '=', '+'].map((key) => (
+                <Button 
+                  key={key} 
+                  variant={['÷', '×', '-', '+', '='].includes(key) ? 'default' : 'outline'}
+                  className="h-12 text-lg font-medium"
+                  onClick={() => toast.info("Calculadora em desenvolvimento")}
+                >
+                  {key}
+                </Button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => toast.info("Limpar")}>
+                C
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => toast.info("Backspace")}>
+                ⌫
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCalculator(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

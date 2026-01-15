@@ -162,7 +162,7 @@ export default function AdminNovaOS() {
       if (error) throw error;
 
       toast.success("OS criada com sucesso!");
-      navigate(`/admin/ordens-servico/${data.id}`);
+      navigate(`/admin/ordens-servico/${data.id}?new=true`);
     } catch (err: any) {
       console.error("Erro ao criar OS:", err);
       toast.error("Erro ao criar OS: " + (err.message || "Erro desconhecido"));
