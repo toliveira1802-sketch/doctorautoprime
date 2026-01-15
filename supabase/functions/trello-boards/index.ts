@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,10 +13,35 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('TRELLO_API_KEY');
-    const token = Deno.env.get('TRELLO_TOKEN');
+    // Validate authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Missing or invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    if (!apiKey || !token) {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data, error: authError } = await supabaseClient.auth.getClaims(token);
+    
+    if (authError || !data?.claims) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid session' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const apiKey = Deno.env.get('TRELLO_API_KEY');
+    const trelloToken = Deno.env.get('TRELLO_TOKEN');
+
+    if (!apiKey || !trelloToken) {
       throw new Error('Trello credentials not configured');
     }
 
@@ -25,19 +51,19 @@ serve(async (req) => {
     
     switch (action) {
       case 'getBoards':
-        url = `https://api.trello.com/1/members/me/boards?key=${apiKey}&token=${token}&fields=name,desc,url,dateLastActivity`;
+        url = `https://api.trello.com/1/members/me/boards?key=${apiKey}&token=${trelloToken}&fields=name,desc,url,dateLastActivity`;
         break;
       case 'getLists':
         if (!boardId) throw new Error('boardId required');
-        url = `https://api.trello.com/1/boards/${boardId}/lists?key=${apiKey}&token=${token}&fields=name,pos`;
+        url = `https://api.trello.com/1/boards/${boardId}/lists?key=${apiKey}&token=${trelloToken}&fields=name,pos`;
         break;
       case 'getCards':
         if (!listId) throw new Error('listId required');
-        url = `https://api.trello.com/1/lists/${listId}/cards?key=${apiKey}&token=${token}&fields=name,desc,due,labels,url,dateLastActivity`;
+        url = `https://api.trello.com/1/lists/${listId}/cards?key=${apiKey}&token=${trelloToken}&fields=name,desc,due,labels,url,dateLastActivity`;
         break;
       case 'getBoardCards':
         if (!boardId) throw new Error('boardId required');
-        url = `https://api.trello.com/1/boards/${boardId}/cards?key=${apiKey}&token=${token}&fields=name,desc,due,labels,url,idList,dateLastActivity`;
+        url = `https://api.trello.com/1/boards/${boardId}/cards?key=${apiKey}&token=${trelloToken}&fields=name,desc,due,labels,url,idList,dateLastActivity`;
         break;
       default:
         throw new Error('Invalid action');
@@ -50,9 +76,9 @@ serve(async (req) => {
       throw new Error(`Trello API error: ${response.status} - ${errorText}`);
     }
 
-    const data = await response.json();
+    const responseData = await response.json();
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
