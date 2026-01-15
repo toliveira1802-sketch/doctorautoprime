@@ -2,14 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type PatioStatus = 
-  | "fora_da_loja"
   | "diagnostico"
   | "orcamento"
   | "aguardando_aprovacao"
-  | "bo_peca"
   | "aguardando_pecas"
+  | "pronto_iniciar"
   | "em_execucao"
-  | "em_teste"
   | "pronto_retirada"
   | "concluido";
 
@@ -44,16 +42,14 @@ interface TrelloList {
 
 // Mapeamento das listas do Trello para status do pátio
 const listNameToStatus: Record<string, PatioStatus> = {
-  "fora da loja": "fora_da_loja",
-  "diagnostico": "diagnostico",
-  "em orçamento": "orcamento",
-  "aguardando aprovar": "aguardando_aprovacao",
-  "b.o peça/ b.o oficina": "bo_peca",
-  "aguardando peça": "aguardando_pecas",
-  "em serviço": "em_execucao",
-  "em teste": "em_teste",
-  "pronto": "pronto_retirada",
-  "veiculo entregue": "concluido",
+  "🧠diagnóstico": "diagnostico",
+  "📝orçamento": "orcamento",
+  "🤔aguardando aprovação": "aguardando_aprovacao",
+  "😤aguardando peças": "aguardando_pecas",
+  "🫵pronto para iniciar": "pronto_iniciar",
+  "🛠️🔩em execução": "em_execucao",
+  "💰pronto / aguardando retirada": "pronto_retirada",
+  "🙏🏻entregue": "concluido",
 };
 
 // ID do board do Trello

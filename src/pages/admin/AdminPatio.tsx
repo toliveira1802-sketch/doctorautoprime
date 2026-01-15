@@ -13,13 +13,6 @@ import { useTrelloCards, PatioStatus, PatioItem } from "@/hooks/useTrelloCards";
 
 const statusColumns: { status: PatioStatus; label: string; icon: string; color: string; headerColor: string }[] = [
   { 
-    status: "fora_da_loja", 
-    label: "Fora da Loja", 
-    icon: "🚗", 
-    color: "border-gray-500/50",
-    headerColor: "bg-gray-500/20 text-gray-400"
-  },
-  { 
     status: "diagnostico", 
     label: "Diagnóstico", 
     icon: "🧠", 
@@ -29,23 +22,16 @@ const statusColumns: { status: PatioStatus; label: string; icon: string; color: 
   { 
     status: "orcamento", 
     label: "Orçamento", 
-    icon: "📋", 
+    icon: "📝", 
     color: "border-cyan-500/50",
     headerColor: "bg-cyan-500/20 text-cyan-400"
   },
   { 
     status: "aguardando_aprovacao", 
     label: "Aguardando Aprovação", 
-    icon: "⏳", 
+    icon: "🤔", 
     color: "border-yellow-500/50",
     headerColor: "bg-yellow-500/20 text-yellow-400"
-  },
-  { 
-    status: "bo_peca", 
-    label: "B.O. Peça/Oficina", 
-    icon: "⚠️", 
-    color: "border-red-500/50",
-    headerColor: "bg-red-500/20 text-red-400"
   },
   { 
     status: "aguardando_pecas", 
@@ -55,22 +41,22 @@ const statusColumns: { status: PatioStatus; label: string; icon: string; color: 
     headerColor: "bg-orange-500/20 text-orange-400"
   },
   { 
+    status: "pronto_iniciar", 
+    label: "Pronto para Iniciar", 
+    icon: "🫵", 
+    color: "border-blue-500/50",
+    headerColor: "bg-blue-500/20 text-blue-400"
+  },
+  { 
     status: "em_execucao", 
-    label: "Em Serviço", 
+    label: "Em Execução", 
     icon: "🛠️", 
     color: "border-amber-500/50",
     headerColor: "bg-amber-500/20 text-amber-400"
   },
   { 
-    status: "em_teste", 
-    label: "Em Teste", 
-    icon: "🧪", 
-    color: "border-indigo-500/50",
-    headerColor: "bg-indigo-500/20 text-indigo-400"
-  },
-  { 
     status: "pronto_retirada", 
-    label: "Pronto", 
+    label: "Pronto / Aguardando Retirada", 
     icon: "💰", 
     color: "border-emerald-500/50",
     headerColor: "bg-emerald-500/20 text-emerald-400"
@@ -78,7 +64,7 @@ const statusColumns: { status: PatioStatus; label: string; icon: string; color: 
   { 
     status: "concluido", 
     label: "Entregue", 
-    icon: "✅", 
+    icon: "🙏🏻", 
     color: "border-muted-foreground/50",
     headerColor: "bg-muted text-muted-foreground"
   },
