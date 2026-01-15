@@ -37,7 +37,7 @@ const Index = () => {
               <Instagram className="h-6 w-6 text-white" />
             </a>
             <a
-              href="https://youtube.com/@drprime"
+              href="https://www.youtube.com/@PerformanceDoctorAuto/shorts"
               target="_blank"
               rel="noopener noreferrer"
               className="h-12 w-12 rounded-xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
