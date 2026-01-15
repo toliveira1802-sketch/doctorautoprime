@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Lock, CreditCard, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, User, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,6 @@ interface FormData {
   email: string;
   password: string;
   confirmPassword: string;
-  plate: string;
 }
 
 interface FormErrors {
@@ -23,19 +22,7 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
-  plate?: string;
 }
-
-const formatPlate = (value: string): string => {
-  const clean = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-  
-  if (clean.length <= 3) {
-    return clean;
-  } else if (clean.length <= 7) {
-    return `${clean.slice(0, 3)}-${clean.slice(3)}`;
-  }
-  return `${clean.slice(0, 3)}-${clean.slice(3, 7)}`;
-};
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -46,7 +33,6 @@ const Register: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    plate: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,13 +74,6 @@ const Register: React.FC = () => {
       newErrors.confirmPassword = 'Senhas não conferem';
     }
 
-    const plateClean = formData.plate.replace(/[^A-Za-z0-9]/g, '');
-    if (!plateClean) {
-      newErrors.plate = 'Placa é obrigatória';
-    } else if (plateClean.length !== 7) {
-      newErrors.plate = 'Placa deve ter 7 caracteres';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -124,22 +103,7 @@ const Register: React.FC = () => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
-      // 4. Create the vehicle
-      const plateClean = formData.plate.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-      const { error: vehicleError } = await supabase
-        .from('vehicles')
-        .insert({
-          user_id: user.id,
-          plate: plateClean,
-          model: 'A definir',
-        });
-
-      if (vehicleError) {
-        console.error('Error creating vehicle:', vehicleError);
-        // Don't fail registration, vehicle can be added later
-      }
-
-      // 5. Save referral source if present (for lead tracking)
+      // Save referral source if present (for lead tracking)
       if (referralCode) {
         const { error: referralError } = await supabase
           .from('profiles')
@@ -159,13 +123,7 @@ const Register: React.FC = () => {
   };
 
   const handleChange = (field: keyof FormData, value: string) => {
-    let processedValue = value;
-    
-    if (field === 'plate') {
-      processedValue = formatPlate(value);
-    }
-    
-    setFormData((prev) => ({ ...prev, [field]: processedValue }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -175,8 +133,7 @@ const Register: React.FC = () => {
   const isFormValid = formData.name.trim().length >= 3 && 
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
     formData.password.length >= 6 &&
-    formData.password === formData.confirmPassword &&
-    formData.plate.replace(/[^A-Za-z0-9]/g, '').length === 7;
+    formData.password === formData.confirmPassword;
 
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
@@ -320,34 +277,6 @@ const Register: React.FC = () => {
             {errors.confirmPassword && (
               <p className="text-destructive text-sm animate-fade-in">{errors.confirmPassword}</p>
             )}
-          </div>
-
-          {/* Plate Field */}
-          <div className="space-y-2">
-            <Label htmlFor="plate" className="text-foreground font-medium text-sm">
-              Placa do veículo
-            </Label>
-            <div className={cn(
-              'glass-card flex items-center gap-3 px-4 transition-all duration-300',
-              errors.plate && 'ring-2 ring-destructive/50'
-            )}>
-              <CreditCard className="w-5 h-5 text-muted-foreground" />
-              <Input
-                id="plate"
-                type="text"
-                value={formData.plate}
-                onChange={(e) => handleChange('plate', e.target.value)}
-                placeholder="ABC-1234"
-                maxLength={8}
-                className="border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 py-5 uppercase"
-              />
-            </div>
-            {errors.plate && (
-              <p className="text-destructive text-sm animate-fade-in">{errors.plate}</p>
-            )}
-            <p className="text-muted-foreground text-xs">
-              Formatos aceitos: ABC-1234 ou ABC1D23
-            </p>
           </div>
         </div>
 
