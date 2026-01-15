@@ -1,4 +1,4 @@
-import { Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, Plus, Car, Star } from "lucide-react";
+import { Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, Plus, Car, Star, TrendingUp } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,7 @@ const adminItems = [
   { title: "Pátio", url: "/admin/patio", icon: Car },
   { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar },
   { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star },
+  { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp },
   { title: "Clientes", url: "/admin/clientes", icon: Users },
   { title: "Serviços", url: "/admin/servicos", icon: Wrench },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },

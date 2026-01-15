@@ -24,6 +24,7 @@ import AdminNovaOS from "./pages/admin/AdminNovaOS";
 import AdminPatioDetalhes from "./pages/admin/AdminPatioDetalhes";
 import AdminPatio from "./pages/admin/AdminPatio";
 import AdminMechanicFeedback from "./pages/admin/AdminMechanicFeedback";
+import AdminMechanicAnalytics from "./pages/admin/AdminMechanicAnalytics";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
 import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
@@ -206,6 +207,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <AdminMechanicFeedback />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/analytics-mecanicos" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminMechanicAnalytics />
             </AdminRoute>
           </ProtectedRoute>
         } 
