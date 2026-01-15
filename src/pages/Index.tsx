@@ -1,11 +1,35 @@
+import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { ActionButtons } from "@/components/home/ActionButtons";
 import { MyVehiclesSection } from "@/components/home/MyVehiclesSection";
 import { Youtube, Instagram, BookOpen, Construction } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const [userName, setUserName] = useState<string>("");
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", user.id)
+          .single();
+        
+        if (profile?.full_name) {
+          // Get first name only
+          const firstName = profile.full_name.split(" ")[0];
+          setUserName(firstName);
+        }
+      }
+    };
+    fetchUserName();
+  }, []);
+
   const handleBlogClick = () => {
     toast.info("Blog em construção! 🚧", {
       description: "Em breve teremos conteúdos exclusivos para você.",
@@ -20,7 +44,7 @@ const Index = () => {
         {/* Welcome Section */}
         <section className="animate-fade-in">
           <h2 className="text-2xl font-bold text-foreground mb-4">
-            Olá, Carlos! 👋
+            Olá, {userName || "..."} 👋
           </h2>
         </section>
 
