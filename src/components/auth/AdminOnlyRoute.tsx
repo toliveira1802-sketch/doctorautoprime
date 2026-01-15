@@ -5,8 +5,9 @@ interface AdminOnlyRouteProps {
   children: React.ReactNode;
 }
 
+// This route is for GESTÃO only (highest level) - renamed from AdminOnlyRoute for clarity
 export function AdminOnlyRoute({ children }: AdminOnlyRouteProps) {
-  const { isAdmin, isLoading } = useUserRole();
+  const { isGestao, isLoading } = useUserRole();
 
   if (isLoading) {
     return (
@@ -19,7 +20,8 @@ export function AdminOnlyRoute({ children }: AdminOnlyRouteProps) {
     );
   }
 
-  if (!isAdmin) {
+  // Only gestão (highest level) can access these routes
+  if (!isGestao) {
     return <Navigate to="/admin" replace />;
   }
 

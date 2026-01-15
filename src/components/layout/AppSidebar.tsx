@@ -56,22 +56,22 @@ type AdminMenuGroup = {
   items: AdminMenuItem[];
 };
 
-// MODULE: Gestão (dashboards customizados) - PRIMEIRO
+// MODULE: Gestão (dashboards customizados) - APENAS GESTÃO (nível mais alto)
 const gestaoModule: AdminMenuGroup = {
   label: "Gestão",
   icon: LayoutDashboard,
-  roles: ["admin"],
+  roles: ["gestao"],
   items: [
-    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["admin"] },
-    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["admin"] },
-    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["admin"] },
-    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["admin"] },
-    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["admin"] },
-    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["admin"] },
+    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["gestao"] },
+    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["gestao"] },
+    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["gestao"] },
+    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["gestao"] },
+    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["gestao"] },
+    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["gestao"] },
   ],
 };
 
-// MODULE: Painel ADM (junta Operacional + Dashboard)
+// MODULE: Painel ADM (admin + gestao - gestão tem acesso a tudo)
 const painelAdmModule: AdminMenuGroup = {
   label: "Painel ADM",
   icon: Gauge,
@@ -84,8 +84,8 @@ const painelAdmModule: AdminMenuGroup = {
     { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "gestao"] },
     { title: "Cronograma", url: "/admin/agenda-mecanicos", icon: ClipboardList, roles: ["admin", "gestao"] },
     { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["admin", "gestao"] },
-    { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["admin"] },
-    { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["admin"] },
+    { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["gestao"] },
+    { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["gestao"] },
     { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "gestao"] },
   ],
 };
