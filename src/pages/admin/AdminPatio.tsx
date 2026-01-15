@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MessageSquare, Eye, GripVertical, Car, RefreshCw, ExternalLink, AlertTriangle } from "lucide-react";
+import { Search, MessageSquare, Eye, GripVertical, Car, RefreshCw, ExternalLink, AlertTriangle, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -200,6 +200,13 @@ const AdminPatio = () => {
             </p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
+            <Button 
+              className="gradient-primary text-primary-foreground"
+              onClick={() => navigate("/admin/nova-os")}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Criar OS
+            </Button>
             <Button variant="outline" size="sm" onClick={handleRefresh}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Atualizar
