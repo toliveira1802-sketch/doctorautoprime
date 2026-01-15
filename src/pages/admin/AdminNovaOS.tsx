@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Car, User, Phone, FileText, Loader2, Search, Zap, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Save, Car, User, Phone, FileText, Loader2, Search, Zap, Wrench } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -28,7 +28,7 @@ export default function AdminNovaOS() {
     client_phone: clientPhone || "",
     km_atual: "",
     descricao_problema: "",
-    is_urgent: false,
+    status: "diagnostico",
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,7 +83,7 @@ export default function AdminNovaOS() {
       client_phone: result.client_phone || "",
       km_atual: result.km_atual || "",
       descricao_problema: "",
-      is_urgent: false,
+      status: "diagnostico",
     });
     setSearchQuery("");
     setShowResults(false);
@@ -153,7 +153,7 @@ export default function AdminNovaOS() {
           client_phone: formData.client_phone.trim() || null,
           km_atual: formData.km_atual.trim() || null,
           descricao_problema: formData.descricao_problema.trim() || null,
-          status: "diagnostico",
+          status: formData.status,
           data_entrada: new Date().toISOString(),
         }])
         .select()
@@ -277,18 +277,25 @@ export default function AdminNovaOS() {
                 </div>
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    Urgente
+                    <Wrench className="w-4 h-4" />
+                    Status
                   </Label>
-                  <div className="flex items-center h-10 gap-2">
-                    <Switch
-                      checked={formData.is_urgent}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_urgent: checked }))}
-                    />
-                    <span className={`text-sm ${formData.is_urgent ? 'text-amber-500 font-medium' : 'text-muted-foreground'}`}>
-                      {formData.is_urgent ? 'SIM' : 'Não'}
-                    </span>
-                  </div>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="diagnostico">Diagnóstico</SelectItem>
+                      <SelectItem value="orcamento">Orçamento</SelectItem>
+                      <SelectItem value="aguardando_aprovacao">Aguardando Aprovação</SelectItem>
+                      <SelectItem value="aguardando_pecas">Aguardando Peças</SelectItem>
+                      <SelectItem value="pronto_iniciar">Pronto p/ Iniciar</SelectItem>
+                      <SelectItem value="em_execucao">Em Execução</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
