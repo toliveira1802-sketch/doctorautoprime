@@ -243,6 +243,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birthday: string | null
           cpf: string | null
           created_at: string
           full_name: string | null
@@ -250,6 +251,8 @@ export type Database = {
           internal_notes: string | null
           is_recurrent: boolean | null
           lifetime_value: number | null
+          loyalty_level: string | null
+          loyalty_points: number | null
           phone: string | null
           priority_score: number | null
           tags: string[] | null
@@ -258,6 +261,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          birthday?: string | null
           cpf?: string | null
           created_at?: string
           full_name?: string | null
@@ -265,6 +269,8 @@ export type Database = {
           internal_notes?: string | null
           is_recurrent?: boolean | null
           lifetime_value?: number | null
+          loyalty_level?: string | null
+          loyalty_points?: number | null
           phone?: string | null
           priority_score?: number | null
           tags?: string[] | null
@@ -273,6 +279,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          birthday?: string | null
           cpf?: string | null
           created_at?: string
           full_name?: string | null
@@ -280,6 +287,8 @@ export type Database = {
           internal_notes?: string | null
           is_recurrent?: boolean | null
           lifetime_value?: number | null
+          loyalty_level?: string | null
+          loyalty_points?: number | null
           phone?: string | null
           priority_score?: number | null
           tags?: string[] | null
