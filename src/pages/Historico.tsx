@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { ChevronDown, ChevronUp, Wrench, CheckCircle2, XCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, Wrench, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ServiceItem {
   id: string;
@@ -13,56 +14,61 @@ interface ServiceItem {
   services: string[];
   total: number;
   status: "completed" | "cancelled";
-  cashback: number; // 15% do total
+  cashback: number;
 }
-
-// Mock data - will be replaced with real data
-const mockHistory: ServiceItem[] = [
-  {
-    id: "1",
-    date: "2024-01-10",
-    vehicleModel: "VW Golf",
-    plate: "ABC-1234",
-    services: ["Revisão 30.000km", "Troca de óleo"],
-    total: 890,
-    status: "completed",
-    cashback: 133.50, // 15% de 890
-  },
-  {
-    id: "2",
-    date: "2023-10-15",
-    vehicleModel: "VW Golf",
-    plate: "ABC-1234",
-    services: ["Revisão 20.000km"],
-    total: 650,
-    status: "completed",
-    cashback: 97.50, // 15% de 650
-  },
-  {
-    id: "3",
-    date: "2023-07-20",
-    vehicleModel: "VW Golf",
-    plate: "ABC-1234",
-    services: ["Diagnóstico", "Troca de pastilhas"],
-    total: 450,
-    status: "completed",
-    cashback: 67.50, // 15% de 450
-  },
-  {
-    id: "4",
-    date: "2023-04-05",
-    vehicleModel: "VW Polo",
-    plate: "XYZ-5678",
-    services: ["Revisão 10.000km"],
-    total: 420,
-    status: "cancelled",
-    cashback: 0,
-  },
-];
-
 
 export default function Historico() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [history, setHistory] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch completed and cancelled appointments with their services
+      const { data: appointments, error } = await supabase
+        .from("appointments")
+        .select(`
+          id,
+          appointment_date,
+          status,
+          final_price,
+          vehicle_id,
+          vehicles (model, plate, brand),
+          appointment_services (
+            services (name)
+          )
+        `)
+        .eq("user_id", user.id)
+        .in("status", ["concluido", "cancelado"])
+        .order("appointment_date", { ascending: false });
+
+      if (error) throw error;
+
+      const formattedHistory: ServiceItem[] = (appointments || []).map((apt: any) => ({
+        id: apt.id,
+        date: apt.appointment_date,
+        vehicleModel: apt.vehicles ? `${apt.vehicles.brand || ''} ${apt.vehicles.model}`.trim() : "Veículo",
+        plate: apt.vehicles?.plate || "",
+        services: apt.appointment_services?.map((as: any) => as.services?.name).filter(Boolean) || [],
+        total: Number(apt.final_price) || 0,
+        status: apt.status === "concluido" ? "completed" : "cancelled",
+        cashback: apt.status === "concluido" ? (Number(apt.final_price) || 0) * 0.15 : 0,
+      }));
+
+      setHistory(formattedHistory);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -73,8 +79,16 @@ export default function Historico() {
     });
   };
 
-  const completedServices = mockHistory.filter(s => s.status === "completed");
+  const completedServices = history.filter(s => s.status === "completed");
   const totalCashback = completedServices.reduce((acc, item) => acc + item.cashback, 0);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -110,7 +124,7 @@ export default function Historico() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {mockHistory.map((item) => (
+            {history.map((item) => (
               <Collapsible
                 key={item.id}
                 open={expandedId === item.id}
@@ -156,16 +170,20 @@ export default function Historico() {
                 
                 <CollapsibleContent>
                   <div className="ml-13 pl-4 border-l-2 border-muted mt-2 mb-2 space-y-2">
-                    <p className="text-sm font-medium">Serviços:</p>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      {item.services.map((service, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                          {service}
-                        </li>
-                      ))}
-                    </ul>
-                    {item.status === "completed" && (
+                    {item.services.length > 0 && (
+                      <>
+                        <p className="text-sm font-medium">Serviços:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1">
+                          {item.services.map((service, idx) => (
+                            <li key={idx} className="flex items-center gap-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                              {service}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    {item.status === "completed" && item.cashback > 0 && (
                       <p className="text-sm text-green-600 font-medium">
                         +R$ {item.cashback.toFixed(2).replace('.', ',')} de cashback
                       </p>
@@ -175,7 +193,7 @@ export default function Historico() {
               </Collapsible>
             ))}
 
-            {mockHistory.length === 0 && (
+            {history.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Wrench className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p>Nenhum serviço realizado ainda</p>

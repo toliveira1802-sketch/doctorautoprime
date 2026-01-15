@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Plus, Clock, Wrench, Star, Gift, Sparkles, ChevronRight, MapPin, Users, Droplets, GraduationCap } from "lucide-react";
+import { Calendar, Plus, Clock, Wrench, Star, Gift, Sparkles, ChevronRight, MapPin, Users, Droplets, GraduationCap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -14,40 +14,36 @@ import {
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import {
-  userVehicles,
-  getActivePromotions,
-  getUpcomingEvents,
-  eventTypeLabels,
-  type PrimePromotion,
-  type PrimeEvent,
-} from "@/data/promotions";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Appointment {
   id: string;
   date: Date;
-  time: string;
+  time: string | null;
   service: string;
   status: "confirmado" | "pendente" | "concluido";
+  vehicleModel?: string;
+  vehiclePlate?: string;
+  isFullDay?: boolean;
 }
 
-// Mock data - será substituído por dados do backend
-const mockAppointments: Appointment[] = [
-  {
-    id: "1",
-    date: new Date(2026, 0, 16),
-    time: "09:00",
-    service: "Troca de óleo",
-    status: "confirmado",
-  },
-  {
-    id: "2",
-    date: new Date(2026, 0, 20),
-    time: "14:00",
-    service: "Revisão completa",
-    status: "pendente",
-  },
-];
+interface Promotion {
+  id: string;
+  title: string;
+  description: string | null;
+  discount_label: string;
+  discount_percent: number;
+  valid_to: string;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  description: string | null;
+  event_date: string;
+  event_type: string;
+  location: string | null;
+}
 
 const statusColors = {
   confirmado: "bg-emerald-500/20 text-emerald-500",
@@ -61,7 +57,7 @@ const statusLabels = {
   concluido: "Concluído",
 };
 
-const eventIcons: Record<PrimeEvent["type"], React.ElementType> = {
+const eventIcons: Record<string, React.ElementType> = {
   workshop: GraduationCap,
   meetup: Users,
   carwash: Droplets,
@@ -71,37 +67,101 @@ const eventIcons: Record<PrimeEvent["type"], React.ElementType> = {
 
 const Agenda = () => {
   const navigate = useNavigate();
-  const [clickedPromoIds, setClickedPromoIds] = useState<string[]>([]);
-  const [clickedEventIds, setClickedEventIds] = useState<string[]>([]);
-  
-  const upcomingAppointments = mockAppointments
-    .filter((apt) => apt.date >= new Date())
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Usa os dados centralizados
-  const userVehicleModels = userVehicles.map(v => v.model);
-  const activePromotions = getActivePromotions(userVehicleModels);
-  const upcomingEvents = getUpcomingEvents();
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const handlePromoClick = (promo: PrimePromotion) => {
-    if (!clickedPromoIds.includes(promo.id)) {
-      setClickedPromoIds(prev => [...prev, promo.id]);
-      console.log(`[TRACKING] Promo clicked: ${promo.id} - ${promo.title}`);
+  const fetchData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch appointments
+      const { data: appointmentsData } = await supabase
+        .from("appointments")
+        .select(`
+          id,
+          appointment_date,
+          appointment_time,
+          status,
+          is_full_day,
+          vehicles (model, plate, brand),
+          appointment_services (
+            services (name)
+          )
+        `)
+        .eq("user_id", user.id)
+        .gte("appointment_date", new Date().toISOString().split("T")[0])
+        .in("status", ["pendente", "confirmado"])
+        .order("appointment_date", { ascending: true });
+
+      const formattedAppointments: Appointment[] = (appointmentsData || []).map((apt: any) => ({
+        id: apt.id,
+        date: new Date(apt.appointment_date),
+        time: apt.appointment_time?.slice(0, 5) || null,
+        service: apt.appointment_services?.[0]?.services?.name || "Serviço",
+        status: apt.status === "confirmado" ? "confirmado" : "pendente",
+        vehicleModel: apt.vehicles ? `${apt.vehicles.brand || ''} ${apt.vehicles.model}`.trim() : undefined,
+        vehiclePlate: apt.vehicles?.plate,
+        isFullDay: apt.is_full_day,
+      }));
+
+      setAppointments(formattedAppointments);
+
+      // Fetch active promotions
+      const { data: promotionsData } = await supabase
+        .from("promotions")
+        .select("id, title, description, discount_label, discount_percent, valid_to")
+        .eq("is_active", true)
+        .gte("valid_to", new Date().toISOString().split("T")[0])
+        .order("valid_to", { ascending: true });
+
+      setPromotions(promotionsData || []);
+
+      // Fetch upcoming events
+      const { data: eventsData } = await supabase
+        .from("events")
+        .select("id, title, description, event_date, event_type, location")
+        .eq("is_active", true)
+        .gte("event_date", new Date().toISOString().split("T")[0])
+        .order("event_date", { ascending: true });
+
+      setEvents(eventsData || []);
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
     }
-    
-    toast.success("Oferta selecionada!", {
-      description: "Redirecionando para agendamento...",
-    });
-    navigate("/novo-agendamento", { state: { promotion: promo } });
   };
 
-  const handleWaitlistClick = () => {
-    console.log("[TRACKING] Waitlist interest clicked");
-    toast.info("Interesse registrado!", {
-      description: "Você será notificado quando tivermos promoções exclusivas para você.",
-    });
-    // TODO: Registrar interesse no backend
+  const handleWaitlistClick = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("waitlist_interests").insert({
+        user_id: user?.id || null,
+        source: "agenda_promos",
+      });
+      toast.info("Interesse registrado!", {
+        description: "Você será notificado quando tivermos promoções exclusivas para você.",
+      });
+    } catch (error) {
+      console.error("Error registering waitlist:", error);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="h-screen gradient-bg dark flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen gradient-bg dark flex flex-col overflow-hidden">
@@ -120,9 +180,9 @@ const Agenda = () => {
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              {upcomingAppointments.length > 0 ? (
+              {appointments.length > 0 ? (
                 <div className="space-y-3">
-                  {upcomingAppointments.map((apt) => {
+                  {appointments.map((apt) => {
                     const canReschedule = apt.status === "confirmado";
                     
                     return (
@@ -134,12 +194,12 @@ const Agenda = () => {
                               state: {
                                 appointment: {
                                   id: apt.id,
-                                  vehicleModel: "Volkswagen Polo", // Mock - será do backend
-                                  vehiclePlate: "ABC-1234", // Mock - será do backend
+                                  vehicleModel: apt.vehicleModel || "Veículo",
+                                  vehiclePlate: apt.vehiclePlate || "",
                                   service: apt.service,
                                   currentDate: apt.date,
                                   currentTime: apt.time,
-                                  isFullDay: false,
+                                  isFullDay: apt.isFullDay || false,
                                 },
                               },
                             });
@@ -160,7 +220,7 @@ const Agenda = () => {
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock className="w-4 h-4" />
                             <span>
-                              {format(apt.date, "dd/MM", { locale: ptBR })} às {apt.time}
+                              {format(apt.date, "dd/MM", { locale: ptBR })} {apt.time ? `às ${apt.time}` : "(dia todo)"}
                             </span>
                           </div>
                           {canReschedule && (
@@ -208,7 +268,7 @@ const Agenda = () => {
             </AccordionContent>
           </AccordionItem>
 
-          {/* 3. PROMOÇÕES PRIME EXCLUSIVAS */}
+          {/* 3. PROMOÇÕES */}
           <AccordionItem value="promos" className="glass-card rounded-xl border-none">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
               <div className="flex items-center gap-3">
@@ -217,64 +277,56 @@ const Agenda = () => {
                 </div>
                 <div className="flex flex-col items-start">
                   <span className="text-base font-semibold text-foreground">Promoções Prime</span>
-                  {activePromotions.length > 0 && (
+                  {promotions.length > 0 && (
                     <span className="text-xs text-amber-500 font-medium">
-                      {activePromotions.length} oferta{activePromotions.length > 1 ? "s" : ""} exclusiva{activePromotions.length > 1 ? "s" : ""}
+                      {promotions.length} oferta{promotions.length > 1 ? "s" : ""} disponíve{promotions.length > 1 ? "is" : "l"}
                     </span>
                   )}
                 </div>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              {activePromotions.length > 0 ? (
+              {promotions.length > 0 ? (
                 <div className="space-y-3">
-                  {activePromotions.map((promo) => {
-                    const eligibleVehicle = userVehicles.find(v => 
-                      promo.vehicleModels.length === 0 ||
-                      promo.vehicleModels.some(model => 
-                        v.model.toLowerCase().includes(model.split(" ").pop()?.toLowerCase() || "")
-                      )
-                    );
-                    
-                    return (
-                      <button
-                        key={promo.id}
-                        onClick={() => handlePromoClick(promo)}
-                        className="w-full bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 rounded-xl p-4 border border-amber-500/20 transition-all hover:border-amber-500/40 hover:scale-[1.01] active:scale-[0.99] text-left"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-primary/20 flex items-center justify-center flex-shrink-0">
-                            <Gift className="w-6 h-6 text-amber-500" />
+                  {promotions.map((promo) => (
+                    <button
+                      key={promo.id}
+                      onClick={() => {
+                        toast.success("Oferta selecionada!", {
+                          description: "Redirecionando para agendamento...",
+                        });
+                        navigate("/novo-agendamento", { state: { promotionId: promo.id } });
+                      }}
+                      className="w-full bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 rounded-xl p-4 border border-amber-500/20 transition-all hover:border-amber-500/40 hover:scale-[1.01] active:scale-[0.99] text-left"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-primary/20 flex items-center justify-center flex-shrink-0">
+                          <Gift className="w-6 h-6 text-amber-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-foreground">{promo.title}</p>
+                            <span className="text-xs font-bold text-amber-500 bg-amber-500/20 px-2 py-0.5 rounded-full">
+                              {promo.discount_label}
+                            </span>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-foreground">{promo.title}</p>
-                              <span className="text-xs font-bold text-amber-500 bg-amber-500/20 px-2 py-0.5 rounded-full">
-                                {promo.discount}
-                              </span>
-                            </div>
+                          {promo.description && (
                             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                               {promo.description}
                             </p>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-xs text-muted-foreground">
-                                Válido até {format(promo.validTo, "dd/MM", { locale: ptBR })}
-                              </span>
-                              {eligibleVehicle && (
-                                <span className="text-xs text-primary font-medium">
-                                  Para seu {eligibleVehicle.model}
-                                </span>
-                              )}
-                            </div>
+                          )}
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-muted-foreground">
+                              Válido até {format(new Date(promo.valid_to), "dd/MM", { locale: ptBR })}
+                            </span>
                           </div>
-                          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                         </div>
-                      </button>
-                    );
-                  })}
+                        <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                      </div>
+                    </button>
+                  ))}
                 </div>
               ) : (
-                // Estado vazio - Aguarde surpresa
                 <button 
                   onClick={handleWaitlistClick}
                   className="w-full text-center py-8 bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl border border-dashed border-muted-foreground/30 hover:border-primary/40 transition-all"
@@ -298,7 +350,7 @@ const Agenda = () => {
             </AccordionContent>
           </AccordionItem>
 
-          {/* 4. EVENTOS PRIME */}
+          {/* 4. EVENTOS */}
           <AccordionItem value="eventos" className="glass-card rounded-xl border-none">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
               <div className="flex items-center gap-3">
@@ -307,29 +359,31 @@ const Agenda = () => {
                 </div>
                 <div className="flex flex-col items-start">
                   <span className="text-base font-semibold text-foreground">Eventos Prime</span>
-                  {upcomingEvents.length > 0 && (
+                  {events.length > 0 && (
                     <span className="text-xs text-purple-500 font-medium">
-                      {upcomingEvents.length} evento{upcomingEvents.length > 1 ? "s" : ""} próximo{upcomingEvents.length > 1 ? "s" : ""}
+                      {events.length} evento{events.length > 1 ? "s" : ""} próximo{events.length > 1 ? "s" : ""}
                     </span>
                   )}
                 </div>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              {upcomingEvents.length > 0 ? (
+              {events.length > 0 ? (
                 <div className="space-y-3">
-                  {upcomingEvents.map((event) => {
-                    const EventIcon = eventIcons[event.type];
-                    const typeInfo = eventTypeLabels[event.type];
+                  {events.map((event) => {
+                    const EventIcon = eventIcons[event.event_type] || Star;
                     
                     return (
                       <button
                         key={event.id}
-                        onClick={() => {
-                          if (!clickedEventIds.includes(event.id)) {
-                            setClickedEventIds(prev => [...prev, event.id]);
-                            console.log(`[TRACKING] Event clicked: ${event.id} - ${event.title}`);
-                          }
+                        onClick={async () => {
+                          try {
+                            const { data: { user } } = await supabase.auth.getUser();
+                            await supabase.from("event_clicks").insert({
+                              event_id: event.id,
+                              user_id: user?.id || null,
+                            });
+                          } catch (e) {}
                           toast.info("Evento selecionado!", {
                             description: "Detalhes do evento em breve.",
                           });
@@ -341,19 +395,16 @@ const Agenda = () => {
                             <EventIcon className="w-5 h-5 text-purple-500" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-medium text-foreground">{event.title}</p>
-                              <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", typeInfo.color)}>
-                                {typeInfo.label}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {event.description}
-                            </p>
+                            <p className="font-medium text-foreground">{event.title}</p>
+                            {event.description && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {event.description}
+                              </p>
+                            )}
                             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
-                                <span>{format(event.date, "dd MMM", { locale: ptBR })}</span>
+                                <span>{format(new Date(event.event_date), "dd MMM", { locale: ptBR })}</span>
                               </div>
                               {event.location && (
                                 <div className="flex items-center gap-1">

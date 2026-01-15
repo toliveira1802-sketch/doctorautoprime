@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { ChevronDown, ChevronUp, Wrench, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, Wrench, CheckCircle2, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ServiceItem {
   id: string;
@@ -13,36 +14,55 @@ interface ServiceItem {
   status: "completed" | "cancelled";
 }
 
-// Mock data - will be replaced with real data
-const mockHistory: ServiceItem[] = [
-  {
-    id: "1",
-    date: "2024-01-10",
-    vehicleModel: "VW Golf",
-    services: ["Revisão 30.000km", "Troca de óleo"],
-    total: 890,
-    status: "completed",
-  },
-  {
-    id: "2",
-    date: "2023-10-15",
-    vehicleModel: "VW Golf",
-    services: ["Revisão 20.000km"],
-    total: 650,
-    status: "completed",
-  },
-  {
-    id: "3",
-    date: "2023-07-20",
-    vehicleModel: "VW Golf",
-    services: ["Diagnóstico", "Troca de pastilhas"],
-    total: 450,
-    status: "completed",
-  },
-];
-
 export function ServiceHistory() {
   const [isOpen, setIsOpen] = useState(false);
+  const [history, setHistory] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: appointments, error } = await supabase
+        .from("appointments")
+        .select(`
+          id,
+          appointment_date,
+          status,
+          final_price,
+          vehicles (model, brand),
+          appointment_services (
+            services (name)
+          )
+        `)
+        .eq("user_id", user.id)
+        .eq("status", "concluido")
+        .order("appointment_date", { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+
+      const formattedHistory: ServiceItem[] = (appointments || []).map((apt: any) => ({
+        id: apt.id,
+        date: apt.appointment_date,
+        vehicleModel: apt.vehicles ? `${apt.vehicles.brand || ''} ${apt.vehicles.model}`.trim() : "Veículo",
+        services: apt.appointment_services?.map((as: any) => as.services?.name).filter(Boolean) || [],
+        total: Number(apt.final_price) || 0,
+        status: "completed",
+      }));
+
+      setHistory(formattedHistory);
+    } catch (error) {
+      console.error("Error fetching service history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -53,7 +73,17 @@ export function ServiceHistory() {
     });
   };
 
-  const totalSpent = mockHistory.reduce((acc, item) => acc + item.total, 0);
+  const totalSpent = history.reduce((acc, item) => acc + item.total, 0);
+
+  if (loading) {
+    return (
+      <Card className="border shadow-sm">
+        <CardContent className="py-6 flex justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -68,14 +98,16 @@ export function ServiceHistory() {
                 <div>
                   <CardTitle className="text-base">Histórico de Serviços</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {mockHistory.length} serviços realizados
+                    {history.length} serviço{history.length !== 1 ? 's' : ''} realizado{history.length !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
-                  R$ {totalSpent.toLocaleString()}
-                </Badge>
+                {totalSpent > 0 && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    R$ {totalSpent.toLocaleString()}
+                  </Badge>
+                )}
                 {isOpen ? (
                   <ChevronUp className="h-5 w-5 text-muted-foreground" />
                 ) : (
@@ -88,7 +120,7 @@ export function ServiceHistory() {
 
         <CollapsibleContent>
           <CardContent className="pt-0 space-y-3">
-            {mockHistory.map((item) => (
+            {history.map((item) => (
               <div
                 key={item.id}
                 className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
@@ -104,16 +136,18 @@ export function ServiceHistory() {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    {item.services.join(", ")}
+                    {item.services.length > 0 ? item.services.join(", ") : "Serviço"}
                   </p>
-                  <p className="text-sm font-semibold text-primary mt-1">
-                    R$ {item.total.toLocaleString()}
-                  </p>
+                  {item.total > 0 && (
+                    <p className="text-sm font-semibold text-primary mt-1">
+                      R$ {item.total.toLocaleString()}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
 
-            {mockHistory.length === 0 && (
+            {history.length === 0 && (
               <div className="text-center py-6 text-muted-foreground">
                 <Wrench className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">Nenhum serviço realizado ainda</p>

@@ -1,38 +1,63 @@
 import { useNavigate } from "react-router-dom";
-import { Car, ChevronDown, ChevronRight } from "lucide-react";
+import { Car, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Vehicle {
   id: string;
   model: string;
   plate: string;
-  brand: string;
-  inService: boolean;
+  brand: string | null;
 }
-
-// Mock data - será substituído por dados reais do Supabase
-const mockVehicles: Vehicle[] = [
-  {
-    id: "1",
-    model: "Golf",
-    plate: "BRA-2E19",
-    brand: "VW",
-    inService: true,
-  },
-];
 
 export function MyVehiclesSection() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const hasVehicleInService = mockVehicles.some((v) => v.inService);
-  const vehicleSummary = mockVehicles.map((v) => `${v.brand} ${v.model}`).join(", ");
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, model, plate, brand")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setVehicles(data || []);
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const vehicleSummary = vehicles.map((v) => `${v.brand || ''} ${v.model}`.trim()).join(", ");
+
+  if (loading) {
+    return (
+      <section className="animate-fade-in">
+        <div className="flex items-center justify-center p-4 glass-card rounded-xl">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="animate-fade-in">
@@ -42,9 +67,6 @@ export function MyVehiclesSection() {
             <div className="flex items-center gap-4">
               <div className="relative w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
                 <Car className="w-6 h-6 text-primary" strokeWidth={1.5} />
-                {hasVehicleInService && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full border-2 border-background animate-pulse" />
-                )}
               </div>
               <div className="text-left">
                 <p className="font-semibold text-foreground">MEUS VEÍCULOS</p>
@@ -61,13 +83,12 @@ export function MyVehiclesSection() {
 
         <CollapsibleContent>
           <div className="mt-2 space-y-2">
-            {mockVehicles.map((vehicle) => (
+            {vehicles.map((vehicle) => (
               <div
                 key={vehicle.id}
                 className={cn(
                   "flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all ml-4",
-                  "bg-muted/20 hover:bg-muted/40 border border-border/50",
-                  vehicle.inService && "border-l-4 border-l-destructive"
+                  "bg-muted/20 hover:bg-muted/40 border border-border/50"
                 )}
                 onClick={() => navigate(`/veiculo/${vehicle.id}`)}
               >
@@ -77,27 +98,17 @@ export function MyVehiclesSection() {
                   </div>
                   <div>
                     <p className="font-medium text-foreground text-sm">
-                      {vehicle.brand} {vehicle.model}
+                      {vehicle.brand || ''} {vehicle.model}
                     </p>
                     <p className="text-xs text-muted-foreground">{vehicle.plate}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {vehicle.inService && (
-                    <>
-                      <span className="text-xs text-destructive font-medium">
-                        Em serviço
-                      </span>
-                      <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
-                    </>
-                  )}
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
             ))}
 
-            {mockVehicles.length === 0 && (
+            {vehicles.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Nenhum veículo cadastrado
               </p>
