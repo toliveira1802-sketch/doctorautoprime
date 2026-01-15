@@ -21,6 +21,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
 import AdminNovaOS from "./pages/admin/AdminNovaOS";
 import AdminPatioDetalhes from "./pages/admin/AdminPatioDetalhes";
+import AdminPatio from "./pages/admin/AdminPatio";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
 import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
@@ -157,6 +158,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AdminNovaOS />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/patio" 
+        element={
+          <ProtectedRoute>
+            <AdminPatio />
           </ProtectedRoute>
         } 
       />
