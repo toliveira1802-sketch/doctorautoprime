@@ -14,12 +14,8 @@ const views = [
 export function ViewSwitcher() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
 
-  // Only show for thales
-  if (!user?.email?.toLowerCase().includes("thales")) {
-    return null;
-  }
+  // TEMPORÁRIO: Visível para todos durante testes
 
   const getCurrentView = () => {
     if (location.pathname.startsWith("/gestao")) return "gestao";
