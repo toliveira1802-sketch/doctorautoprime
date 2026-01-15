@@ -17,7 +17,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <Menu className="w-5 h-5" />
             </SidebarTrigger>
             <div className="flex-1">
-              <h1 className="text-lg font-semibold text-foreground">Doctor Auto Prime</h1>
+              <h1 className="text-lg font-semibold text-foreground">Painel Gestão</h1>
             </div>
           </header>
           <main className="flex-1 overflow-y-auto">

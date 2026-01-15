@@ -55,9 +55,19 @@ type AdminMenuGroup = {
   items: AdminMenuItem[];
 };
 
-// MODULE: Operacional (oficina, gestao, direcao)
-const operacionalModule: AdminMenuGroup = {
-  label: "Operacional",
+// MODULE: Gestão (dashboards customizados) - PRIMEIRO
+const gestaoModule: AdminMenuGroup = {
+  label: "Gestão",
+  icon: LayoutDashboard,
+  roles: ["admin"],
+  items: [
+    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["admin"] },
+  ],
+};
+
+// MODULE: Painel ADM (junta Operacional + Dashboard)
+const painelAdmModule: AdminMenuGroup = {
+  label: "Painel ADM",
   icon: Gauge,
   roles: ["admin", "oficina"],
   items: [
@@ -66,15 +76,6 @@ const operacionalModule: AdminMenuGroup = {
     { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "oficina"] },
     { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "oficina"] },
     { title: "Cronograma", url: "/admin/agenda-mecanicos", icon: ClipboardList, roles: ["admin", "oficina"] },
-  ],
-};
-
-// MODULE: Dashboard (consolidates analytics, feedback, financeiro)
-const dashboardModule: AdminMenuGroup = {
-  label: "Dashboard",
-  icon: BarChart3,
-  roles: ["admin", "oficina"],
-  items: [
     { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["admin", "oficina"] },
     { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["admin"] },
     { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["admin"] },
@@ -93,21 +94,10 @@ const sistemaModule: AdminMenuGroup = {
   ],
 };
 
-// MODULE: Gestão (dashboards customizados)
-const gestaoModule: AdminMenuGroup = {
-  label: "Gestão",
-  icon: LayoutDashboard,
-  roles: ["admin"],
-  items: [
-    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["admin"] },
-  ],
-};
-
-// All admin modules - easy to separate in the future
+// All admin modules - Gestão primeiro, depois Painel ADM, depois Sistema
 const adminModules: AdminMenuGroup[] = [
-  operacionalModule,
-  dashboardModule,
   gestaoModule,
+  painelAdmModule,
   sistemaModule,
 ];
 
@@ -155,7 +145,7 @@ export function AppSidebar({ variant = "client" }: AppSidebarProps) {
             <div className="flex flex-col">
               <span className="font-bold text-foreground text-sm">Doctor Auto Prime</span>
               <span className="text-xs text-muted-foreground">
-                {variant === "admin" ? "Painel Admin" : "Cliente"}
+                {variant === "admin" ? "Gestão" : "Cliente"}
               </span>
             </div>
           )}
