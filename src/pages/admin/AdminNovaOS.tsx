@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, User, Car, Loader2, FileText, Trash2, Wrench, Package } from "lucide-react";
+import { Search, Plus, User, Car, Loader2, FileText, Trash2, Wrench, Package, Calculator } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -522,7 +522,18 @@ export default function AdminNovaOS() {
                   </Table>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="gap-2 opacity-60"
+                    title="Em breve"
+                  >
+                    <Calculator className="w-4 h-4" />
+                    Calculadora de Desconto
+                    <span className="text-xs bg-muted px-2 py-0.5 rounded-full">Em breve</span>
+                  </Button>
                   <div className="bg-primary/10 border border-primary/20 rounded-lg px-6 py-3">
                     <span className="text-sm text-muted-foreground mr-3">Total do Orçamento:</span>
                     <span className="text-xl font-bold text-primary">
