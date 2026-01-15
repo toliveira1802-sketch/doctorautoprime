@@ -5,7 +5,8 @@ import {
   Calendar, DollarSign, FileText, Wrench, CheckCircle,
   XCircle, AlertTriangle, Clock, Loader2, Edit2,
   ClipboardCheck, Camera, ChevronDown, ChevronUp, Gauge, ShieldCheck, Activity, Image,
-  TrendingUp, Sparkles, Calculator, Gift, Video, Zap
+  TrendingUp, Sparkles, Calculator, Gift, Video, Zap, Link, Send, Download,
+  MessageSquare, Crown, Award, Medal, Star, Scan
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -90,7 +91,17 @@ interface OrdemServico {
   checklist_precompra: Record<string, boolean> | null;
   fotos_entrada: string[] | null;
   km_atual: string | null;
+  // Optional fields that may not exist in DB yet
+  google_drive_link?: string | null;
+  scanner_avarias?: string | null;
 }
+
+const loyaltyBadgeConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  bronze: { label: "Bronze", color: "bg-amber-700/20 text-amber-700 border-amber-700/30", icon: Medal },
+  prata: { label: "Prata", color: "bg-slate-400/20 text-slate-500 border-slate-400/30", icon: Award },
+  ouro: { label: "Ouro", color: "bg-yellow-500/20 text-yellow-600 border-yellow-500/30", icon: Crown },
+  diamante: { label: "Diamante", color: "bg-cyan-500/20 text-cyan-600 border-cyan-500/30", icon: Star },
+};
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   diagnostico: { label: "Diagnóstico", color: "bg-orange-500/10 text-orange-500 border-orange-500/20", icon: Wrench },
@@ -140,6 +151,13 @@ export default function AdminOSDetalhes() {
   const [servicosOpen, setServicosOpen] = useState(isNewOS);
   const [upsellOpen, setUpsellOpen] = useState(isNewOS);
   const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro' | 'precompra' | 'geral'>('entrada');
+  
+  // Google Drive link and scanner
+  const [googleDriveLink, setGoogleDriveLink] = useState("");
+  const [scannerAvarias, setScannerAvarias] = useState("");
+  
+  // Mock client loyalty level - would come from profile in real implementation
+  const [clientLoyaltyLevel] = useState<'bronze' | 'prata' | 'ouro' | 'diamante'>('ouro');
   
   // Checklist states
   const [checklistEntrada, setChecklistEntrada] = useState<Record<string, boolean>>({});
@@ -318,6 +336,10 @@ export default function AdminOSDetalhes() {
       if (os.checklist_entrada) setChecklistEntrada(os.checklist_entrada);
       if (os.checklist_dinamometro) setChecklistDyno(os.checklist_dinamometro);
       if (os.checklist_precompra) setChecklistPreCompra(os.checklist_precompra);
+      // @ts-ignore - fields may not exist yet
+      if (os.google_drive_link) setGoogleDriveLink(os.google_drive_link);
+      // @ts-ignore
+      if (os.scanner_avarias) setScannerAvarias(os.scanner_avarias);
     }
   }, [os]);
 
@@ -442,13 +464,26 @@ export default function AdminOSDetalhes() {
             {/* Client & Vehicle */}
             <Card className="bg-card/50 border-border/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <User className="w-5 h-5" />
-                  Cliente e Veículo
+                <CardTitle className="flex items-center justify-between text-lg">
+                  <div className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Cliente e Veículo
+                  </div>
+                  {/* Loyalty Badge */}
+                  {(() => {
+                    const loyalty = loyaltyBadgeConfig[clientLoyaltyLevel];
+                    const LoyaltyIcon = loyalty.icon;
+                    return (
+                      <Badge variant="outline" className={cn("gap-1.5 px-3 py-1", loyalty.color)}>
+                        <LoyaltyIcon className="w-4 h-4" />
+                        {loyalty.label}
+                      </Badge>
+                    );
+                  })()}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Nome</Label>
                     {isEditing ? (
@@ -484,6 +519,26 @@ export default function AdminOSDetalhes() {
                     )}
                   </div>
                   <div>
+                    <Label className="text-muted-foreground flex items-center gap-1">
+                      KM Atual <span className="text-red-500">*</span>
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedOS.km_atual || ""}
+                        onChange={(e) => setEditedOS({ ...editedOS, km_atual: e.target.value })}
+                        placeholder="Ex: 45.000"
+                        className={cn(!os.km_atual && "border-red-500/50")}
+                      />
+                    ) : (
+                      <p className={cn(
+                        "font-medium font-mono mt-1",
+                        !os.km_atual && "text-red-500"
+                      )}>
+                        {os.km_atual ? `${os.km_atual} km` : "⚠️ Não informado"}
+                      </p>
+                    )}
+                  </div>
+                  <div>
                     <Label className="text-muted-foreground">Veículo</Label>
                     {isEditing ? (
                       <Input
@@ -505,6 +560,26 @@ export default function AdminOSDetalhes() {
                       <p className="font-medium font-mono mt-1">{os.plate}</p>
                     )}
                   </div>
+                </div>
+                
+                {/* Scanner / Avarias */}
+                <div className="pt-4 border-t border-border">
+                  <Label className="text-muted-foreground flex items-center gap-2 mb-2">
+                    <Scan className="w-4 h-4" />
+                    Scanner / Avarias
+                  </Label>
+                  {isEditing ? (
+                    <Textarea
+                      value={scannerAvarias}
+                      onChange={(e) => setScannerAvarias(e.target.value)}
+                      placeholder="Códigos de erro, avarias identificadas no scanner..."
+                      className="min-h-[80px]"
+                    />
+                  ) : (
+                    <p className="text-sm text-foreground whitespace-pre-wrap p-3 bg-muted/50 rounded-lg min-h-[60px]">
+                      {scannerAvarias || "Nenhuma avaria registrada"}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -764,7 +839,7 @@ export default function AdminOSDetalhes() {
               </Card>
             </Collapsible>
 
-            {/* Fotos e Vídeos Section - Between Checklist and Diagnosis */}
+            {/* Fotos e Vídeos Section - With Google Drive Link */}
             <Collapsible open={fotosOpen} onOpenChange={setFotosOpen}>
               <Card className="bg-card/50 border-border/50">
                 <CollapsibleTrigger asChild>
@@ -773,8 +848,11 @@ export default function AdminOSDetalhes() {
                       <div className="flex items-center gap-2">
                         <Camera className="w-5 h-5" />
                         Fotos e Vídeos
-                        {os.fotos_entrada && os.fotos_entrada.length > 0 && (
-                          <Badge variant="secondary" className="ml-2">{os.fotos_entrada.length} arquivos</Badge>
+                        {googleDriveLink && (
+                          <Badge variant="secondary" className="ml-2 gap-1">
+                            <Link className="w-3 h-3" />
+                            Link
+                          </Badge>
                         )}
                       </div>
                       {fotosOpen ? (
@@ -787,35 +865,61 @@ export default function AdminOSDetalhes() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="pt-0 space-y-4">
-                    {/* Upload buttons */}
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Camera className="w-4 h-4" />
-                        Adicionar Foto
-                      </Button>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Video className="w-4 h-4" />
-                        Adicionar Vídeo
-                      </Button>
+                    {/* Google Drive Link */}
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm">
+                        <Link className="w-4 h-4" />
+                        Link do Google Drive (Fotos/Vídeos)
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={googleDriveLink}
+                          onChange={(e) => setGoogleDriveLink(e.target.value)}
+                          placeholder="https://drive.google.com/drive/folders/..."
+                          className="flex-1"
+                        />
+                        {googleDriveLink && (
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => window.open(googleDriveLink, '_blank')}
+                          >
+                            <Link className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Cole o link da pasta do Google Drive para manter as fotos e vídeos organizados
+                      </p>
                     </div>
-                    
-                    {os.fotos_entrada && os.fotos_entrada.length > 0 ? (
-                      <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                        {os.fotos_entrada.map((foto, index) => (
-                          <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
-                            <img
-                              src={foto}
-                              alt={`Foto ${index + 1}`}
-                              className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => window.open(foto, '_blank')}
-                            />
+
+                    {googleDriveLink ? (
+                      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <Image className="w-6 h-6 text-blue-600" />
                           </div>
-                        ))}
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">Pasta do Google Drive</p>
+                            <p className="text-xs text-muted-foreground truncate max-w-[300px]">
+                              {googleDriveLink}
+                            </p>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            onClick={() => window.open(googleDriveLink, '_blank')}
+                            className="gap-2"
+                          >
+                            <Link className="w-4 h-4" />
+                            Abrir
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Image className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>Nenhuma foto ou vídeo registrado</p>
+                      <div className="text-center py-6 text-muted-foreground border-2 border-dashed border-border rounded-lg">
+                        <Image className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Adicione o link do Google Drive</p>
+                        <p className="text-xs">As fotos ficam no Drive para não pesar a página</p>
                       </div>
                     )}
                   </CardContent>
@@ -1321,6 +1425,55 @@ export default function AdminOSDetalhes() {
                     Desconto
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Enviar Orçamento */}
+            <Card className="bg-card/50 border-border/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Send className="w-4 h-4" />
+                  Enviar Orçamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start gap-2 h-9"
+                  onClick={() => {
+                    const phone = os.client_phone?.replace(/\D/g, '');
+                    if (phone) {
+                      const message = encodeURIComponent(
+                        `Olá ${os.client_name || 'Cliente'}! 🚗\n\nSeu orçamento está pronto!\n\nOS: ${os.numero_os}\nVeículo: ${os.vehicle} - ${os.plate}\nValor Total: ${formatCurrency(totalOrcado)}\n\nPodemos prosseguir?`
+                      );
+                      window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
+                    } else {
+                      toast.error("Telefone do cliente não informado");
+                    }
+                  }}
+                >
+                  <MessageSquare className="w-4 h-4 text-green-600" />
+                  Enviar por WhatsApp
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start gap-2 h-9"
+                  onClick={() => toast.info("Orçamento enviado pelo sistema")}
+                >
+                  <Send className="w-4 h-4 text-blue-600" />
+                  Enviar pelo Sistema
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start gap-2 h-9"
+                  onClick={() => toast.info("Gerando PDF para download...")}
+                >
+                  <Download className="w-4 h-4 text-purple-600" />
+                  Baixar PDF
+                </Button>
               </CardContent>
             </Card>
           </div>
