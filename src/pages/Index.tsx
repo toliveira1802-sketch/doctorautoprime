@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { ActionButtons } from "@/components/home/ActionButtons";
+import { MyVehiclesSection } from "@/components/home/MyVehiclesSection";
 import { Youtube, Instagram, BookOpen } from "lucide-react";
 
 const Index = () => {
@@ -16,8 +17,11 @@ const Index = () => {
           </h2>
         </section>
 
+        {/* My Vehicles - only shows if vehicle is in service */}
+        <MyVehiclesSection />
+
         {/* Action Buttons */}
-        <section className="flex-1">
+        <section className="flex-1 mt-4">
           <ActionButtons />
         </section>
 
