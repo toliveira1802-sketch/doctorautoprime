@@ -210,21 +210,33 @@ export default function AdminNovaOS() {
       return;
     }
 
+    if (!selectedClient.plate || selectedClient.plate === "Sem veículo") {
+      toast.error("Cliente precisa ter um veículo cadastrado");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("appointments").insert([{
-        user_id: selectedClient.user_id,
-        vehicle_id: selectedClient.vehicle_id || null,
-        appointment_date: new Date().toISOString().split('T')[0],
-        notes: notes || null,
-        status: "confirmado" as const,
-      }]);
+      const { data: osData, error: osError } = await supabase
+        .from("ordens_servico")
+        .insert([{
+          numero_os: "", // Trigger will generate this automatically
+          plate: selectedClient.plate,
+          vehicle: `${selectedClient.brand || ''} ${selectedClient.model || 'Veículo'}`.trim(),
+          client_name: selectedClient.name,
+          client_phone: selectedClient.phone,
+          descricao_problema: notes || null,
+          status: "orcamento",
+          data_entrada: new Date().toISOString(),
+        }])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (osError) throw osError;
 
       toast.success("OS aberta com sucesso!");
-      navigate("/admin/agendamentos");
+      navigate(`/admin/ordens-servico/${osData.id}`);
     } catch (error) {
       console.error("Error creating OS:", error);
       toast.error("Erro ao abrir OS. Tente novamente.");
