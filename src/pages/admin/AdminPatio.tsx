@@ -11,9 +11,12 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type PatioStatus = 
   | "diagnostico"
+  | "orcamento"
+  | "aguardando_aprovacao"
   | "aguardando_pecas"
   | "pronto_iniciar"
   | "em_execucao"
+  | "em_teste"
   | "pronto_retirada"
   | "concluido";
 
@@ -100,6 +103,20 @@ const statusColumns: { status: PatioStatus; label: string; icon: string; color: 
     headerColor: "bg-purple-500/20 text-purple-400"
   },
   { 
+    status: "orcamento", 
+    label: "Orçamento", 
+    icon: "📋", 
+    color: "border-cyan-500/50",
+    headerColor: "bg-cyan-500/20 text-cyan-400"
+  },
+  { 
+    status: "aguardando_aprovacao", 
+    label: "Aguardando Aprovação", 
+    icon: "⏳", 
+    color: "border-yellow-500/50",
+    headerColor: "bg-yellow-500/20 text-yellow-400"
+  },
+  { 
     status: "aguardando_pecas", 
     label: "Aguardando Peças", 
     icon: "😤", 
@@ -119,6 +136,13 @@ const statusColumns: { status: PatioStatus; label: string; icon: string; color: 
     icon: "🛠️", 
     color: "border-amber-500/50",
     headerColor: "bg-amber-500/20 text-amber-400"
+  },
+  { 
+    status: "em_teste", 
+    label: "Em Teste", 
+    icon: "🧪", 
+    color: "border-indigo-500/50",
+    headerColor: "bg-indigo-500/20 text-indigo-400"
   },
   { 
     status: "pronto_retirada", 
