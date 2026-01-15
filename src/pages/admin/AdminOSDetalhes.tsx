@@ -58,6 +58,10 @@ interface OrdemServicoItem {
   valor_total: number;
   status: string;
   motivo_recusa: string | null;
+  valor_custo: number | null;
+  valor_venda_sugerido: number | null;
+  margem_aplicada: number | null;
+  justificativa_desconto: string | null;
 }
 
 interface OrdemServico {
@@ -121,8 +125,14 @@ export default function AdminOSDetalhes() {
     descricao: "",
     tipo: "servico",
     quantidade: 1,
-    valor_unitario: 0,
+    valor_custo: 0,
+    margem: 40, // default 40%
+    valor_unitario: 0, // será o valor de venda final
   });
+  const [showJustificativaDialog, setShowJustificativaDialog] = useState(false);
+  const [pendingItem, setPendingItem] = useState<typeof newItem | null>(null);
+  const [justificativa, setJustificativa] = useState("");
+  const MARGEM_MINIMA = 40; // Margem mínima de 40% definida pela gestão
   
   // Collapsible sections - open by default if new OS
   const [checklistOpen, setChecklistOpen] = useState(isNewOS);
@@ -208,8 +218,13 @@ export default function AdminOSDetalhes() {
 
   // Add item mutation
   const addItemMutation = useMutation({
-    mutationFn: async (item: typeof newItem) => {
-      const valor_total = item.quantidade * item.valor_unitario;
+    mutationFn: async (item: typeof newItem & { justificativa?: string }) => {
+      const valor_venda_sugerido = item.valor_custo * (1 + item.margem / 100) * item.quantidade;
+      const valor_total = item.valor_unitario * item.quantidade;
+      const margem_real = item.valor_custo > 0 
+        ? ((item.valor_unitario - item.valor_custo) / item.valor_custo) * 100 
+        : item.margem;
+      
       const { error } = await supabase
         .from("ordens_servico_itens")
         .insert([{
@@ -217,8 +232,12 @@ export default function AdminOSDetalhes() {
           descricao: item.descricao,
           tipo: item.tipo,
           quantidade: item.quantidade,
+          valor_custo: item.valor_custo,
+          valor_venda_sugerido: valor_venda_sugerido,
           valor_unitario: item.valor_unitario,
           valor_total,
+          margem_aplicada: margem_real,
+          justificativa_desconto: item.justificativa || null,
           status: "pendente",
         }]);
       if (error) throw error;
@@ -228,7 +247,9 @@ export default function AdminOSDetalhes() {
       recalculateTotal();
       toast.success("Item adicionado!");
       setShowAddItemDialog(false);
-      setNewItem({ descricao: "", tipo: "servico", quantidade: 1, valor_unitario: 0 });
+      setNewItem({ descricao: "", tipo: "servico", quantidade: 1, valor_custo: 0, margem: 40, valor_unitario: 0 });
+      setJustificativa("");
+      setPendingItem(null);
     },
     onError: (error) => {
       console.error("Error adding item:", error);
@@ -853,12 +874,12 @@ export default function AdminOSDetalhes() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* Serviços Section */}
+                    {/* Mão de Obra Section */}
                     {itens.filter(i => i.tipo === "servico").length > 0 && (
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 pb-2 border-b border-border">
                           <Wrench className="w-4 h-4 text-primary" />
-                          <h4 className="font-semibold text-sm text-primary">SERVIÇOS</h4>
+                          <h4 className="font-semibold text-sm text-primary">MÃO DE OBRA</h4>
                           <Badge variant="secondary" className="ml-auto text-xs">
                             {itens.filter(i => i.tipo === "servico").length} itens
                           </Badge>
@@ -876,11 +897,26 @@ export default function AdminOSDetalhes() {
                             >
                               <div className="flex-1 space-y-1">
                                 <span className="font-medium">{item.descricao}</span>
-                                <div className="text-sm text-muted-foreground">
+                                <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                                  <span>Custo: {formatCurrency(item.valor_custo || 0)}</span>
+                                  <span>Venda: {formatCurrency(item.valor_unitario)}</span>
+                                  <span className={cn(
+                                    "font-medium",
+                                    (item.margem_aplicada || 0) < MARGEM_MINIMA ? "text-red-600" : "text-green-600"
+                                  )}>
+                                    Margem: {(item.margem_aplicada || 0).toFixed(0)}%
+                                  </span>
+                                </div>
+                                <div className="text-sm font-medium">
                                   {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
                                 </div>
+                                {item.justificativa_desconto && (
+                                  <p className="text-xs text-amber-600 bg-amber-500/10 px-2 py-1 rounded">
+                                    💬 {item.justificativa_desconto}
+                                  </p>
+                                )}
                                 {item.motivo_recusa && (
-                                  <p className="text-sm text-red-600">Motivo: {item.motivo_recusa}</p>
+                                  <p className="text-sm text-red-600">Motivo recusa: {item.motivo_recusa}</p>
                                 )}
                               </div>
                               <div className="flex items-center gap-2">
@@ -968,11 +1004,26 @@ export default function AdminOSDetalhes() {
                             >
                               <div className="flex-1 space-y-1">
                                 <span className="font-medium">{item.descricao}</span>
-                                <div className="text-sm text-muted-foreground">
+                                <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                                  <span>Custo: {formatCurrency(item.valor_custo || 0)}</span>
+                                  <span>Venda: {formatCurrency(item.valor_unitario)}</span>
+                                  <span className={cn(
+                                    "font-medium",
+                                    (item.margem_aplicada || 0) < MARGEM_MINIMA ? "text-red-600" : "text-green-600"
+                                  )}>
+                                    Margem: {(item.margem_aplicada || 0).toFixed(0)}%
+                                  </span>
+                                </div>
+                                <div className="text-sm font-medium">
                                   {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
                                 </div>
+                                {item.justificativa_desconto && (
+                                  <p className="text-xs text-amber-600 bg-amber-500/10 px-2 py-1 rounded">
+                                    💬 {item.justificativa_desconto}
+                                  </p>
+                                )}
                                 {item.motivo_recusa && (
-                                  <p className="text-sm text-red-600">Motivo: {item.motivo_recusa}</p>
+                                  <p className="text-sm text-red-600">Motivo recusa: {item.motivo_recusa}</p>
                                 )}
                               </div>
                               <div className="flex items-center gap-2">
@@ -1195,17 +1246,18 @@ export default function AdminOSDetalhes() {
                 {/* Quick suggestions */}
                 <div className="space-y-1">
                   {[
-                    { desc: "Higienização A/C", valor: 189 },
-                    { desc: "Limpeza de Bicos", valor: 280 },
-                    { desc: "Cristalização Faróis", valor: 150 },
+                    { desc: "Higienização A/C", custo: 80, venda: 189 },
+                    { desc: "Limpeza de Bicos", custo: 120, venda: 280 },
+                    { desc: "Cristalização Faróis", custo: 60, venda: 150 },
                   ].map((sug) => (
                     <div key={sug.desc} className="flex items-center justify-between text-xs p-1.5 bg-background/50 rounded">
                       <span className="truncate">{sug.desc}</span>
                       <Button size="sm" variant="ghost" className="h-5 px-2 text-xs" onClick={() => {
-                        setNewItem({ descricao: sug.desc, tipo: "servico", quantidade: 1, valor_unitario: sug.valor });
+                        const margem = ((sug.venda - sug.custo) / sug.custo) * 100;
+                        setNewItem({ descricao: sug.desc, tipo: "servico", quantidade: 1, valor_custo: sug.custo, margem, valor_unitario: sug.venda });
                         setShowAddItemDialog(true);
                       }}>
-                        +R${sug.valor}
+                        +R${sug.venda}
                       </Button>
                     </div>
                   ))}
@@ -1277,35 +1329,27 @@ export default function AdminOSDetalhes() {
 
       {/* Add Item Dialog */}
       <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Adicionar Item ao Orçamento</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select
-                value={newItem.tipo}
-                onValueChange={(value) => setNewItem({ ...newItem, tipo: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="servico">Serviço</SelectItem>
-                  <SelectItem value="peca">Peça</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Descrição *</Label>
-              <Input
-                value={newItem.descricao}
-                onChange={(e) => setNewItem({ ...newItem, descricao: e.target.value })}
-                placeholder="Ex: Troca de óleo"
-              />
-            </div>
             <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select
+                  value={newItem.tipo}
+                  onValueChange={(value) => setNewItem({ ...newItem, tipo: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="servico">Mão de Obra</SelectItem>
+                    <SelectItem value="peca">Peça</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Quantidade</Label>
                 <Input
@@ -1315,21 +1359,104 @@ export default function AdminOSDetalhes() {
                   onChange={(e) => setNewItem({ ...newItem, quantidade: parseInt(e.target.value) || 1 })}
                 />
               </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Descrição *</Label>
+              <Input
+                value={newItem.descricao}
+                onChange={(e) => setNewItem({ ...newItem, descricao: e.target.value })}
+                placeholder="Ex: Troca de óleo"
+              />
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
-                <Label>Valor Unitário (R$)</Label>
+                <Label className="text-xs">Custo (R$)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={newItem.valor_custo}
+                  onChange={(e) => {
+                    const custo = parseFloat(e.target.value) || 0;
+                    const vendaSugerida = custo * (1 + newItem.margem / 100);
+                    setNewItem({ 
+                      ...newItem, 
+                      valor_custo: custo,
+                      valor_unitario: vendaSugerida
+                    });
+                  }}
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Margem (%)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={newItem.margem}
+                  onChange={(e) => {
+                    const margem = parseFloat(e.target.value) || 0;
+                    const vendaSugerida = newItem.valor_custo * (1 + margem / 100);
+                    setNewItem({ 
+                      ...newItem, 
+                      margem,
+                      valor_unitario: vendaSugerida
+                    });
+                  }}
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Venda Final (R$)</Label>
                 <Input
                   type="number"
                   min={0}
                   step={0.01}
                   value={newItem.valor_unitario}
-                  onChange={(e) => setNewItem({ ...newItem, valor_unitario: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => {
+                    const venda = parseFloat(e.target.value) || 0;
+                    const margemReal = newItem.valor_custo > 0 
+                      ? ((venda - newItem.valor_custo) / newItem.valor_custo) * 100 
+                      : newItem.margem;
+                    setNewItem({ ...newItem, valor_unitario: venda, margem: margemReal });
+                  }}
+                  className="text-sm"
                 />
               </div>
             </div>
-            <div className="p-3 bg-muted/50 rounded-lg">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total:</span>
-                <span className="font-bold">{formatCurrency(newItem.quantidade * newItem.valor_unitario)}</span>
+
+            {/* Margin indicator */}
+            {newItem.valor_custo > 0 && (
+              <div className={cn(
+                "p-3 rounded-lg border text-sm",
+                newItem.margem < MARGEM_MINIMA 
+                  ? "bg-red-500/10 border-red-500/30 text-red-700" 
+                  : "bg-green-500/10 border-green-500/30 text-green-700"
+              )}>
+                <div className="flex items-center justify-between">
+                  <span>Margem aplicada:</span>
+                  <span className="font-bold">{newItem.margem.toFixed(1)}%</span>
+                </div>
+                {newItem.margem < MARGEM_MINIMA && (
+                  <p className="text-xs mt-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Abaixo da margem mínima ({MARGEM_MINIMA}%) - justificativa necessária
+                  </p>
+                )}
+              </div>
+            )}
+            
+            <div className="p-3 bg-muted/50 rounded-lg space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Sugerido:</span>
+                <span>{formatCurrency(newItem.valor_custo * (1 + 40 / 100) * newItem.quantidade)}</span>
+              </div>
+              <div className="flex justify-between font-medium">
+                <span>Total Final:</span>
+                <span className="text-lg">{formatCurrency(newItem.quantidade * newItem.valor_unitario)}</span>
               </div>
             </div>
           </div>
@@ -1338,7 +1465,14 @@ export default function AdminOSDetalhes() {
               Cancelar
             </Button>
             <Button 
-              onClick={() => addItemMutation.mutate(newItem)}
+              onClick={() => {
+                if (newItem.margem < MARGEM_MINIMA && newItem.valor_custo > 0) {
+                  setPendingItem(newItem);
+                  setShowJustificativaDialog(true);
+                } else {
+                  addItemMutation.mutate(newItem);
+                }
+              }}
               disabled={!newItem.descricao.trim() || addItemMutation.isPending}
             >
               {addItemMutation.isPending ? (
@@ -1347,6 +1481,53 @@ export default function AdminOSDetalhes() {
                 <Plus className="w-4 h-4 mr-2" />
               )}
               Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Justificativa Dialog */}
+      <Dialog open={showJustificativaDialog} onOpenChange={setShowJustificativaDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="w-5 h-5" />
+              Margem Abaixo do Mínimo
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              A margem aplicada ({pendingItem?.margem.toFixed(1)}%) está abaixo do mínimo permitido ({MARGEM_MINIMA}%).
+              Por favor, justifique a negociação para continuar.
+            </p>
+            <div className="space-y-2">
+              <Label>Justificativa da Negociação *</Label>
+              <Textarea
+                value={justificativa}
+                onChange={(e) => setJustificativa(e.target.value)}
+                placeholder="Ex: Cliente fidelizado, pacote fechado, promoção especial..."
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowJustificativaDialog(false);
+              setJustificativa("");
+              setPendingItem(null);
+            }}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                if (pendingItem && justificativa.trim()) {
+                  addItemMutation.mutate({ ...pendingItem, justificativa });
+                  setShowJustificativaDialog(false);
+                }
+              }}
+              disabled={!justificativa.trim() || addItemMutation.isPending}
+            >
+              Confirmar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1377,14 +1558,6 @@ export default function AdminOSDetalhes() {
                   {key}
                 </Button>
               ))}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => toast.info("Limpar")}>
-                C
-              </Button>
-              <Button variant="outline" className="flex-1" onClick={() => toast.info("Backspace")}>
-                ⌫
-              </Button>
             </div>
           </div>
           <DialogFooter>

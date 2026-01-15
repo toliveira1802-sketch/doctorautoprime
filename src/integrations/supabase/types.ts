@@ -923,6 +923,8 @@ export type Database = {
           horario_saida_semana: string
           id: string
           logo_url: string | null
+          margem_minima_pecas: number | null
+          margem_minima_servicos: number | null
           nome: string
           updated_at: string
         }
@@ -936,6 +938,8 @@ export type Database = {
           horario_saida_semana?: string
           id?: string
           logo_url?: string | null
+          margem_minima_pecas?: number | null
+          margem_minima_servicos?: number | null
           nome?: string
           updated_at?: string
         }
@@ -949,6 +953,8 @@ export type Database = {
           horario_saida_semana?: string
           id?: string
           logo_url?: string | null
+          margem_minima_pecas?: number | null
+          margem_minima_servicos?: number | null
           nome?: string
           updated_at?: string
         }
@@ -1061,37 +1067,49 @@ export type Database = {
           created_at: string
           descricao: string
           id: string
+          justificativa_desconto: string | null
+          margem_aplicada: number | null
           motivo_recusa: string | null
           ordem_servico_id: string
           quantidade: number | null
           status: string
           tipo: string
+          valor_custo: number | null
           valor_total: number | null
           valor_unitario: number | null
+          valor_venda_sugerido: number | null
         }
         Insert: {
           created_at?: string
           descricao: string
           id?: string
+          justificativa_desconto?: string | null
+          margem_aplicada?: number | null
           motivo_recusa?: string | null
           ordem_servico_id: string
           quantidade?: number | null
           status?: string
           tipo?: string
+          valor_custo?: number | null
           valor_total?: number | null
           valor_unitario?: number | null
+          valor_venda_sugerido?: number | null
         }
         Update: {
           created_at?: string
           descricao?: string
           id?: string
+          justificativa_desconto?: string | null
+          margem_aplicada?: number | null
           motivo_recusa?: string | null
           ordem_servico_id?: string
           quantidade?: number | null
           status?: string
           tipo?: string
+          valor_custo?: number | null
           valor_total?: number | null
           valor_unitario?: number | null
+          valor_venda_sugerido?: number | null
         }
         Relationships: [
           {
