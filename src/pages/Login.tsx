@@ -126,6 +126,17 @@ const Login: React.FC = () => {
             </button>
           </p>
         </div>
+
+        {/* Test Credentials - DEV ONLY */}
+        <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30">
+          <p className="text-xs text-muted-foreground text-center mb-2 font-semibold">
+            🧪 Credenciais de Teste
+          </p>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p><span className="font-medium">Admin:</span> admin@doctorautoprime.com / admin123</p>
+            <p><span className="font-medium">Cliente:</span> cliente@teste.com / cliente123</p>
+          </div>
+        </div>
       </div>
 
       {/* Bottom safe area */}
