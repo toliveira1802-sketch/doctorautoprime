@@ -17,8 +17,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
 import AdminNovaOS from "./pages/admin/AdminNovaOS";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
+import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
-
 const queryClient = new QueryClient();
 
 // Protected Route component - saves intended destination before redirecting to login
@@ -79,6 +79,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Reagendamento />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/veiculo/:vehicleId" 
+        element={
+          <ProtectedRoute>
+            <VehicleDetails />
           </ProtectedRoute>
         } 
       />
