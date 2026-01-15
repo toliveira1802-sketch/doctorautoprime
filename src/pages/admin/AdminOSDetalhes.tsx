@@ -659,16 +659,16 @@ export default function AdminOSDetalhes() {
                 <div className="space-y-2">
                   <Label>Mecânico Responsável</Label>
                   <Select
-                    value={os.mechanic_id || ""}
+                    value={os.mechanic_id || "none"}
                     onValueChange={(value) => {
-                      updateOSMutation.mutate({ mechanic_id: value || null });
+                      updateOSMutation.mutate({ mechanic_id: value === "none" ? null : value });
                     }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecionar mecânico" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Não atribuído</SelectItem>
+                      <SelectItem value="none">Não atribuído</SelectItem>
                       {mechanics.map((mec) => (
                         <SelectItem key={mec.id} value={mec.id}>
                           {mec.name}
