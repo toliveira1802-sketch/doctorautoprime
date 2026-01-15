@@ -756,6 +756,28 @@ export default function AdminOSDetalhes() {
                             ))}
                           </div>
                         </div>
+                        
+                        {/* Scanner / Códigos de Erro */}
+                        <div className="space-y-3 pt-4 border-t border-border">
+                          <h4 className="font-semibold text-sm flex items-center gap-2 text-blue-600">
+                            <Scan className="w-4 h-4" />
+                            Scanner / Códigos de Erro
+                          </h4>
+                          {isEditing ? (
+                            <Textarea
+                              value={scannerAvarias}
+                              onChange={(e) => setScannerAvarias(e.target.value)}
+                              placeholder="Códigos de erro do scanner (ex: P0300, P0171)..."
+                              className="min-h-[80px]"
+                            />
+                          ) : (
+                            <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg min-h-[60px]">
+                              <p className="text-sm text-foreground whitespace-pre-wrap">
+                                {scannerAvarias || "Nenhum código registrado"}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </TabsContent>
 
                       {/* Checklist Dinamômetro */}
