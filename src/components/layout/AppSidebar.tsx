@@ -64,18 +64,19 @@ const operacionalModule: AdminMenuGroup = {
     { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "oficina"] },
     { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "oficina"] },
     { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "oficina"] },
-    { title: "Dashboard", url: "/admin/dashboard", icon: BarChart3, roles: ["admin", "oficina"] },
   ],
 };
 
-// MODULE: Equipe (admin + oficina)
-const equipeModule: AdminMenuGroup = {
-  label: "Equipe",
-  icon: Users,
+// MODULE: Dashboard (consolidates analytics, feedback, financeiro)
+const dashboardModule: AdminMenuGroup = {
+  label: "Dashboard",
+  icon: BarChart3,
   roles: ["admin", "oficina"],
   items: [
+    { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["admin", "oficina"] },
     { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "oficina"] },
     { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["admin"] },
+    { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["admin"] },
   ],
 };
 
@@ -87,16 +88,6 @@ const cadastrosModule: AdminMenuGroup = {
   items: [
     { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "oficina"] },
     { title: "Serviços", url: "/admin/servicos", icon: Wrench, roles: ["admin", "oficina"] },
-  ],
-};
-
-// MODULE: Financeiro (admin only)
-const financeiroModule: AdminMenuGroup = {
-  label: "Financeiro",
-  icon: DollarSign,
-  roles: ["admin"],
-  items: [
-    { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["admin"] },
   ],
 };
 
@@ -114,9 +105,8 @@ const sistemaModule: AdminMenuGroup = {
 // All admin modules - easy to separate in the future
 const adminModules: AdminMenuGroup[] = [
   operacionalModule,
-  equipeModule,
+  dashboardModule,
   cadastrosModule,
-  financeiroModule,
   sistemaModule,
 ];
 
