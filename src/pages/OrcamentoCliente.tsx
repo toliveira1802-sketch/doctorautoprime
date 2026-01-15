@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Car, Phone, AlertTriangle, 
-  Clock, Loader2, CheckCircle, XCircle
+  Clock, Loader2, CheckCircle, XCircle, User, Calendar, Cake
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface OrdemServicoItem {
@@ -102,11 +102,42 @@ export default function OrcamentoCliente() {
     enabled: !!osId,
   });
 
+  // Fetch client profile by phone
+  const { data: clientProfile } = useQuery({
+    queryKey: ["client-profile", os?.client_phone],
+    queryFn: async () => {
+      if (!os?.client_phone) return null;
+      
+      const phoneDigits = os.client_phone.replace(/\D/g, '');
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, phone, birthday")
+        .or(`phone.ilike.%${phoneDigits}%,phone.ilike.%${os.client_phone}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) return null;
+      return data;
+    },
+    enabled: !!os?.client_phone,
+  });
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(value);
+  };
+
+  const formatBirthday = (dateStr: string | null) => {
+    if (!dateStr) return null;
+    try {
+      const date = parseISO(dateStr);
+      return format(date, "dd 'de' MMMM", { locale: ptBR });
+    } catch {
+      return null;
+    }
   };
 
   // Calculate totals
@@ -220,6 +251,10 @@ export default function OrcamentoCliente() {
     );
   };
 
+  const clientName = clientProfile?.full_name || os.client_name;
+  const clientPhone = clientProfile?.phone || os.client_phone;
+  const clientBirthday = formatBirthday(clientProfile?.birthday);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Header */}
@@ -241,6 +276,53 @@ export default function OrcamentoCliente() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6 pb-32">
+        {/* Client Info */}
+        <Card className="bg-card/80 backdrop-blur border-border/50">
+          <CardContent className="p-4 space-y-4">
+            {/* Cliente */}
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Cliente</p>
+                <h2 className="font-semibold text-lg text-foreground">{clientName || "Não informado"}</h2>
+              </div>
+            </div>
+
+            {/* Telefone e Aniversário */}
+            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Telefone</p>
+                  {clientPhone ? (
+                    <a 
+                      href={`https://wa.me/55${clientPhone.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-green-600 hover:underline"
+                    >
+                      {clientPhone}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Não informado</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Cake className="w-4 h-4 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Aniversário</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {clientBirthday || "Não informado"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Vehicle Info */}
         <Card className="bg-card/80 backdrop-blur border-border/50">
           <CardContent className="p-4">
@@ -252,15 +334,13 @@ export default function OrcamentoCliente() {
                 <h2 className="font-semibold text-lg text-foreground">{os.vehicle}</h2>
                 <p className="text-sm text-muted-foreground font-mono">{os.plate}</p>
               </div>
-              {os.client_phone && (
-                <a 
-                  href={`https://wa.me/55${os.client_phone.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-full bg-green-500/10 text-green-600 hover:bg-green-500/20"
-                >
-                  <Phone className="w-5 h-5" />
-                </a>
+              {os.data_entrada && (
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Entrada</p>
+                  <p className="text-sm font-medium">
+                    {format(new Date(os.data_entrada), "dd/MM/yyyy", { locale: ptBR })}
+                  </p>
+                </div>
               )}
             </div>
             {os.diagnostico && (
