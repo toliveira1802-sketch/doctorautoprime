@@ -24,6 +24,7 @@ import AdminDashboardOverview from "./pages/admin/AdminDashboardOverview";
 import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
 
 import AdminOrdensServico from "./pages/admin/AdminOrdensServico";
+import AdminNovaOS from "./pages/admin/AdminNovaOS";
 import AdminOSDetalhes from "./pages/admin/AdminOSDetalhes";
 import AdminPatioDetalhes from "./pages/admin/AdminPatioDetalhes";
 import AdminPatio from "./pages/admin/AdminPatio";
@@ -184,6 +185,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <AdminDashboardOverview />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/nova-os" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminNovaOS />
             </AdminRoute>
           </ProtectedRoute>
         } 
