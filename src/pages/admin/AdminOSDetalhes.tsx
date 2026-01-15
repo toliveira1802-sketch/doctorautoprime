@@ -3,11 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Save, Plus, Trash2, Phone, Car, User, 
   Calendar, DollarSign, FileText, Wrench, CheckCircle,
-  XCircle, AlertTriangle, Clock, Loader2, Edit2
+  XCircle, AlertTriangle, Clock, Loader2, Edit2,
+  ClipboardCheck, Camera, ChevronDown, ChevronUp, Gauge, ShieldCheck, Activity, Image
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,10 +80,17 @@ interface OrdemServico {
   observacoes: string | null;
   motivo_recusa: string | null;
   mechanic_id: string | null;
+  checklist_entrada: Record<string, boolean> | null;
+  checklist_dinamometro: Record<string, boolean> | null;
+  checklist_precompra: Record<string, boolean> | null;
+  fotos_entrada: string[] | null;
+  km_atual: string | null;
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  diagnostico: { label: "Diagnóstico", color: "bg-orange-500/10 text-orange-500 border-orange-500/20", icon: Wrench },
   orcamento: { label: "Orçamento", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: FileText },
+  aguardando_aprovacao: { label: "Aguardando Aprovação", color: "bg-amber-500/10 text-amber-500 border-amber-500/20", icon: Clock },
   aprovado: { label: "Aprovado", color: "bg-green-500/10 text-green-500 border-green-500/20", icon: CheckCircle },
   parcial: { label: "Parcial", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", icon: AlertTriangle },
   recusado: { label: "Recusado", color: "bg-red-500/10 text-red-500 border-red-500/20", icon: XCircle },
@@ -108,6 +119,16 @@ export default function AdminOSDetalhes() {
     quantidade: 1,
     valor_unitario: 0,
   });
+  
+  // Collapsible sections
+  const [checklistOpen, setChecklistOpen] = useState(false);
+  const [fotosOpen, setFotosOpen] = useState(false);
+  const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro' | 'precompra'>('entrada');
+  
+  // Checklist states
+  const [checklistEntrada, setChecklistEntrada] = useState<Record<string, boolean>>({});
+  const [checklistDyno, setChecklistDyno] = useState<Record<string, boolean>>({});
+  const [checklistPreCompra, setChecklistPreCompra] = useState<Record<string, boolean>>({});
 
   // Fetch OS data
   const { data: os, isLoading, error } = useQuery({
@@ -265,6 +286,10 @@ export default function AdminOSDetalhes() {
   useEffect(() => {
     if (os) {
       setEditedOS(os);
+      // Initialize checklists from OS data
+      if (os.checklist_entrada) setChecklistEntrada(os.checklist_entrada);
+      if (os.checklist_dinamometro) setChecklistDyno(os.checklist_dinamometro);
+      if (os.checklist_precompra) setChecklistPreCompra(os.checklist_precompra);
     }
   }, [os]);
 
@@ -504,6 +529,200 @@ export default function AdminOSDetalhes() {
               </CardContent>
             </Card>
 
+            {/* Checklist Section */}
+            <Collapsible open={checklistOpen} onOpenChange={setChecklistOpen}>
+              <Card className="bg-card/50 border-border/50">
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between text-lg">
+                      <div className="flex items-center gap-2">
+                        <ClipboardCheck className="w-5 h-5" />
+                        Checklist
+                        {(Object.values(checklistEntrada).some(v => v) || 
+                          Object.values(checklistDyno).some(v => v) || 
+                          Object.values(checklistPreCompra).some(v => v)) && (
+                          <Badge variant="secondary" className="ml-2">Preenchido</Badge>
+                        )}
+                      </div>
+                      {checklistOpen ? (
+                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 space-y-4">
+                    <Tabs value={checklistType} onValueChange={(v) => setChecklistType(v as 'entrada' | 'dinamometro' | 'precompra')}>
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="entrada" className="flex items-center gap-1 text-xs md:text-sm">
+                          <ClipboardCheck className="w-4 h-4" />
+                          <span className="hidden sm:inline">Entrada</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="dinamometro" className="flex items-center gap-1 text-xs md:text-sm">
+                          <Gauge className="w-4 h-4" />
+                          <span className="hidden sm:inline">Dinamômetro</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="precompra" className="flex items-center gap-1 text-xs md:text-sm">
+                          <ShieldCheck className="w-4 h-4" />
+                          <span className="hidden sm:inline">Pré-Compra</span>
+                        </TabsTrigger>
+                      </TabsList>
+
+                      {/* Checklist Entrada */}
+                      <TabsContent value="entrada" className="mt-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {[
+                            { key: "nivelOleo", label: "Nível de Óleo" },
+                            { key: "nivelAgua", label: "Nível de Água" },
+                            { key: "freios", label: "Freios" },
+                            { key: "pneus", label: "Pneus" },
+                            { key: "luzes", label: "Luzes" },
+                            { key: "bateria", label: "Bateria" },
+                            { key: "correia", label: "Correia" },
+                            { key: "suspensao", label: "Suspensão" },
+                          ].map((item) => (
+                            <div key={item.key} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`entrada-${item.key}`}
+                                checked={checklistEntrada[item.key] || false}
+                                onCheckedChange={(checked) => {
+                                  const updated = { ...checklistEntrada, [item.key]: checked === true };
+                                  setChecklistEntrada(updated);
+                                  updateOSMutation.mutate({ checklist_entrada: updated });
+                                }}
+                              />
+                              <label htmlFor={`entrada-${item.key}`} className="text-sm font-medium leading-none cursor-pointer">
+                                {item.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+
+                      {/* Checklist Dinamômetro */}
+                      <TabsContent value="dinamometro" className="mt-4 space-y-4">
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                            <Activity className="w-4 h-4" />
+                            Verificações
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {[
+                              { key: "combustivelAdequado", label: "Combustível adequado" },
+                              { key: "oleoNivel", label: "Óleo no nível correto" },
+                              { key: "arrefecimentoOk", label: "Arrefecimento ok" },
+                              { key: "pneusCalibrados", label: "Pneus calibrados" },
+                              { key: "correiasPolias", label: "Correias e polias" },
+                              { key: "escapamentoOk", label: "Escapamento ok" },
+                              { key: "sensorOxigenio", label: "Sensor de oxigênio" },
+                              { key: "ignioOk", label: "Sistema de ignição" },
+                            ].map((item) => (
+                              <div key={item.key} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`dyno-${item.key}`}
+                                  checked={checklistDyno[item.key] || false}
+                                  onCheckedChange={(checked) => {
+                                    const updated = { ...checklistDyno, [item.key]: checked === true };
+                                    setChecklistDyno(updated);
+                                    updateOSMutation.mutate({ checklist_dinamometro: updated });
+                                  }}
+                                />
+                                <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
+                                  {item.label}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      {/* Checklist Pré-Compra */}
+                      <TabsContent value="precompra" className="mt-4 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {[
+                            { key: "documentacao", label: "Documentação em dia" },
+                            { key: "pintura", label: "Pintura original" },
+                            { key: "motor", label: "Motor ok" },
+                            { key: "cambio", label: "Câmbio ok" },
+                            { key: "suspensao", label: "Suspensão ok" },
+                            { key: "freios", label: "Freios ok" },
+                            { key: "eletrica", label: "Parte elétrica" },
+                            { key: "estrutura", label: "Estrutura íntegra" },
+                            { key: "historico", label: "Histórico limpo" },
+                            { key: "sinistro", label: "Sem sinistro" },
+                          ].map((item) => (
+                            <div key={item.key} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`precompra-${item.key}`}
+                                checked={checklistPreCompra[item.key] || false}
+                                onCheckedChange={(checked) => {
+                                  const updated = { ...checklistPreCompra, [item.key]: checked === true };
+                                  setChecklistPreCompra(updated);
+                                  updateOSMutation.mutate({ checklist_precompra: updated });
+                                }}
+                              />
+                              <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
+                                {item.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* Fotos de Entrada */}
+            <Collapsible open={fotosOpen} onOpenChange={setFotosOpen}>
+              <Card className="bg-card/50 border-border/50">
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between text-lg">
+                      <div className="flex items-center gap-2">
+                        <Camera className="w-5 h-5" />
+                        Fotos de Entrada
+                        {os.fotos_entrada && os.fotos_entrada.length > 0 && (
+                          <Badge variant="secondary" className="ml-2">{os.fotos_entrada.length} fotos</Badge>
+                        )}
+                      </div>
+                      {fotosOpen ? (
+                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0">
+                    {os.fotos_entrada && os.fotos_entrada.length > 0 ? (
+                      <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                        {os.fotos_entrada.map((foto, index) => (
+                          <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
+                            <img
+                              src={foto}
+                              alt={`Foto ${index + 1}`}
+                              className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => window.open(foto, '_blank')}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Image className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>Nenhuma foto registrada na entrada</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
             {/* Items / Budget */}
             <Card className="bg-card/50 border-border/50">
               <CardHeader className="flex flex-row items-center justify-between">
@@ -645,7 +864,9 @@ export default function AdminOSDetalhes() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="diagnostico">Diagnóstico</SelectItem>
                     <SelectItem value="orcamento">Orçamento</SelectItem>
+                    <SelectItem value="aguardando_aprovacao">Aguardando Aprovação</SelectItem>
                     <SelectItem value="aprovado">Aprovado</SelectItem>
                     <SelectItem value="parcial">Parcialmente Aprovado</SelectItem>
                     <SelectItem value="recusado">Recusado</SelectItem>
