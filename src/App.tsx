@@ -36,6 +36,7 @@ import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
 import AdminFinanceiro from "./pages/admin/AdminFinanceiro";
 import AdminDocumentacao from "./pages/admin/AdminDocumentacao";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
+import OrcamentoCliente from "./pages/OrcamentoCliente";
 import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
 import Blog from "./pages/Blog";
@@ -157,6 +158,10 @@ const AppRoutes = () => {
             <ServicoDetalhes />
           </ProtectedRoute>
         } 
+      />
+      <Route 
+        path="/orcamento/:osId" 
+        element={<OrcamentoCliente />} 
       />
       {/* Admin Routes - Protected by role */}
       <Route 
