@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   Search, Plus, Filter, Eye, FileText, AlertTriangle, 
   CheckCircle, XCircle, Clock, Wrench, Loader2, Phone,
-  ChevronDown, ChevronRight, DollarSign, Calendar
+  ChevronDown, ChevronRight, DollarSign, Calendar, ExternalLink
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -400,16 +400,30 @@ export default function AdminOrdensServico() {
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedOS(os);
-                                }}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title="Ver orçamento do cliente"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(`/orcamento/${os.id}`, '_blank');
+                                  }}
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title="Ver detalhes"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedOS(os);
+                                  }}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                           {isExpanded && hasItems && (
