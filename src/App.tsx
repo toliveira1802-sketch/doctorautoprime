@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AdminRoute } from "./components/auth/AdminRoute";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Historico from "./pages/Historico";
@@ -136,12 +137,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
-      {/* Admin Routes */}
+      {/* Admin Routes - Protected by role */}
       <Route 
         path="/admin" 
         element={
           <ProtectedRoute>
-            <AdminDashboard />
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
           </ProtectedRoute>
         } 
       />
@@ -149,7 +152,9 @@ const AppRoutes = () => {
         path="/admin/agendamentos" 
         element={
           <ProtectedRoute>
-            <AdminAgendamentos />
+            <AdminRoute>
+              <AdminAgendamentos />
+            </AdminRoute>
           </ProtectedRoute>
         } 
       />
@@ -157,7 +162,9 @@ const AppRoutes = () => {
         path="/admin/nova-os" 
         element={
           <ProtectedRoute>
-            <AdminNovaOS />
+            <AdminRoute>
+              <AdminNovaOS />
+            </AdminRoute>
           </ProtectedRoute>
         } 
       />
@@ -165,7 +172,9 @@ const AppRoutes = () => {
         path="/admin/patio" 
         element={
           <ProtectedRoute>
-            <AdminPatio />
+            <AdminRoute>
+              <AdminPatio />
+            </AdminRoute>
           </ProtectedRoute>
         } 
       />
@@ -173,7 +182,9 @@ const AppRoutes = () => {
         path="/admin/patio/:patioId" 
         element={
           <ProtectedRoute>
-            <AdminPatioDetalhes />
+            <AdminRoute>
+              <AdminPatioDetalhes />
+            </AdminRoute>
           </ProtectedRoute>
         } 
       />
