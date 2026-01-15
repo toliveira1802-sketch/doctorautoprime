@@ -88,7 +88,6 @@ const cadastrosModule: AdminMenuGroup = {
   icon: ClipboardList,
   roles: ["admin", "oficina"],
   items: [
-    { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "oficina"] },
     { title: "Serviços", url: "/admin/servicos", icon: Wrench, roles: ["admin", "oficina"] },
   ],
 };
