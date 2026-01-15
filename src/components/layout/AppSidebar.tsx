@@ -1,4 +1,4 @@
-import { Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, Plus, Car, Star, TrendingUp, DollarSign } from "lucide-react";
+import { Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, Plus, Car, Star, TrendingUp, DollarSign, FileText } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,7 @@ const adminItems: AdminMenuItem[] = [
   { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "oficina"] },
   { title: "Serviços", url: "/admin/servicos", icon: Wrench, roles: ["admin", "oficina"] },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["admin", "oficina"] },
+  { title: "Documentação", url: "/admin/documentacao", icon: FileText, roles: ["admin", "oficina"] },
 ];
 
 interface AppSidebarProps {

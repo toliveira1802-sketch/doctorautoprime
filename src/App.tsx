@@ -30,6 +30,7 @@ import AdminClientes from "./pages/admin/AdminClientes";
 import AdminServicos from "./pages/admin/AdminServicos";
 import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
 import AdminFinanceiro from "./pages/admin/AdminFinanceiro";
+import AdminDocumentacao from "./pages/admin/AdminDocumentacao";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
 import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
@@ -262,6 +263,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <AdminConfiguracoes />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/documentacao" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminDocumentacao />
             </AdminRoute>
           </ProtectedRoute>
         } 
