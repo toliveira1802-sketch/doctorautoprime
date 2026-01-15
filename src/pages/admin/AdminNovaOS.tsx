@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Car, User, Phone, FileText, Loader2, Search, Zap } from "lucide-react";
+import { ArrowLeft, Save, Car, User, Phone, FileText, Loader2, Search, Zap, AlertTriangle } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ export default function AdminNovaOS() {
     client_phone: clientPhone || "",
     km_atual: "",
     descricao_problema: "",
+    is_urgent: false,
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,6 +83,7 @@ export default function AdminNovaOS() {
       client_phone: result.client_phone || "",
       km_atual: result.km_atual || "",
       descricao_problema: "",
+      is_urgent: false,
     });
     setSearchQuery("");
     setShowResults(false);
@@ -239,15 +242,17 @@ export default function AdminNovaOS() {
             </CardContent>
           </Card>
 
+          {/* Cadastro Rápido - Veículo + Cliente unificado */}
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Car className="w-5 h-5" />
-                Dados do Veículo
+                Cadastro Rápido
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              {/* Linha 1: Placa, KM, Urgente */}
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="plate">Placa *</Label>
                   <Input
@@ -270,7 +275,24 @@ export default function AdminNovaOS() {
                     onChange={handleChange}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-500" />
+                    Urgente
+                  </Label>
+                  <div className="flex items-center h-10 gap-2">
+                    <Switch
+                      checked={formData.is_urgent}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_urgent: checked }))}
+                    />
+                    <span className={`text-sm ${formData.is_urgent ? 'text-amber-500 font-medium' : 'text-muted-foreground'}`}>
+                      {formData.is_urgent ? 'SIM' : 'Não'}
+                    </span>
+                  </div>
+                </div>
               </div>
+
+              {/* Linha 2: Veículo */}
               <div className="space-y-2">
                 <Label htmlFor="vehicle">Veículo *</Label>
                 <Input
@@ -281,40 +303,40 @@ export default function AdminNovaOS() {
                   onChange={handleChange}
                 />
               </div>
+
+              {/* Linha 3: Cliente e Telefone */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="client_name" className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Nome do Cliente
+                  </Label>
+                  <Input
+                    id="client_name"
+                    name="client_name"
+                    placeholder="Nome completo"
+                    value={formData.client_name}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="client_phone" className="flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    Telefone
+                  </Label>
+                  <Input
+                    id="client_phone"
+                    name="client_phone"
+                    placeholder="(11) 99999-9999"
+                    value={formData.client_phone}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <User className="w-5 h-5" />
-                Dados do Cliente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="client_name">Nome do Cliente</Label>
-                <Input
-                  id="client_name"
-                  name="client_name"
-                  placeholder="Nome completo"
-                  value={formData.client_name}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="client_phone">Telefone</Label>
-                <Input
-                  id="client_phone"
-                  name="client_phone"
-                  placeholder="(11) 99999-9999"
-                  value={formData.client_phone}
-                  onChange={handleChange}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
+          {/* Descrição do Problema */}
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
