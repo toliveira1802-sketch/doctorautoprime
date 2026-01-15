@@ -977,6 +977,8 @@ export type Database = {
           data_orcamento: string | null
           descricao_problema: string | null
           diagnostico: string | null
+          enviado_gestao: boolean | null
+          enviado_gestao_em: string | null
           fotos_entrada: string[] | null
           google_drive_link: string | null
           id: string
@@ -986,6 +988,8 @@ export type Database = {
           numero_os: string
           observacoes: string | null
           plate: string
+          remarketing_data_prevista: string | null
+          remarketing_status: string | null
           scanner_avarias: string | null
           status: string
           trello_card_id: string | null
@@ -1012,6 +1016,8 @@ export type Database = {
           data_orcamento?: string | null
           descricao_problema?: string | null
           diagnostico?: string | null
+          enviado_gestao?: boolean | null
+          enviado_gestao_em?: string | null
           fotos_entrada?: string[] | null
           google_drive_link?: string | null
           id?: string
@@ -1021,6 +1027,8 @@ export type Database = {
           numero_os: string
           observacoes?: string | null
           plate: string
+          remarketing_data_prevista?: string | null
+          remarketing_status?: string | null
           scanner_avarias?: string | null
           status?: string
           trello_card_id?: string | null
@@ -1047,6 +1055,8 @@ export type Database = {
           data_orcamento?: string | null
           descricao_problema?: string | null
           diagnostico?: string | null
+          enviado_gestao?: boolean | null
+          enviado_gestao_em?: string | null
           fotos_entrada?: string[] | null
           google_drive_link?: string | null
           id?: string
@@ -1056,6 +1066,8 @@ export type Database = {
           numero_os?: string
           observacoes?: string | null
           plate?: string
+          remarketing_data_prevista?: string | null
+          remarketing_status?: string | null
           scanner_avarias?: string | null
           status?: string
           trello_card_id?: string | null
@@ -1071,12 +1083,14 @@ export type Database = {
       ordens_servico_itens: {
         Row: {
           created_at: string
+          data_retorno_estimada: string | null
           descricao: string
           id: string
           justificativa_desconto: string | null
           margem_aplicada: number | null
           motivo_recusa: string | null
           ordem_servico_id: string
+          prioridade: string | null
           quantidade: number | null
           status: string
           tipo: string
@@ -1087,12 +1101,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          data_retorno_estimada?: string | null
           descricao: string
           id?: string
           justificativa_desconto?: string | null
           margem_aplicada?: number | null
           motivo_recusa?: string | null
           ordem_servico_id: string
+          prioridade?: string | null
           quantidade?: number | null
           status?: string
           tipo?: string
@@ -1103,12 +1119,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          data_retorno_estimada?: string | null
           descricao?: string
           id?: string
           justificativa_desconto?: string | null
           margem_aplicada?: number | null
           motivo_recusa?: string | null
           ordem_servico_id?: string
+          prioridade?: string | null
           quantidade?: number | null
           status?: string
           tipo?: string
