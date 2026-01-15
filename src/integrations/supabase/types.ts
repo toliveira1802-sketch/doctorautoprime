@@ -921,6 +921,140 @@ export type Database = {
         }
         Relationships: []
       }
+      ordens_servico: {
+        Row: {
+          appointment_id: string | null
+          client_name: string | null
+          client_phone: string | null
+          created_at: string
+          created_by: string | null
+          data_aprovacao: string | null
+          data_conclusao: string | null
+          data_entrada: string | null
+          data_entrega: string | null
+          data_orcamento: string | null
+          descricao_problema: string | null
+          diagnostico: string | null
+          id: string
+          mechanic_id: string | null
+          motivo_recusa: string | null
+          numero_os: string
+          observacoes: string | null
+          plate: string
+          status: string
+          trello_card_id: string | null
+          trello_card_url: string | null
+          updated_at: string
+          valor_aprovado: number | null
+          valor_final: number | null
+          valor_orcado: number | null
+          vehicle: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_aprovacao?: string | null
+          data_conclusao?: string | null
+          data_entrada?: string | null
+          data_entrega?: string | null
+          data_orcamento?: string | null
+          descricao_problema?: string | null
+          diagnostico?: string | null
+          id?: string
+          mechanic_id?: string | null
+          motivo_recusa?: string | null
+          numero_os: string
+          observacoes?: string | null
+          plate: string
+          status?: string
+          trello_card_id?: string | null
+          trello_card_url?: string | null
+          updated_at?: string
+          valor_aprovado?: number | null
+          valor_final?: number | null
+          valor_orcado?: number | null
+          vehicle: string
+        }
+        Update: {
+          appointment_id?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_aprovacao?: string | null
+          data_conclusao?: string | null
+          data_entrada?: string | null
+          data_entrega?: string | null
+          data_orcamento?: string | null
+          descricao_problema?: string | null
+          diagnostico?: string | null
+          id?: string
+          mechanic_id?: string | null
+          motivo_recusa?: string | null
+          numero_os?: string
+          observacoes?: string | null
+          plate?: string
+          status?: string
+          trello_card_id?: string | null
+          trello_card_url?: string | null
+          updated_at?: string
+          valor_aprovado?: number | null
+          valor_final?: number | null
+          valor_orcado?: number | null
+          vehicle?: string
+        }
+        Relationships: []
+      }
+      ordens_servico_itens: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          motivo_recusa: string | null
+          ordem_servico_id: string
+          quantidade: number | null
+          status: string
+          tipo: string
+          valor_total: number | null
+          valor_unitario: number | null
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          motivo_recusa?: string | null
+          ordem_servico_id: string
+          quantidade?: number | null
+          status?: string
+          tipo?: string
+          valor_total?: number | null
+          valor_unitario?: number | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          motivo_recusa?: string | null
+          ordem_servico_id?: string
+          quantidade?: number | null
+          status?: string
+          tipo?: string
+          valor_total?: number | null
+          valor_unitario?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_itens_ordem_servico_id_fkey"
+            columns: ["ordem_servico_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patio_daily_feedback: {
         Row: {
           bottlenecks: string | null
