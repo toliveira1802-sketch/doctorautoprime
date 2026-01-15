@@ -48,13 +48,6 @@ export function ActionButtons() {
 
   const actions = [
     {
-      icon: Car,
-      label: "Veículos",
-      subtitle: userVehicles[0]?.model || "Adicionar",
-      color: "text-primary",
-      onClick: () => toast.info("Em breve!", { description: "Página de veículos em desenvolvimento." }),
-    },
-    {
       icon: Bell,
       label: "Lembrete",
       subtitle: "2 pendentes",
