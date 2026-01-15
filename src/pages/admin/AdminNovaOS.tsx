@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, User, Car, Loader2, FileText } from "lucide-react";
+import { 
+  Search, Plus, User, Car, Loader2, FileText, 
+  ClipboardCheck, Package, Wrench, ChevronDown, ChevronUp 
+} from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -37,6 +42,23 @@ export default function AdminNovaOS() {
   const [notes, setNotes] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Expandable sections state
+  const [checklistOpen, setChecklistOpen] = useState(true);
+  const [pecasOpen, setPecasOpen] = useState(false);
+  const [servicosOpen, setServicosOpen] = useState(false);
+
+  // Checklist state
+  const [checklist, setChecklist] = useState({
+    nivelOleo: false,
+    nivelAgua: false,
+    freios: false,
+    pneus: false,
+    luzes: false,
+    bateria: false,
+    correia: false,
+    suspensao: false,
+  });
 
   // New client dialog state
   const [showNewClientDialog, setShowNewClientDialog] = useState(false);
@@ -375,13 +397,134 @@ export default function AdminNovaOS() {
               placeholder="Descreva o problema relatado pelo cliente, sintomas do veículo, etc..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="min-h-[150px]"
+              className="min-h-[100px]"
             />
           </CardContent>
         </Card>
 
+        {/* Checklist Section */}
+        <Collapsible open={checklistOpen} onOpenChange={setChecklistOpen}>
+          <Card className="bg-card/50 border-border/50">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardTitle className="flex items-center justify-between text-lg">
+                  <div className="flex items-center gap-2">
+                    <ClipboardCheck className="w-5 h-5" />
+                    Checklist de Entrada
+                  </div>
+                  {checklistOpen ? (
+                    <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { key: "nivelOleo", label: "Nível de Óleo" },
+                    { key: "nivelAgua", label: "Nível de Água" },
+                    { key: "freios", label: "Freios" },
+                    { key: "pneus", label: "Pneus" },
+                    { key: "luzes", label: "Luzes" },
+                    { key: "bateria", label: "Bateria" },
+                    { key: "correia", label: "Correia" },
+                    { key: "suspensao", label: "Suspensão" },
+                  ].map((item) => (
+                    <div key={item.key} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={item.key}
+                        checked={checklist[item.key as keyof typeof checklist]}
+                        onCheckedChange={(checked) =>
+                          setChecklist({ ...checklist, [item.key]: checked === true })
+                        }
+                      />
+                      <label
+                        htmlFor={item.key}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {item.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
+        {/* Peças Section */}
+        <Collapsible open={pecasOpen} onOpenChange={setPecasOpen}>
+          <Card className="bg-card/50 border-border/50">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardTitle className="flex items-center justify-between text-lg">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    Peças
+                    <span className="text-xs text-muted-foreground font-normal ml-2">(0 itens)</span>
+                  </div>
+                  {pecasOpen ? (
+                    <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>Nenhuma peça adicionada</p>
+                  <Button variant="outline" size="sm" className="mt-3" disabled>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Peça
+                  </Button>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
+        {/* Serviços Section */}
+        <Collapsible open={servicosOpen} onOpenChange={setServicosOpen}>
+          <Card className="bg-card/50 border-border/50">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardTitle className="flex items-center justify-between text-lg">
+                  <div className="flex items-center gap-2">
+                    <Wrench className="w-5 h-5" />
+                    Serviços
+                    <span className="text-xs text-muted-foreground font-normal ml-2">(0 itens)</span>
+                  </div>
+                  {servicosOpen ? (
+                    <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <div className="text-center py-8 text-muted-foreground">
+                  <Wrench className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>Nenhum serviço adicionado</p>
+                  <Button variant="outline" size="sm" className="mt-3" disabled>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Serviço
+                  </Button>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 sticky bottom-4">
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || !selectedClient}
