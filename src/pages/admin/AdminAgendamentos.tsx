@@ -266,7 +266,7 @@ const AdminAgendamentos = () => {
                               ❌ Cancelado
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Status OS</DropdownMenuLabel>
+                            <DropdownMenuLabel>Pátio</DropdownMenuLabel>
                             {osStatuses.map((status) => (
                               <DropdownMenuItem 
                                 key={status} 
@@ -278,7 +278,7 @@ const AdminAgendamentos = () => {
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                        {/* View OS Button */}
+                        {/* View Pátio Button */}
                         <Button
                           size="sm"
                           variant="outline"
@@ -286,7 +286,7 @@ const AdminAgendamentos = () => {
                           onClick={() => handleViewOS(apt.id)}
                         >
                           <Eye className="w-4 h-4 mr-1" />
-                          Ver OS
+                          Ver Pátio
                         </Button>
 
                         {/* WhatsApp */}
