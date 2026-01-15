@@ -1,14 +1,26 @@
 import { useNavigate } from "react-router-dom";
-import { Car, ChevronDown, ChevronRight, Loader2, Plus } from "lucide-react";
+import { Car, ChevronDown, ChevronRight, Loader2, Plus, Trash2 } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { AddVehicleDialog } from "@/components/vehicle/AddVehicleDialog";
+import { toast } from "sonner";
 
 interface Vehicle {
   id: string;
@@ -45,6 +57,24 @@ export function MyVehiclesSection() {
       console.error("Error fetching vehicles:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteVehicle = async (vehicleId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { error } = await supabase
+        .from("vehicles")
+        .update({ is_active: false })
+        .eq("id", vehicleId);
+
+      if (error) throw error;
+      
+      toast.success("Veículo removido com sucesso!");
+      fetchVehicles();
+    } catch (error) {
+      console.error("Error deleting vehicle:", error);
+      toast.error("Erro ao remover veículo");
     }
   };
 
@@ -110,7 +140,36 @@ export function MyVehiclesSection() {
                   </div>
                 </div>
 
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center gap-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-2 rounded-lg hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remover veículo?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja remover {vehicle.brand || ''} {vehicle.model} ({vehicle.plate}) da sua lista?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={(e) => handleDeleteVehicle(vehicle.id, e)}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          Remover
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </div>
               </div>
             ))}
 
