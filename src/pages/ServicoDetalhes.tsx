@@ -7,6 +7,50 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
+
+// Componente para buscar telefone da oficina e ligar
+function ContactOfficeButton() {
+  const [loading, setLoading] = useState(false);
+
+  const handleCall = async () => {
+    setLoading(true);
+    try {
+      const { data: config } = await supabase
+        .from("oficina_config")
+        .select("telefone")
+        .limit(1)
+        .single();
+
+      const phone = config?.telefone;
+      if (phone) {
+        window.open(`tel:${phone}`);
+      } else {
+        toast.error("Telefone da oficina não configurado");
+      }
+    } catch (error) {
+      toast.error("Erro ao buscar telefone da oficina");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      className="w-full gradient-primary text-primary-foreground"
+      size="lg"
+      onClick={handleCall}
+      disabled={loading}
+    >
+      {loading ? (
+        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+      ) : (
+        <Phone className="w-5 h-5 mr-2" />
+      )}
+      Falar com a Oficina
+    </Button>
+  );
+}
 
 interface Vehicle {
   id: string;
@@ -207,14 +251,7 @@ const ServicoDetalhes = () => {
         </Card>
 
         {/* Contact Button */}
-        <Button
-          className="w-full gradient-primary text-primary-foreground"
-          size="lg"
-          onClick={() => window.open("tel:+5511999999999")}
-        >
-          <Phone className="w-5 h-5 mr-2" />
-          Falar com a Oficina
-        </Button>
+        <ContactOfficeButton />
       </main>
     </div>
   );

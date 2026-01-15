@@ -926,7 +926,9 @@ export type Database = {
           margem_minima_pecas: number | null
           margem_minima_servicos: number | null
           nome: string
+          telefone: string | null
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
           capacidade_maxima?: number
@@ -941,7 +943,9 @@ export type Database = {
           margem_minima_pecas?: number | null
           margem_minima_servicos?: number | null
           nome?: string
+          telefone?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
           capacidade_maxima?: number
@@ -956,7 +960,9 @@ export type Database = {
           margem_minima_pecas?: number | null
           margem_minima_servicos?: number | null
           nome?: string
+          telefone?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }

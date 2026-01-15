@@ -1,9 +1,11 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Crown, UserCog, Shield, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { ViewSwitcher } from "./ViewSwitcher";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 const roleConfig = {
   dev: { 
@@ -112,6 +114,23 @@ function DevBadge() {
 export function Header() {
   const navigate = useNavigate();
   const { role, isDev } = useUserRole();
+  const [whatsappUrl, setWhatsappUrl] = useState("");
+
+  useEffect(() => {
+    const fetchWhatsapp = async () => {
+      const { data: config } = await supabase
+        .from("oficina_config")
+        .select("whatsapp")
+        .limit(1)
+        .single();
+      
+      if (config?.whatsapp) {
+        const phone = config.whatsapp.replace(/\D/g, "");
+        setWhatsappUrl(`https://wa.me/${phone}?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es!`);
+      }
+    };
+    fetchWhatsapp();
+  }, []);
 
   const currentRole = role ? roleConfig[role] : null;
   const RoleIcon = currentRole?.icon || User;
@@ -156,15 +175,17 @@ export function Header() {
           {/* Action Icons */}
           <div className="flex items-center gap-2">
             {/* WhatsApp Button */}
-            <a
-              href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es!"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-10 w-10 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center hover:scale-105 transition-all"
-              aria-label="Contato via WhatsApp"
-            >
-              <MessageCircle className="h-5 w-5 text-white" fill="white" />
-            </a>
+            {whatsappUrl && (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-10 w-10 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center hover:scale-105 transition-all"
+                aria-label="Contato via WhatsApp"
+              >
+                <MessageCircle className="h-5 w-5 text-white" fill="white" />
+              </a>
+            )}
 
             {/* Profile Icon */}
             <button

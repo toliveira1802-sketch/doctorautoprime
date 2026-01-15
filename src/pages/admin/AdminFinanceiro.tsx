@@ -50,8 +50,8 @@ export default function AdminFinanceiro() {
     diasUteis: 22,
     diasTrabalhados: 10,
   });
-  const [password, setPassword] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
+  // Autenticação via role - remova a verificação de senha hardcoded
+  const authenticated = true; // Admin já está autenticado se chegou nesta página
   const [detailModal, setDetailModal] = useState<{ type: string; vehicles: any[] } | null>(null);
 
   const fetchData = async () => {
@@ -164,11 +164,6 @@ export default function AdminFinanceiro() {
   }, [period]);
 
   const handleSaveMeta = async () => {
-    if (password !== 'admin123') {
-      toast.error("Senha incorreta");
-      return;
-    }
-
     try {
       const mes = new Date().getMonth() + 1;
       const ano = new Date().getFullYear();
@@ -189,8 +184,6 @@ export default function AdminFinanceiro() {
 
       toast.success("Metas atualizadas!");
       setShowMetaModal(false);
-      setPassword("");
-      setAuthenticated(false);
     } catch (error) {
       console.error('Error saving meta:', error);
       toast.error("Erro ao salvar metas");
@@ -466,73 +459,44 @@ export default function AdminFinanceiro() {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
-              {!authenticated ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Lock className="w-4 h-4" />
-                    Digite a senha de administrador
-                  </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Meta Mensal (R$)</label>
                   <Input
-                    type="password"
-                    placeholder="Senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && password === 'admin123') {
-                        setAuthenticated(true);
-                      }
-                    }}
+                    type="number"
+                    value={metaConfig.metaMensal}
+                    onChange={(e) => setMetaConfig(prev => ({ 
+                      ...prev, 
+                      metaMensal: parseFloat(e.target.value) || 0 
+                    }))}
                   />
-                  <Button 
-                    className="w-full"
-                    onClick={() => {
-                      if (password === 'admin123') setAuthenticated(true);
-                      else toast.error("Senha incorreta");
-                    }}
-                  >
-                    Acessar
-                  </Button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Meta Mensal (R$)</label>
-                    <Input
-                      type="number"
-                      value={metaConfig.metaMensal}
-                      onChange={(e) => setMetaConfig(prev => ({ 
-                        ...prev, 
-                        metaMensal: parseFloat(e.target.value) || 0 
-                      }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Dias Úteis no Mês</label>
-                    <Input
-                      type="number"
-                      value={metaConfig.diasUteis}
-                      onChange={(e) => setMetaConfig(prev => ({ 
-                        ...prev, 
-                        diasUteis: parseInt(e.target.value) || 0 
-                      }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Dias Trabalhados</label>
-                    <Input
-                      type="number"
-                      value={metaConfig.diasTrabalhados}
-                      onChange={(e) => setMetaConfig(prev => ({ 
-                        ...prev, 
-                        diasTrabalhados: parseInt(e.target.value) || 0 
-                      }))}
-                    />
-                  </div>
-                  <Button className="w-full" onClick={handleSaveMeta}>
-                    Salvar Metas
-                  </Button>
+                <div>
+                  <label className="text-sm font-medium">Dias Úteis no Mês</label>
+                  <Input
+                    type="number"
+                    value={metaConfig.diasUteis}
+                    onChange={(e) => setMetaConfig(prev => ({ 
+                      ...prev, 
+                      diasUteis: parseInt(e.target.value) || 0 
+                    }))}
+                  />
                 </div>
-              )}
+                <div>
+                  <label className="text-sm font-medium">Dias Trabalhados</label>
+                  <Input
+                    type="number"
+                    value={metaConfig.diasTrabalhados}
+                    onChange={(e) => setMetaConfig(prev => ({ 
+                      ...prev, 
+                      diasTrabalhados: parseInt(e.target.value) || 0 
+                    }))}
+                  />
+                </div>
+                <Button className="w-full" onClick={handleSaveMeta}>
+                  Salvar Metas
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
