@@ -25,6 +25,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,6 +55,8 @@ export default function AdminNovaOS() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState<ClientWithVehicle | null>(null);
   const [notes, setNotes] = useState("");
+  const [kmAtual, setKmAtual] = useState("");
+  const [statusVeiculo, setStatusVeiculo] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -558,6 +567,46 @@ export default function AdminNovaOS() {
                   <div>
                     <p className="text-xs text-muted-foreground">Cor</p>
                     <p className="font-medium text-foreground">{selectedClient.color || "-"}</p>
+                  </div>
+                </div>
+
+                {/* KM e Status do Veículo */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <div className="space-y-2">
+                    <Label htmlFor="km-atual" className="text-sm font-medium flex items-center gap-2">
+                      <Gauge className="w-4 h-4" />
+                      KM Atual
+                    </Label>
+                    <Input
+                      id="km-atual"
+                      placeholder="Ex: 45.000"
+                      value={kmAtual}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '');
+                        const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        setKmAtual(formatted);
+                      }}
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status-veiculo" className="text-sm font-medium flex items-center gap-2">
+                      <Activity className="w-4 h-4" />
+                      Status do Veículo
+                    </Label>
+                    <Select value={statusVeiculo} onValueChange={setStatusVeiculo}>
+                      <SelectTrigger id="status-veiculo" className="h-11">
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="funcionando">✅ Funcionando normalmente</SelectItem>
+                        <SelectItem value="problema_leve">⚠️ Problema leve</SelectItem>
+                        <SelectItem value="problema_grave">🔴 Problema grave</SelectItem>
+                        <SelectItem value="nao_liga">❌ Não liga</SelectItem>
+                        <SelectItem value="guincho">🚛 Chegou de guincho</SelectItem>
+                        <SelectItem value="preventiva">🔧 Manutenção preventiva</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
