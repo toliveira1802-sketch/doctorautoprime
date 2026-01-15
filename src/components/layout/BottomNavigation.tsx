@@ -1,4 +1,4 @@
-import { Home, Calendar, FileSearch } from "lucide-react";
+import { Home, Calendar, FileSearch, Bell } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Calendar, label: "Agenda", path: "/agenda" },
+  { icon: Bell, label: "Avisos", path: "/avisos" },
   { icon: FileSearch, label: "Histórico", path: "/historico" },
 ];
 

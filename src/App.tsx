@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import VerifyOTP from "./pages/VerifyOTP";
 import BiometricSetup from "./pages/BiometricSetup";
 import Agenda from "./pages/Agenda";
+import Avisos from "./pages/Avisos";
 import NovoAgendamento from "./pages/NovoAgendamento";
 import AgendamentoSucesso from "./pages/AgendamentoSucesso";
 import Reagendamento from "./pages/Reagendamento";
@@ -57,6 +58,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Agenda />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/avisos" 
+        element={
+          <ProtectedRoute>
+            <Avisos />
           </ProtectedRoute>
         } 
       />
