@@ -151,7 +151,8 @@ export default function AdminOrdensServico() {
     total: ordensServico.length,
     finalizadas: ordensServico.filter(os => os.status === "concluido" || os.status === "entregue").length,
     orcamento: ordensServico.filter(os => os.status === "orcamento").length,
-    aprovado: ordensServico.filter(os => os.status === "aprovado" || os.status === "parcial").length,
+    aprovado: ordensServico.filter(os => os.status === "aprovado").length,
+    parcial: ordensServico.filter(os => os.status === "parcial").length,
     recusado: ordensServico.filter(os => os.status === "recusado").length,
     valorTotal: ordensServico
       .filter(os => os.status === "concluido" || os.status === "entregue")
@@ -252,13 +253,29 @@ export default function AdminOrdensServico() {
 
         {/* Tabs for different views */}
         <Tabs defaultValue="todas" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid">
-            <TabsTrigger value="todas">Todas as OS</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 md:w-auto md:inline-grid">
+            <TabsTrigger value="todas">Todas</TabsTrigger>
             <TabsTrigger value="finalizadas" className="relative">
               Finalizadas
               {stats.finalizadas > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs bg-emerald-500/20 text-emerald-600">
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs bg-emerald-500/20 text-emerald-600">
                   {stats.finalizadas}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="parciais" className="relative">
+              Parciais
+              {stats.parcial > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs bg-yellow-500/20 text-yellow-600">
+                  {stats.parcial}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="recusadas" className="relative">
+              Recusadas
+              {stats.recusado > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs bg-red-500/20 text-red-600">
+                  {stats.recusado}
                 </Badge>
               )}
             </TabsTrigger>
@@ -542,6 +559,133 @@ export default function AdminOrdensServico() {
               </div>
             )}
           </TabsContent>
+
+          {/* Parciais Tab */}
+          <TabsContent value="parciais" className="space-y-4 mt-4">
+            {ordensServico.filter(os => os.status === "parcial").length === 0 ? (
+              <Card className="bg-card/50 border-border/50">
+                <CardContent className="p-12 text-center">
+                  <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Nenhuma OS parcial</h3>
+                  <p className="text-muted-foreground">OS com itens parcialmente aprovados aparecerão aqui</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {ordensServico
+                  .filter(os => os.status === "parcial")
+                  .map((os) => {
+                    const aprovados = os.itens?.filter(i => i.status === "aprovado").length || 0;
+                    const recusados = os.itens?.filter(i => i.status === "recusado").length || 0;
+                    return (
+                      <Card key={os.id} className="bg-yellow-500/5 border-yellow-500/20">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <span className="font-mono font-bold text-lg">{os.numero_os}</span>
+                                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                                  <AlertTriangle className="w-3 h-3 mr-1" />
+                                  Parcial
+                                </Badge>
+                                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                                  {aprovados} aprovados
+                                </Badge>
+                                <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20">
+                                  {recusados} recusados
+                                </Badge>
+                              </div>
+                              <div>
+                                <p className="font-medium text-foreground">{os.client_name}</p>
+                                <p className="text-sm text-muted-foreground">{os.plate} - {os.vehicle}</p>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  Entrada: {formatShortDate(os.data_entrada)}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <DollarSign className="w-4 h-4 text-yellow-600" />
+                                  <span className="text-yellow-600 font-medium">
+                                    Aprovado: {formatCurrency(os.valor_aprovado)}
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/ordens-servico/${os.id}`)}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                Ver OS
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Recusadas Tab */}
+          <TabsContent value="recusadas" className="space-y-4 mt-4">
+            {ordensServico.filter(os => os.status === "recusado").length === 0 ? (
+              <Card className="bg-card/50 border-border/50">
+                <CardContent className="p-12 text-center">
+                  <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Nenhuma OS recusada</h3>
+                  <p className="text-muted-foreground">OS totalmente recusadas aparecerão aqui</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {ordensServico
+                  .filter(os => os.status === "recusado")
+                  .map((os) => (
+                    <Card key={os.id} className="bg-red-500/5 border-red-500/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono font-bold text-lg">{os.numero_os}</span>
+                              <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20">
+                                <XCircle className="w-3 h-3 mr-1" />
+                                Recusado
+                              </Badge>
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground">{os.client_name}</p>
+                              <p className="text-sm text-muted-foreground">{os.plate} - {os.vehicle}</p>
+                            </div>
+                            {os.motivo_recusa && (
+                              <p className="text-sm text-red-600 bg-red-500/10 p-2 rounded">
+                                Motivo: {os.motivo_recusa}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                Entrada: {formatShortDate(os.data_entrada)}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="w-4 h-4" />
+                                Orçado: {formatCurrency(os.valor_orcado)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/ordens-servico/${os.id}`)}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              Ver OS
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -716,6 +860,20 @@ export default function AdminOrdensServico() {
                   <p className="text-sm p-3 bg-muted/30 rounded-lg">{selectedOS.observacoes}</p>
                 </div>
               )}
+
+              {/* Action Button */}
+              <div className="pt-4 border-t">
+                <Button 
+                  className="w-full"
+                  onClick={() => {
+                    setSelectedOS(null);
+                    navigate(`/admin/ordens-servico/${selectedOS.id}`);
+                  }}
+                >
+                  <Wrench className="w-4 h-4 mr-2" />
+                  Editar OS
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
