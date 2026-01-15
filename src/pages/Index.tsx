@@ -49,7 +49,7 @@ const Index = () => {
         href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es!"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-24 right-4 z-50 h-14 w-14 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+        className="fixed bottom-32 right-4 z-50 h-14 w-14 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center shadow-lg hover:scale-105 transition-all"
         aria-label="Contato via WhatsApp"
       >
         <MessageCircle className="h-7 w-7 text-white" fill="white" />

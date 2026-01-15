@@ -1,5 +1,5 @@
-
 import { useNavigate } from "react-router-dom";
+import { User } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { ViewSwitcher } from "./ViewSwitcher";
 
@@ -21,8 +21,14 @@ export function Header() {
           {/* View Switcher - Only for thales */}
           <ViewSwitcher />
 
-          {/* Spacer to balance layout */}
-          <div className="w-10" />
+          {/* Profile Icon */}
+          <button
+            onClick={() => navigate("/profile")}
+            className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+            aria-label="Meu Perfil"
+          >
+            <User className="h-5 w-5 text-muted-foreground" />
+          </button>
         </div>
       </div>
     </header>
