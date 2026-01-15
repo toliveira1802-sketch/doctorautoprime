@@ -978,6 +978,7 @@ export type Database = {
           descricao_problema: string | null
           diagnostico: string | null
           fotos_entrada: string[] | null
+          google_drive_link: string | null
           id: string
           km_atual: string | null
           mechanic_id: string | null
@@ -985,6 +986,7 @@ export type Database = {
           numero_os: string
           observacoes: string | null
           plate: string
+          scanner_avarias: string | null
           status: string
           trello_card_id: string | null
           trello_card_url: string | null
@@ -1011,6 +1013,7 @@ export type Database = {
           descricao_problema?: string | null
           diagnostico?: string | null
           fotos_entrada?: string[] | null
+          google_drive_link?: string | null
           id?: string
           km_atual?: string | null
           mechanic_id?: string | null
@@ -1018,6 +1021,7 @@ export type Database = {
           numero_os: string
           observacoes?: string | null
           plate: string
+          scanner_avarias?: string | null
           status?: string
           trello_card_id?: string | null
           trello_card_url?: string | null
@@ -1044,6 +1048,7 @@ export type Database = {
           descricao_problema?: string | null
           diagnostico?: string | null
           fotos_entrada?: string[] | null
+          google_drive_link?: string | null
           id?: string
           km_atual?: string | null
           mechanic_id?: string | null
@@ -1051,6 +1056,7 @@ export type Database = {
           numero_os?: string
           observacoes?: string | null
           plate?: string
+          scanner_avarias?: string | null
           status?: string
           trello_card_id?: string | null
           trello_card_url?: string | null
