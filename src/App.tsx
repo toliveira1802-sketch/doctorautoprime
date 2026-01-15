@@ -20,6 +20,7 @@ import Reagendamento from "./pages/Reagendamento";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
 import AdminNovaOS from "./pages/admin/AdminNovaOS";
+import AdminOSDetalhes from "./pages/admin/AdminOSDetalhes";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
 import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
@@ -156,6 +157,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AdminNovaOS />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/os/:osId" 
+        element={
+          <ProtectedRoute>
+            <AdminOSDetalhes />
           </ProtectedRoute>
         } 
       />

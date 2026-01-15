@@ -1,13 +1,33 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Search, Filter, Check, X, Clock, Phone, MessageSquare } from "lucide-react";
+import { Calendar, Search, Filter, Check, X, Clock, Phone, MessageSquare, Eye, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+
+type AppointmentStatus = 
+  | "pendente" 
+  | "confirmado" 
+  | "concluido" 
+  | "cancelado"
+  | "diagnostico"
+  | "aguardando_pecas"
+  | "pronto_iniciar"
+  | "em_execucao"
+  | "pronto_retirada";
 
 interface Appointment {
   id: string;
@@ -19,7 +39,7 @@ interface Appointment {
   date: Date;
   time: string | null;
   isFullDay: boolean;
-  status: "pendente" | "confirmado" | "concluido" | "cancelado";
+  status: AppointmentStatus;
   payInAdvance: boolean;
   finalPrice: number;
 }
@@ -36,7 +56,7 @@ const mockAppointments: Appointment[] = [
     date: new Date(2026, 0, 15),
     time: "09:00",
     isFullDay: false,
-    status: "pendente",
+    status: "diagnostico",
     payInAdvance: true,
     finalPrice: 189.90,
   },
@@ -50,7 +70,7 @@ const mockAppointments: Appointment[] = [
     date: new Date(2026, 0, 15),
     time: "10:00",
     isFullDay: false,
-    status: "confirmado",
+    status: "em_execucao",
     payInAdvance: false,
     finalPrice: 450.00,
   },
@@ -70,14 +90,29 @@ const mockAppointments: Appointment[] = [
   },
 ];
 
-const statusConfig = {
-  pendente: { label: "Pendente", color: "bg-amber-500/20 text-amber-500", icon: Clock },
-  confirmado: { label: "Confirmado", color: "bg-emerald-500/20 text-emerald-500", icon: Check },
-  concluido: { label: "Concluído", color: "bg-muted text-muted-foreground", icon: Check },
-  cancelado: { label: "Cancelado", color: "bg-destructive/20 text-destructive", icon: X },
+const statusConfig: Record<AppointmentStatus, { label: string; color: string; icon: typeof Clock }> = {
+  pendente: { label: "⏳ Pendente", color: "bg-amber-500/20 text-amber-500", icon: Clock },
+  confirmado: { label: "✅ Confirmado", color: "bg-emerald-500/20 text-emerald-500", icon: Check },
+  concluido: { label: "🎉 Concluído", color: "bg-muted text-muted-foreground", icon: Check },
+  cancelado: { label: "❌ Cancelado", color: "bg-destructive/20 text-destructive", icon: X },
+  diagnostico: { label: "🧠 Diagnóstico", color: "bg-purple-500/20 text-purple-600", icon: Clock },
+  aguardando_pecas: { label: "😤 Aguardando Peças", color: "bg-orange-500/20 text-orange-600", icon: Clock },
+  pronto_iniciar: { label: "🫵 Pronto para Iniciar", color: "bg-blue-500/20 text-blue-600", icon: Clock },
+  em_execucao: { label: "🛠️ Em Execução", color: "bg-amber-500/20 text-amber-600", icon: Clock },
+  pronto_retirada: { label: "💰 Pronto Retirada", color: "bg-emerald-500/20 text-emerald-600", icon: Clock },
 };
 
+const osStatuses: AppointmentStatus[] = [
+  "diagnostico",
+  "aguardando_pecas",
+  "pronto_iniciar",
+  "em_execucao",
+  "pronto_retirada",
+  "concluido",
+];
+
 const AdminAgendamentos = () => {
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState(mockAppointments);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -93,25 +128,27 @@ const AdminAgendamentos = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleConfirm = (id: string) => {
+  const handleStatusChange = (id: string, newStatus: AppointmentStatus) => {
     setAppointments((prev) =>
-      prev.map((apt) => (apt.id === id ? { ...apt, status: "confirmado" as const } : apt))
+      prev.map((apt) => (apt.id === id ? { ...apt, status: newStatus } : apt))
     );
-    toast.success("Agendamento confirmado!");
+    toast.success(`Status alterado para ${statusConfig[newStatus].label}`);
+  };
+
+  const handleConfirm = (id: string) => {
+    handleStatusChange(id, "confirmado");
   };
 
   const handleCancel = (id: string) => {
-    setAppointments((prev) =>
-      prev.map((apt) => (apt.id === id ? { ...apt, status: "cancelado" as const } : apt))
-    );
-    toast.error("Agendamento cancelado");
+    handleStatusChange(id, "cancelado");
   };
 
   const handleComplete = (id: string) => {
-    setAppointments((prev) =>
-      prev.map((apt) => (apt.id === id ? { ...apt, status: "concluido" as const } : apt))
-    );
-    toast.success("Serviço concluído!");
+    handleStatusChange(id, "concluido");
+  };
+
+  const handleViewOS = (id: string) => {
+    navigate(`/admin/os/${id}`);
   };
 
   return (
@@ -128,14 +165,15 @@ const AdminAgendamentos = () => {
               className="pl-10 bg-background/50"
             />
           </div>
-          <div className="flex gap-2">
-            {["all", "pendente", "confirmado", "concluido"].map((status) => (
+          <div className="flex gap-2 flex-wrap">
+            {["all", "pendente", "diagnostico", "em_execucao", "pronto_retirada", "concluido"].map((status) => (
               <Button
                 key={status}
                 variant={statusFilter === status ? "default" : "outline"}
                 size="sm"
                 onClick={() => setStatusFilter(status)}
                 className={cn(
+                  "text-xs",
                   statusFilter === status && "gradient-primary text-primary-foreground"
                 )}
               >
@@ -203,38 +241,55 @@ const AdminAgendamentos = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex lg:flex-col gap-2 p-4 bg-muted/30 lg:w-48">
-                        {apt.status === "pendente" && (
-                          <>
-                            <Button
-                              size="sm"
-                              className="flex-1 gradient-primary text-primary-foreground"
-                              onClick={() => handleConfirm(apt.id)}
-                            >
-                              <Check className="w-4 h-4 mr-1" />
-                              Confirmar
-                            </Button>
+                      <div className="flex lg:flex-col gap-2 p-4 bg-muted/30 lg:w-56">
+                        {/* Status Dropdown */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1 text-destructive hover:bg-destructive/10"
-                              onClick={() => handleCancel(apt.id)}
+                              className="flex-1 justify-between"
                             >
-                              <X className="w-4 h-4 mr-1" />
-                              Cancelar
+                              <span className="truncate">{statusConfig[apt.status].label}</span>
+                              <ChevronDown className="w-4 h-4 ml-2 shrink-0" />
                             </Button>
-                          </>
-                        )}
-                        {apt.status === "confirmado" && (
-                          <Button
-                            size="sm"
-                            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white"
-                            onClick={() => handleComplete(apt.id)}
-                          >
-                            <Check className="w-4 h-4 mr-1" />
-                            Concluir
-                          </Button>
-                        )}
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>Agendamento</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleStatusChange(apt.id, "pendente")}>
+                              ⏳ Pendente
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(apt.id, "confirmado")}>
+                              ✅ Confirmado
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(apt.id, "cancelado")}>
+                              ❌ Cancelado
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Status OS</DropdownMenuLabel>
+                            {osStatuses.map((status) => (
+                              <DropdownMenuItem 
+                                key={status} 
+                                onClick={() => handleStatusChange(apt.id, status)}
+                              >
+                                {statusConfig[status].label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        {/* View OS Button */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleViewOS(apt.id)}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Ver OS
+                        </Button>
+
+                        {/* WhatsApp */}
                         <Button
                           size="sm"
                           variant="outline"
