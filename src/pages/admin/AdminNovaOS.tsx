@@ -35,7 +35,7 @@ export default function AdminNovaOS() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
 
-  // Busca unificada por placa ou nome do cliente
+  // Busca unificada: primeiro na tabela vehicles+profiles (clientes reais), depois em OS antigas
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     
@@ -47,28 +47,112 @@ export default function AdminNovaOS() {
     
     setIsSearching(true);
     try {
-      const { data: osData } = await supabase
-        .from("ordens_servico")
-        .select("id, plate, vehicle, client_name, client_phone, km_atual, created_at")
-        .or(`plate.ilike.%${query}%,client_name.ilike.%${query}%`)
-        .order("created_at", { ascending: false })
+      const results: any[] = [];
+      
+      // 1. Buscar na tabela de veículos (dados reais dos clientes)
+      const { data: vehiclesData } = await supabase
+        .from("vehicles")
+        .select(`
+          id,
+          plate,
+          model,
+          brand,
+          year,
+          user_id
+        `)
+        .or(`plate.ilike.%${query}%,model.ilike.%${query}%,brand.ilike.%${query}%`)
+        .eq("is_active", true)
         .limit(10);
 
-      if (osData && osData.length > 0) {
-        // Remove duplicatas por placa, mantendo a mais recente
-        const uniqueByPlate = osData.reduce((acc: any[], curr) => {
-          if (!acc.find(item => item.plate === curr.plate)) {
-            acc.push(curr);
+      if (vehiclesData && vehiclesData.length > 0) {
+        // Buscar perfis dos donos dos veículos
+        const userIds = [...new Set(vehiclesData.map(v => v.user_id))];
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, phone")
+          .in("user_id", userIds);
+
+        const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
+        for (const vehicle of vehiclesData) {
+          const profile = profilesMap.get(vehicle.user_id);
+          results.push({
+            id: vehicle.id,
+            plate: vehicle.plate,
+            vehicle: `${vehicle.brand || ''} ${vehicle.model} ${vehicle.year || ''}`.trim(),
+            client_name: profile?.full_name || null,
+            client_phone: profile?.phone || null,
+            km_atual: null,
+            source: 'vehicles', // Marca como vindo do banco de clientes
+          });
+        }
+      }
+
+      // 2. Buscar também por nome do cliente na tabela profiles
+      const { data: profilesSearch } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, phone")
+        .ilike("full_name", `%${query}%`)
+        .limit(5);
+
+      if (profilesSearch && profilesSearch.length > 0) {
+        const userIds = profilesSearch.map(p => p.user_id);
+        const { data: userVehicles } = await supabase
+          .from("vehicles")
+          .select("id, plate, model, brand, year, user_id")
+          .in("user_id", userIds)
+          .eq("is_active", true);
+
+        for (const profile of profilesSearch) {
+          const vehicles = userVehicles?.filter(v => v.user_id === profile.user_id) || [];
+          for (const vehicle of vehicles) {
+            // Evitar duplicatas
+            if (!results.find(r => r.plate === vehicle.plate)) {
+              results.push({
+                id: vehicle.id,
+                plate: vehicle.plate,
+                vehicle: `${vehicle.brand || ''} ${vehicle.model} ${vehicle.year || ''}`.trim(),
+                client_name: profile.full_name,
+                client_phone: profile.phone,
+                km_atual: null,
+                source: 'profiles',
+              });
+            }
           }
-          return acc;
-        }, []);
-        setSearchResults(uniqueByPlate);
+        }
+      }
+
+      // 3. Fallback: buscar em OS antigas (para clientes sem cadastro no app)
+      if (results.length < 5) {
+        const { data: osData } = await supabase
+          .from("ordens_servico")
+          .select("id, plate, vehicle, client_name, client_phone, km_atual, created_at")
+          .or(`plate.ilike.%${query}%,client_name.ilike.%${query}%`)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (osData) {
+          for (const os of osData) {
+            // Evitar duplicatas por placa
+            if (!results.find(r => r.plate === os.plate)) {
+              results.push({
+                ...os,
+                source: 'ordens_servico',
+              });
+            }
+          }
+        }
+      }
+
+      if (results.length > 0) {
+        setSearchResults(results.slice(0, 10));
         setShowResults(true);
       } else {
         setSearchResults([]);
         setShowResults(false);
       }
-    } catch {
+    } catch (err) {
+      console.error("Erro na busca:", err);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -90,12 +174,47 @@ export default function AdminNovaOS() {
     toast.success("Dados preenchidos!");
   };
 
-  // Buscar dados do veículo quando a placa mudar (fallback)
+  // Buscar dados do veículo quando a placa mudar - PRIMEIRO no banco de clientes
   const searchByPlate = async (plateValue: string) => {
     if (plateValue.length < 7) return;
     
     setIsSearching(true);
     try {
+      // 1. Primeiro buscar na tabela de veículos reais
+      const { data: vehicleData } = await supabase
+        .from("vehicles")
+        .select(`
+          id,
+          plate,
+          model,
+          brand,
+          year,
+          user_id
+        `)
+        .ilike("plate", plateValue)
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+
+      if (vehicleData) {
+        // Buscar dados do dono
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("user_id", vehicleData.user_id)
+          .single();
+
+        setFormData(prev => ({
+          ...prev,
+          vehicle: `${vehicleData.brand || ''} ${vehicleData.model} ${vehicleData.year || ''}`.trim(),
+          client_name: profileData?.full_name || prev.client_name,
+          client_phone: profileData?.phone || prev.client_phone,
+        }));
+        toast.success("Cliente encontrado no sistema!");
+        return;
+      }
+
+      // 2. Fallback: buscar em OS antigas
       const { data: osData } = await supabase
         .from("ordens_servico")
         .select("plate, vehicle, client_name, client_phone, km_atual")
@@ -112,10 +231,10 @@ export default function AdminNovaOS() {
           client_phone: osData.client_phone || prev.client_phone,
           km_atual: osData.km_atual || prev.km_atual,
         }));
-        toast.success("Dados encontrados!");
+        toast.success("Dados encontrados em OS anterior!");
       }
     } catch {
-      // Silencioso
+      // Silencioso - placa não encontrada
     } finally {
       setIsSearching(false);
     }
@@ -215,15 +334,26 @@ export default function AdminNovaOS() {
                 {/* Resultados da busca */}
                 {showResults && searchResults.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-card border rounded-lg shadow-lg max-h-60 overflow-auto">
-                    {searchResults.map((result) => (
+                    {searchResults.map((result, index) => (
                       <button
-                        key={result.id}
+                        key={`${result.plate}-${index}`}
                         type="button"
                         onClick={() => selectResult(result)}
                         className="w-full px-4 py-3 text-left hover:bg-muted transition-colors border-b last:border-b-0"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-primary">{result.plate}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-primary">{result.plate}</span>
+                            {result.source === 'vehicles' || result.source === 'profiles' ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                Cliente
+                              </span>
+                            ) : (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                Histórico
+                              </span>
+                            )}
+                          </div>
                           <span className="text-sm text-muted-foreground">{result.vehicle}</span>
                         </div>
                         {result.client_name && (
