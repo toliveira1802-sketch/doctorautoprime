@@ -1,7 +1,8 @@
 import { 
   Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, 
   Plus, Car, Star, TrendingUp, DollarSign, FileText, ChevronDown,
-  ClipboardList, Gauge, UserCog, LayoutDashboard, Lightbulb
+  ClipboardList, Gauge, LayoutDashboard, Lightbulb, UserCog, Cog, 
+  Megaphone, ShoppingCart, Laptop
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -62,6 +63,11 @@ const gestaoModule: AdminMenuGroup = {
   roles: ["admin"],
   items: [
     { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["admin"] },
+    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["admin"] },
+    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["admin"] },
+    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["admin"] },
+    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["admin"] },
+    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["admin"] },
   ],
 };
 

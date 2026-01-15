@@ -39,6 +39,11 @@ import Blog from "./pages/Blog";
 import GestaoDashboards from "./pages/gestao/GestaoDashboards";
 import GestaoDashboardView from "./pages/gestao/GestaoDashboardView";
 import GestaoMelhorias from "./pages/gestao/GestaoMelhorias";
+import GestaoRH from "./pages/gestao/GestaoRH";
+import GestaoOperacoes from "./pages/gestao/GestaoOperacoes";
+import GestaoFinanceiro from "./pages/gestao/GestaoFinanceiro";
+import GestaoTecnologia from "./pages/gestao/GestaoTecnologia";
+import GestaoComercial from "./pages/gestao/GestaoComercial";
 const queryClient = new QueryClient();
 
 // Protected Route component - saves intended destination before redirecting to login
@@ -327,6 +332,56 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <GestaoMelhorias />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/gestao/rh" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <GestaoRH />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/gestao/operacoes" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <GestaoOperacoes />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/gestao/financeiro" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <GestaoFinanceiro />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/gestao/tecnologia" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <GestaoTecnologia />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/gestao/comercial" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <GestaoComercial />
             </AdminRoute>
           </ProtectedRoute>
         } 
