@@ -1,5 +1,7 @@
-import { Check, Clock, Wrench, AlertCircle, CarFront, Camera } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, Clock, Wrench, AlertCircle, CarFront, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 type StepStatus = "completed" | "current" | "upcoming";
 
@@ -12,62 +14,135 @@ interface TimelineStep {
   icon: React.ElementType;
 }
 
-const steps: TimelineStep[] = [
-  {
-    id: "received",
-    title: "Recebido",
-    status: "completed",
-    time: "10:30",
-    details: ["Checklist enviado", "Confirmado por você"],
-    icon: CarFront,
-  },
-  {
-    id: "diagnosis",
-    title: "Em Diagnóstico",
-    status: "current",
-    time: "11:15",
-    details: ["Mecânico: João Silva", "Iniciado há 45min"],
-    icon: Wrench,
-  },
-  {
-    id: "pending",
-    title: "Aguardando Aprovação",
-    status: "upcoming",
-    icon: AlertCircle,
-  },
-  {
-    id: "executing",
-    title: "Em Execução",
-    status: "upcoming",
-    icon: Wrench,
-  },
-  {
-    id: "ready",
-    title: "Pronto para Retirada",
-    status: "upcoming",
-    icon: Check,
-  },
-];
+interface ServiceTimelineProps {
+  appointmentId?: string;
+}
 
-const statusStyles: Record<StepStatus, { dot: string; line: string; text: string }> = {
-  completed: {
-    dot: "bg-success border-success",
-    line: "bg-success",
-    text: "text-foreground",
-  },
-  current: {
-    dot: "bg-primary border-primary status-pulse",
-    line: "bg-border",
-    text: "text-foreground",
-  },
-  upcoming: {
-    dot: "bg-muted border-border",
-    line: "bg-border",
-    text: "text-muted-foreground",
-  },
+const statusToStep: Record<string, number> = {
+  pendente: 0,
+  confirmado: 1,
+  em_execucao: 2,
+  aguardando_pecas: 2,
+  pronto_retirada: 3,
+  concluido: 4,
+  cancelado: -1,
 };
 
-export function ServiceTimeline() {
+export function ServiceTimeline({ appointmentId }: ServiceTimelineProps) {
+  const [loading, setLoading] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [appointmentData, setAppointmentData] = useState<{
+    status: string;
+    mechanic_name?: string;
+    created_at?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchAppointment = async () => {
+      if (!appointmentId) {
+        // Buscar último agendamento do usuário
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        const { data } = await supabase
+          .from("appointments")
+          .select("id, status, created_at, mechanic_id, mechanics(name)")
+          .eq("user_id", user.id)
+          .in("status", ["pendente", "confirmado", "em_execucao", "aguardando_pecas", "pronto_retirada"])
+          .order("appointment_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (data) {
+          setCurrentStep(statusToStep[data.status] ?? 0);
+          setAppointmentData({
+            status: data.status,
+            mechanic_name: (data.mechanics as any)?.name,
+            created_at: data.created_at,
+          });
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchAppointment();
+  }, [appointmentId]);
+
+  const getStepStatus = (stepIndex: number): StepStatus => {
+    if (stepIndex < currentStep) return "completed";
+    if (stepIndex === currentStep) return "current";
+    return "upcoming";
+  };
+
+  const steps: TimelineStep[] = [
+    {
+      id: "received",
+      title: "Recebido",
+      status: getStepStatus(0),
+      time: appointmentData?.created_at 
+        ? new Date(appointmentData.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+        : undefined,
+      details: getStepStatus(0) === "completed" ? ["Agendamento confirmado"] : undefined,
+      icon: CarFront,
+    },
+    {
+      id: "diagnosis",
+      title: "Em Diagnóstico",
+      status: getStepStatus(1),
+      details: appointmentData?.mechanic_name && getStepStatus(1) !== "upcoming"
+        ? [`Mecânico: ${appointmentData.mechanic_name}`]
+        : undefined,
+      icon: Wrench,
+    },
+    {
+      id: "pending",
+      title: "Aguardando Aprovação",
+      status: getStepStatus(2),
+      icon: AlertCircle,
+    },
+    {
+      id: "executing",
+      title: "Em Execução",
+      status: getStepStatus(3),
+      icon: Wrench,
+    },
+    {
+      id: "ready",
+      title: "Pronto para Retirada",
+      status: getStepStatus(4),
+      icon: Check,
+    },
+  ];
+
+  const statusStyles: Record<StepStatus, { dot: string; line: string; text: string }> = {
+    completed: {
+      dot: "bg-success border-success",
+      line: "bg-success",
+      text: "text-foreground",
+    },
+    current: {
+      dot: "bg-primary border-primary status-pulse",
+      line: "bg-border",
+      text: "text-foreground",
+    },
+    upcoming: {
+      dot: "bg-muted border-border",
+      line: "bg-border",
+      text: "text-muted-foreground",
+    },
+  };
+
+  if (loading) {
+    return (
+      <div className="glass-card p-5 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card p-5 animate-slide-up">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">

@@ -144,8 +144,14 @@ const Avisos = () => {
 
   const handleCall = async (alertId: string) => {
     await recordClick.mutateAsync({ alertId, action: "call" });
-    // Open phone dialer
-    window.location.href = "tel:+5511999999999";
+    // Buscar telefone da oficina do banco
+    const { data: config } = await supabase.from("oficina_config").select("telefone").limit(1).single();
+    const phone = config?.telefone || "";
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    } else {
+      toast.error("Telefone da oficina não configurado");
+    }
   };
 
   const pendingAlerts = alerts?.filter(a => 
