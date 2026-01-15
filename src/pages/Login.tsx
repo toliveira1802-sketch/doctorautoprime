@@ -35,7 +35,9 @@ const Login: React.FC = () => {
 
   const handleBiometricSuccess = () => {
     setShowBiometric(false);
-    navigate('/');
+    const redirectTo = localStorage.getItem('drprime_redirect') || '/';
+    localStorage.removeItem('drprime_redirect');
+    navigate(redirectTo);
   };
 
   return (
