@@ -1,4 +1,8 @@
-import { Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, Plus, Car, Star, TrendingUp, DollarSign, FileText } from "lucide-react";
+import { 
+  Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, 
+  Plus, Car, Star, TrendingUp, DollarSign, FileText, ChevronDown,
+  ClipboardList, Gauge, UserCog
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
@@ -17,13 +21,25 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole, type UserRole } from "@/hooks/useUserRole";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
+// ============================================
+// CLIENT AREA MODULE
+// ============================================
 const clientItems = [
   { title: "Home", url: "/", icon: Home },
   { title: "Agenda", url: "/agenda", icon: Calendar },
   { title: "Histórico", url: "/historico", icon: FileSearch },
   { title: "Serviços", url: "/servicos", icon: Wrench },
 ];
+
+// ============================================
+// ADMIN MODULES - Organized for future separation
+// ============================================
 
 type AdminMenuItem = {
   title: string;
@@ -32,18 +48,76 @@ type AdminMenuItem = {
   roles: UserRole[];
 };
 
-const adminItems: AdminMenuItem[] = [
-  { title: "Dashboard", url: "/admin", icon: BarChart3, roles: ["admin", "oficina"] },
-  { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "oficina"] },
-  { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "oficina"] },
-  { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "oficina"] },
-  { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "oficina"] },
-  { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["admin"] },
-  { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["admin"] },
-  { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "oficina"] },
-  { title: "Serviços", url: "/admin/servicos", icon: Wrench, roles: ["admin", "oficina"] },
-  { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["admin", "oficina"] },
-  { title: "Documentação", url: "/admin/documentacao", icon: FileText, roles: ["admin", "oficina"] },
+type AdminMenuGroup = {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles: UserRole[];
+  items: AdminMenuItem[];
+};
+
+// MODULE: Operacional (admin + oficina)
+const operacionalModule: AdminMenuGroup = {
+  label: "Operacional",
+  icon: Gauge,
+  roles: ["admin", "oficina"],
+  items: [
+    { title: "Dashboard", url: "/admin", icon: BarChart3, roles: ["admin", "oficina"] },
+    { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "oficina"] },
+    { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "oficina"] },
+    { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "oficina"] },
+  ],
+};
+
+// MODULE: Equipe (admin + oficina)
+const equipeModule: AdminMenuGroup = {
+  label: "Equipe",
+  icon: Users,
+  roles: ["admin", "oficina"],
+  items: [
+    { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "oficina"] },
+    { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["admin"] },
+  ],
+};
+
+// MODULE: Cadastros (admin + oficina)
+const cadastrosModule: AdminMenuGroup = {
+  label: "Cadastros",
+  icon: ClipboardList,
+  roles: ["admin", "oficina"],
+  items: [
+    { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "oficina"] },
+    { title: "Serviços", url: "/admin/servicos", icon: Wrench, roles: ["admin", "oficina"] },
+  ],
+};
+
+// MODULE: Financeiro (admin only)
+const financeiroModule: AdminMenuGroup = {
+  label: "Financeiro",
+  icon: DollarSign,
+  roles: ["admin"],
+  items: [
+    { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["admin"] },
+  ],
+};
+
+// MODULE: Sistema (admin + oficina)
+const sistemaModule: AdminMenuGroup = {
+  label: "Sistema",
+  icon: Settings,
+  roles: ["admin", "oficina"],
+  items: [
+    { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["admin", "oficina"] },
+    { title: "Documentação", url: "/admin/documentacao", icon: FileText, roles: ["admin", "oficina"] },
+  ],
+};
+
+// All admin modules - easy to separate in the future
+const adminModules: AdminMenuGroup[] = [
+  operacionalModule,
+  equipeModule,
+  cadastrosModule,
+  financeiroModule,
+  sistemaModule,
 ];
 
 interface AppSidebarProps {
@@ -58,13 +132,14 @@ export function AppSidebar({ variant = "client" }: AppSidebarProps) {
   const { role } = useUserRole();
   const collapsed = state === "collapsed";
 
-  // Filter admin items based on user role
-  const filteredAdminItems = adminItems.filter(item => 
-    role && item.roles.includes(role)
-  );
-
-  const items = variant === "admin" ? filteredAdminItems : clientItems;
-  const groupLabel = variant === "admin" ? "Oficina" : "Menu";
+  // Filter modules based on user role
+  const filteredModules = adminModules
+    .filter(module => role && module.roles.includes(role))
+    .map(module => ({
+      ...module,
+      items: module.items.filter(item => role && item.roles.includes(role))
+    }))
+    .filter(module => module.items.length > 0);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -97,39 +172,91 @@ export function AppSidebar({ variant = "client" }: AppSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          {!collapsed && (
-            <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider">
-              {groupLabel}
-            </SidebarGroupLabel>
-          )}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={collapsed ? item.title : undefined}
-                  >
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/" || item.url === "/admin"}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
-                        "hover:bg-muted/50"
+        {variant === "admin" ? (
+          // ADMIN: Modular grouped layout by role
+          <>
+            {filteredModules.map((module) => (
+              <Collapsible key={module.label} defaultOpen className="group/collapsible">
+                <SidebarGroup>
+                  <CollapsibleTrigger asChild>
+                    <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground flex items-center justify-between pr-2">
+                      <div className="flex items-center gap-2">
+                        <module.icon className="h-3.5 w-3.5" />
+                        {!collapsed && <span>{module.label}</span>}
+                      </div>
+                      {!collapsed && (
+                        <ChevronDown className="h-3.5 w-3.5 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                       )}
-                      activeClassName="bg-primary/10 text-primary font-medium"
+                    </SidebarGroupLabel>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {module.items.map((item) => (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={isActive(item.url)}
+                              tooltip={collapsed ? item.title : undefined}
+                            >
+                              <NavLink
+                                to={item.url}
+                                end={item.url === "/admin"}
+                                className={cn(
+                                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
+                                  "hover:bg-muted/50"
+                                )}
+                                activeClassName="bg-primary/10 text-primary font-medium"
+                              >
+                                <item.icon className="h-5 w-5 shrink-0" />
+                                {!collapsed && <span>{item.title}</span>}
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </SidebarGroup>
+              </Collapsible>
+            ))}
+          </>
+        ) : (
+          // CLIENT: Simple flat layout
+          <SidebarGroup>
+            {!collapsed && (
+              <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider">
+                Menu
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {clientItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.url)}
+                      tooltip={collapsed ? item.title : undefined}
                     >
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/"}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
+                          "hover:bg-muted/50"
+                        )}
+                        activeClassName="bg-primary/10 text-primary font-medium"
+                      >
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-4">
