@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Plus, Clock, Wrench, Gift, Sparkles, ChevronRight, Loader2 } from "lucide-react";
+import { Calendar, Plus, Clock, Wrench, Gift, Sparkles, ChevronRight, Loader2, CalendarClock, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -12,6 +12,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +72,10 @@ const Agenda = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [userVehicles, setUserVehicles] = useState<UserVehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -172,6 +187,70 @@ const Agenda = () => {
     });
   };
 
+  const handleCancelAppointment = async () => {
+    if (!selectedAppointment) return;
+    
+    setIsCancelling(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Get user profile for notification
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("user_id", user?.id)
+        .single();
+
+      // Update appointment status to cancelled
+      const { error } = await supabase
+        .from("appointments")
+        .update({ 
+          status: "cancelado",
+          notes: cancelReason ? `Motivo do cancelamento: ${cancelReason}` : null
+        })
+        .eq("id", selectedAppointment.id);
+
+      if (error) throw error;
+
+      // Create recovery lead for management (diretoria) to follow up
+      await supabase.from("recovery_leads").insert({
+        user_id: user?.id,
+        client_name: profile?.full_name || "Não identificado",
+        phone: profile?.phone || "",
+        vehicle_info: `${selectedAppointment.vehicleModel || "N/A"} - ${selectedAppointment.vehiclePlate || "N/A"}`,
+        original_service: selectedAppointment.service,
+        original_date: selectedAppointment.date.toISOString().split("T")[0],
+        cancellation_reason: cancelReason || "Não informado",
+        appointment_id: selectedAppointment.id,
+        recovery_status: "pending",
+      });
+
+      toast.success("Agendamento cancelado", {
+        description: "A diretoria foi notificada sobre o cancelamento.",
+      });
+
+      // Remove from local state
+      setAppointments(prev => prev.filter(apt => apt.id !== selectedAppointment.id));
+      
+    } catch (error) {
+      console.error("Error cancelling appointment:", error);
+      toast.error("Erro ao cancelar", {
+        description: "Tente novamente ou entre em contato conosco.",
+      });
+    } finally {
+      setIsCancelling(false);
+      setCancelDialogOpen(false);
+      setSelectedAppointment(null);
+      setCancelReason("");
+    }
+  };
+
+  const openCancelDialog = (apt: Appointment, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedAppointment(apt);
+    setCancelDialogOpen(true);
+  };
+
   const handleWaitlistClick = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -222,59 +301,79 @@ const Agenda = () => {
               {appointments.length > 0 ? (
                 <div className="space-y-3">
                   {appointments.map((apt) => {
-                    const canReschedule = apt.status === "confirmado";
+                    const canModify = apt.status === "confirmado" || apt.status === "pendente";
                     
                     return (
-                      <button
+                      <div
                         key={apt.id}
-                        onClick={() => {
-                          if (canReschedule) {
-                            navigate("/reagendamento", {
-                              state: {
-                                appointment: {
-                                  id: apt.id,
-                                  vehicleModel: apt.vehicleModel || "Veículo",
-                                  vehiclePlate: apt.vehiclePlate || "",
-                                  service: apt.service,
-                                  currentDate: apt.date,
-                                  currentTime: apt.time,
-                                  isFullDay: apt.isFullDay || false,
-                                },
-                              },
-                            });
-                          }
-                        }}
-                        disabled={!canReschedule}
-                        className={cn(
-                          "w-full bg-background/50 rounded-xl p-4 flex items-center gap-4 text-left transition-all",
-                          canReschedule && "hover:bg-background/70 hover:ring-1 hover:ring-primary/30 cursor-pointer",
-                          !canReschedule && "opacity-60 cursor-not-allowed"
-                        )}
+                        className="w-full bg-background/50 rounded-xl p-4 transition-all"
                       >
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Wrench className="w-5 h-5 text-primary" strokeWidth={1.5} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-foreground">{apt.service}</p>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              {format(apt.date, "dd/MM", { locale: ptBR })} {apt.time ? `às ${apt.time}` : "(dia todo)"}
-                            </span>
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Wrench className="w-5 h-5 text-primary" strokeWidth={1.5} />
                           </div>
-                          {canReschedule && (
-                            <p className="text-xs text-primary mt-1">Toque para reagendar</p>
-                          )}
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">{apt.service}</p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Clock className="w-4 h-4" />
+                              <span>
+                                {format(apt.date, "dd/MM", { locale: ptBR })} {apt.time ? `às ${apt.time}` : "(dia todo)"}
+                              </span>
+                            </div>
+                            {apt.vehicleModel && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {apt.vehicleModel} {apt.vehiclePlate && `• ${apt.vehiclePlate}`}
+                              </p>
+                            )}
+                          </div>
+                          <span
+                            className={cn(
+                              "text-xs font-medium px-2 py-1 rounded-full",
+                              statusColors[apt.status]
+                            )}
+                          >
+                            {statusLabels[apt.status]}
+                          </span>
                         </div>
-                        <span
-                          className={cn(
-                            "text-xs font-medium px-2 py-1 rounded-full",
-                            statusColors[apt.status]
-                          )}
-                        >
-                          {statusLabels[apt.status]}
-                        </span>
-                      </button>
+                        
+                        {/* Action buttons */}
+                        {canModify && (
+                          <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 text-primary border-primary/30 hover:bg-primary/10"
+                              onClick={() => {
+                                navigate("/reagendamento", {
+                                  state: {
+                                    appointment: {
+                                      id: apt.id,
+                                      vehicleModel: apt.vehicleModel || "Veículo",
+                                      vehiclePlate: apt.vehiclePlate || "",
+                                      service: apt.service,
+                                      currentDate: apt.date,
+                                      currentTime: apt.time,
+                                      isFullDay: apt.isFullDay || false,
+                                    },
+                                  },
+                                });
+                              }}
+                            >
+                              <CalendarClock className="w-4 h-4 mr-1" />
+                              Reagendar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                              onClick={(e) => openCancelDialog(apt, e)}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Cancelar
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -401,6 +500,65 @@ const Agenda = () => {
       </main>
 
       <BottomNavigation />
+
+      {/* Cancel Appointment Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar Agendamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja cancelar este agendamento? A diretoria será notificada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          {selectedAppointment && (
+            <div className="bg-muted/50 rounded-lg p-3 my-2">
+              <p className="font-medium">{selectedAppointment.service}</p>
+              <p className="text-sm text-muted-foreground">
+                {format(selectedAppointment.date, "dd/MM/yyyy", { locale: ptBR })} 
+                {selectedAppointment.time && ` às ${selectedAppointment.time}`}
+              </p>
+              {selectedAppointment.vehicleModel && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedAppointment.vehicleModel}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Motivo do cancelamento (opcional)
+            </label>
+            <Textarea
+              placeholder="Ex: Imprevisto, mudança de planos..."
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCancelling}>
+              Voltar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelAppointment}
+              disabled={isCancelling}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isCancelling ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Cancelando...
+                </>
+              ) : (
+                "Confirmar Cancelamento"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
