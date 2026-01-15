@@ -1,85 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Search, Clock, Phone, Plus, FileText, CalendarClock, UserX } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar, Search, Phone, Plus, FileText, CalendarClock, UserX, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Tables } from "@/integrations/supabase/types";
 
-type AppointmentStatus = 
-  | "pendente" 
-  | "confirmado" 
-  | "concluido" 
-  | "cancelado"
-  | "diagnostico"
-  | "aguardando_pecas"
-  | "pronto_iniciar"
-  | "em_execucao"
-  | "pronto_retirada";
+type AppointmentStatus = Tables<"appointments">["status"];
 
-interface Appointment {
+interface AppointmentWithDetails {
   id: string;
   client: string;
   phone: string;
   vehicle: string;
   plate: string;
-  service: string;
+  vehicleId: string;
+  services: string[];
   date: Date;
   time: string | null;
   isFullDay: boolean;
   status: AppointmentStatus;
   payInAdvance: boolean;
   finalPrice: number;
+  userId: string;
 }
-
-// Mock data
-const mockAppointments: Appointment[] = [
-  {
-    id: "1",
-    client: "João Silva",
-    phone: "(11) 99999-1234",
-    vehicle: "VW Polo",
-    plate: "ABC-1234",
-    service: "Troca de Óleo",
-    date: new Date(2026, 0, 15),
-    time: "09:00",
-    isFullDay: false,
-    status: "diagnostico",
-    payInAdvance: true,
-    finalPrice: 189.90,
-  },
-  {
-    id: "2",
-    client: "Maria Santos",
-    phone: "(11) 98888-5678",
-    vehicle: "Fiat Argo",
-    plate: "XYZ-5678",
-    service: "Revisão Completa",
-    date: new Date(2026, 0, 15),
-    time: "10:00",
-    isFullDay: false,
-    status: "em_execucao",
-    payInAdvance: false,
-    finalPrice: 450.00,
-  },
-  {
-    id: "3",
-    client: "Pedro Lima",
-    phone: "(11) 97777-9012",
-    vehicle: "Hyundai HB20",
-    plate: "DEF-9012",
-    service: "Diagnóstico Completo",
-    date: new Date(2026, 0, 16),
-    time: null,
-    isFullDay: true,
-    status: "pendente",
-    payInAdvance: false,
-    finalPrice: 0,
-  },
-];
 
 const statusConfig: Record<AppointmentStatus, { label: string; color: string }> = {
   pendente: { label: "⏳ Pendente", color: "bg-amber-500/20 text-amber-500" },
@@ -93,55 +43,161 @@ const statusConfig: Record<AppointmentStatus, { label: string; color: string }> 
   pronto_retirada: { label: "💰 Pronto Retirada", color: "bg-emerald-500/20 text-emerald-600" },
 };
 
+// Fetch appointments with related data
+async function fetchAppointments(): Promise<AppointmentWithDetails[]> {
+  const { data: appointments, error } = await supabase
+    .from("appointments")
+    .select(`
+      id,
+      appointment_date,
+      appointment_time,
+      is_full_day,
+      status,
+      pay_in_advance,
+      final_price,
+      user_id,
+      vehicle_id,
+      vehicles (id, model, brand, plate),
+      profiles!appointments_user_id_fkey (full_name, phone),
+      appointment_services (
+        services (name)
+      )
+    `)
+    .in("status", ["pendente", "confirmado"])
+    .order("appointment_date", { ascending: true });
+
+  if (error) throw error;
+
+  return (appointments || []).map((apt: any) => ({
+    id: apt.id,
+    client: apt.profiles?.full_name || "Cliente",
+    phone: apt.profiles?.phone || "",
+    vehicle: apt.vehicles ? `${apt.vehicles.brand || ""} ${apt.vehicles.model}`.trim() : "Veículo",
+    plate: apt.vehicles?.plate || "",
+    vehicleId: apt.vehicle_id || "",
+    services: apt.appointment_services?.map((as: any) => as.services?.name).filter(Boolean) || [],
+    date: new Date(apt.appointment_date),
+    time: apt.appointment_time,
+    isFullDay: apt.is_full_day,
+    status: apt.status,
+    payInAdvance: apt.pay_in_advance,
+    finalPrice: apt.final_price,
+    userId: apt.user_id,
+  }));
+}
+
 const AdminAgendamentos = () => {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState(mockAppointments);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const { data: appointments = [], isLoading, error } = useQuery({
+    queryKey: ["admin-appointments"],
+    queryFn: fetchAppointments,
+  });
+
+  // Mutation: Cancel and send to recovery
+  const cancelMutation = useMutation({
+    mutationFn: async (apt: AppointmentWithDetails) => {
+      // 1. Update appointment status to cancelled
+      const { error: updateError } = await supabase
+        .from("appointments")
+        .update({ status: "cancelado" })
+        .eq("id", apt.id);
+
+      if (updateError) throw updateError;
+
+      // 2. Insert into recovery_leads
+      const { error: insertError } = await supabase
+        .from("recovery_leads")
+        .insert({
+          appointment_id: apt.id,
+          user_id: apt.userId,
+          client_name: apt.client,
+          phone: apt.phone,
+          vehicle_info: `${apt.vehicle} - ${apt.plate}`,
+          original_service: apt.services.join(", "),
+          original_date: format(apt.date, "yyyy-MM-dd"),
+          recovery_status: "pending",
+        });
+
+      if (insertError) throw insertError;
+
+      return apt;
+    },
+    onSuccess: (apt) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
+      toast.warning(`Lead enviado para recuperação: ${apt.client}`);
+    },
+    onError: (error) => {
+      console.error("Error cancelling:", error);
+      toast.error("Erro ao cancelar agendamento");
+    },
+  });
+
+  // Mutation: Update status to diagnostico (opening OS)
+  const openOSMutation = useMutation({
+    mutationFn: async (apt: AppointmentWithDetails) => {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status: "diagnostico" })
+        .eq("id", apt.id);
+
+      if (error) throw error;
+      return apt;
+    },
+    onSuccess: (apt) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-appointments"] });
+      navigate("/admin/patio/" + apt.id);
+      toast.success(`OS aberta para ${apt.client}`);
+    },
+    onError: (error) => {
+      console.error("Error opening OS:", error);
+      toast.error("Erro ao abrir OS");
+    },
+  });
 
   const filteredAppointments = appointments.filter((apt) => {
-    const matchesSearch = 
+    const matchesSearch =
       apt.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
       apt.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       apt.plate.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || apt.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
-  const handleOpenOS = (apt: Appointment) => {
-    // Navigate to nova-os with pre-filled data
-    navigate("/admin/nova-os", { 
-      state: { 
-        fromAppointment: apt.id,
+  const handleOpenOS = (apt: AppointmentWithDetails) => {
+    openOSMutation.mutate(apt);
+  };
+
+  const handleReagendar = (apt: AppointmentWithDetails) => {
+    navigate("/reagendamento", {
+      state: {
+        appointmentId: apt.id,
         client: apt.client,
-        phone: apt.phone,
         vehicle: apt.vehicle,
         plate: apt.plate,
-        service: apt.service
-      } 
+      },
     });
-    toast.success("Abrindo OS para " + apt.client);
   };
 
-  const handleReagendar = (apt: Appointment) => {
-    // TODO: Open reschedule modal or navigate
-    toast.info("Reagendamento para " + apt.client);
+  const handleCancelarERecuperar = (apt: AppointmentWithDetails) => {
+    cancelMutation.mutate(apt);
   };
 
-  const handleCancelarERecuperar = (apt: Appointment) => {
-    setAppointments((prev) =>
-      prev.map((a) => (a.id === apt.id ? { ...a, status: "cancelado" as AppointmentStatus } : a))
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="p-6 text-center">
+          <p className="text-destructive">Erro ao carregar agendamentos</p>
+        </div>
+      </AdminLayout>
     );
-    // TODO: Send to recovery base
-    toast.warning("Lead enviado para recuperação: " + apt.client);
-  };
+  }
 
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
-        {/* Header & Filters */}
+        {/* Header & Search */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -161,101 +217,128 @@ const AdminAgendamentos = () => {
           </Button>
         </div>
 
+        {/* Loading */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        )}
+
         {/* Appointments List */}
-        <div className="space-y-4">
-          {filteredAppointments.length > 0 ? (
-            filteredAppointments.map((apt) => (
-              <Card key={apt.id} className="glass-card border-none overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="flex flex-col lg:flex-row">
-                    {/* Main Info */}
-                    <div className="flex-1 p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{apt.client}</h3>
-                          <p className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Phone className="w-3 h-3" />
-                            {apt.phone}
-                          </p>
+        {!isLoading && (
+          <div className="space-y-4">
+            {filteredAppointments.length > 0 ? (
+              filteredAppointments.map((apt) => (
+                <Card key={apt.id} className="glass-card border-none overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="flex flex-col lg:flex-row">
+                      {/* Main Info */}
+                      <div className="flex-1 p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="font-semibold text-foreground">{apt.client}</h3>
+                            <p className="text-sm text-muted-foreground flex items-center gap-2">
+                              <Phone className="w-3 h-3" />
+                              {apt.phone || "Sem telefone"}
+                            </p>
+                          </div>
+                          <span
+                            className={`text-xs font-medium px-2 py-1 rounded-full ${statusConfig[apt.status].color}`}
+                          >
+                            {statusConfig[apt.status].label}
+                          </span>
                         </div>
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusConfig[apt.status].color}`}>
-                          {statusConfig[apt.status].label}
-                        </span>
+
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-muted-foreground">Veículo</p>
+                            <p className="text-foreground font-medium">
+                              {apt.vehicle} • {apt.plate}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Serviço</p>
+                            <p className="text-foreground font-medium">
+                              {apt.services.length > 0 ? apt.services.join(", ") : "Não especificado"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Data/Hora</p>
+                            <p className="text-foreground font-medium">
+                              {format(apt.date, "dd/MM/yyyy", { locale: ptBR })}
+                              {apt.isFullDay ? " (Dia inteiro)" : apt.time ? ` às ${apt.time}` : ""}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Valor</p>
+                            <p className="text-foreground font-medium">
+                              {apt.finalPrice > 0
+                                ? `R$ ${apt.finalPrice.toFixed(2)}`
+                                : "Sob consulta"}
+                              {apt.payInAdvance && (
+                                <span className="text-xs text-emerald-500 ml-2">Pago</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Veículo</p>
-                          <p className="text-foreground font-medium">{apt.vehicle} • {apt.plate}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Serviço</p>
-                          <p className="text-foreground font-medium">{apt.service}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Data/Hora</p>
-                          <p className="text-foreground font-medium">
-                            {format(apt.date, "dd/MM/yyyy", { locale: ptBR })}
-                            {apt.isFullDay ? " (Dia inteiro)" : ` às ${apt.time}`}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Valor</p>
-                          <p className="text-foreground font-medium">
-                            {apt.finalPrice > 0 ? `R$ ${apt.finalPrice.toFixed(2)}` : "Sob consulta"}
-                            {apt.payInAdvance && (
-                              <span className="text-xs text-emerald-500 ml-2">Pago</span>
-                            )}
-                          </p>
-                        </div>
+                      {/* Actions - 3 clear paths */}
+                      <div className="flex lg:flex-col gap-2 p-4 bg-muted/30 lg:w-56">
+                        {/* Abrir OS - Cliente chegou */}
+                        <Button
+                          size="sm"
+                          className="flex-1 gradient-primary text-primary-foreground"
+                          onClick={() => handleOpenOS(apt)}
+                          disabled={openOSMutation.isPending}
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          Abrir OS
+                        </Button>
+
+                        {/* Reagendar */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleReagendar(apt)}
+                        >
+                          <CalendarClock className="w-4 h-4 mr-2" />
+                          Reagendar
+                        </Button>
+
+                        {/* Cancelar e Recuperar */}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleCancelarERecuperar(apt)}
+                          disabled={cancelMutation.isPending}
+                        >
+                          <UserX className="w-4 h-4 mr-2" />
+                          Cancelar
+                        </Button>
                       </div>
                     </div>
-
-                    {/* Actions - 3 clear paths */}
-                    <div className="flex lg:flex-col gap-2 p-4 bg-muted/30 lg:w-56">
-                      {/* Abrir OS - Cliente chegou */}
-                      <Button
-                        size="sm"
-                        className="flex-1 gradient-primary text-primary-foreground"
-                        onClick={() => handleOpenOS(apt)}
-                      >
-                        <FileText className="w-4 h-4 mr-2" />
-                        Abrir OS
-                      </Button>
-
-                      {/* Reagendar */}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleReagendar(apt)}
-                      >
-                        <CalendarClock className="w-4 h-4 mr-2" />
-                        Reagendar
-                      </Button>
-
-                      {/* Cancelar e Recuperar */}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleCancelarERecuperar(apt)}
-                      >
-                        <UserX className="w-4 h-4 mr-2" />
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum agendamento encontrado</p>
-            </div>
-          )}
-        </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Nenhum agendamento pendente</p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => navigate("/admin/nova-os")}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar Agendamento
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

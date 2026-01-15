@@ -978,6 +978,68 @@ export type Database = {
           },
         ]
       }
+      recovery_leads: {
+        Row: {
+          appointment_id: string | null
+          cancellation_reason: string | null
+          client_name: string
+          contacted_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          original_date: string | null
+          original_service: string | null
+          phone: string
+          recovered_at: string | null
+          recovery_status: string
+          updated_at: string
+          user_id: string
+          vehicle_info: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          cancellation_reason?: string | null
+          client_name: string
+          contacted_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          original_date?: string | null
+          original_service?: string | null
+          phone: string
+          recovered_at?: string | null
+          recovery_status?: string
+          updated_at?: string
+          user_id: string
+          vehicle_info?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          cancellation_reason?: string | null
+          client_name?: string
+          contacted_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          original_date?: string | null
+          original_service?: string | null
+          phone?: string
+          recovered_at?: string | null
+          recovery_status?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recovery_leads_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recursos: {
         Row: {
           created_at: string
