@@ -61,12 +61,14 @@ export function AppSidebar({ variant = "client" }: AppSidebarProps) {
           "flex items-center gap-3 transition-all",
           collapsed && "justify-center"
         )}>
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-            <Wrench className="w-4 h-4 text-primary-foreground" />
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="Doctor Auto Prime" 
+            className="w-8 h-8 rounded-lg object-contain"
+          />
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-bold text-foreground text-sm">Prime Care</span>
+              <span className="font-bold text-foreground text-sm">Doctor Auto Prime</span>
               <span className="text-xs text-muted-foreground">
                 {variant === "admin" ? "Painel Admin" : "Cliente"}
               </span>
