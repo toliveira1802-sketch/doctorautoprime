@@ -63,7 +63,7 @@ const Index = () => {
         </section>
 
         {/* Social Links */}
-        <section className="py-6 mt-auto">
+        <section className="py-2 mt-auto">
           <div className="flex justify-between px-4">
             <a
               href="https://www.instagram.com/doctorauto.prime?igsh=ejRheXE2dzB2NGo%3D&utm_source=qr"
