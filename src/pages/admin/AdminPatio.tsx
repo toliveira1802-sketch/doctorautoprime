@@ -77,6 +77,9 @@ const AdminPatio = () => {
   const [draggedItem, setDraggedItem] = useState<PatioItem | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<PatioStatus | null>(null);
 
+  // Excluir veículos entregues da contagem principal
+  const activeItems = items.filter((item) => item.status !== "concluido");
+
   const filteredItems = items.filter((item) =>
     item.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -193,7 +196,7 @@ const AdminPatio = () => {
               Pátio
             </h1>
             <p className="text-sm text-muted-foreground">
-              {items.length} veículos • Sincronizado com Trello
+              {activeItems.length} veículos no pátio • Sincronizado com Trello
             </p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
