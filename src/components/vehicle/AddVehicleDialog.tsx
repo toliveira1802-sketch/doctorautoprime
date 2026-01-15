@@ -121,18 +121,19 @@ export function AddVehicleDialog({ onVehicleAdded, trigger }: AddVehicleDialogPr
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="model">Modelo do veículo</Label>
+            <Label htmlFor="model">Modelo do veículo *</Label>
             <Input
               id="model"
               placeholder="Ex: Civic, Corolla, HB20..."
               value={model}
               onChange={(e) => setModel(e.target.value)}
               className="h-12"
+              required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="plate">Placa</Label>
+            <Label htmlFor="plate">Placa *</Label>
             <Input
               id="plate"
               placeholder="ABC-1234"
@@ -140,6 +141,7 @@ export function AddVehicleDialog({ onVehicleAdded, trigger }: AddVehicleDialogPr
               onChange={handlePlateChange}
               maxLength={8}
               className="h-12 uppercase"
+              required
             />
             <p className="text-xs text-muted-foreground">
               Formatos aceitos: ABC-1234 ou ABC1D23

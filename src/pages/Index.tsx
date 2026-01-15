@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { ActionButtons } from "@/components/home/ActionButtons";
 import { MyVehiclesSection } from "@/components/home/MyVehiclesSection";
-import { Youtube, Instagram, BookOpen } from "lucide-react";
+import { Youtube, Instagram, BookOpen, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -44,6 +44,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen gradient-bg dark flex flex-col">
+      {/* Floating WhatsApp Button */}
+      <a
+        href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es!"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-24 right-4 z-50 h-14 w-14 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+        aria-label="Contato via WhatsApp"
+      >
+        <MessageCircle className="h-7 w-7 text-white" fill="white" />
+      </a>
+
       <Header />
 
       <main className="flex-1 px-4 pt-6 pb-24 flex flex-col">
