@@ -20,7 +20,8 @@ import {
   CreditCard,
   Phone,
   AlertCircle,
-  Info
+  Info,
+  Wallet
 } from "lucide-react";
 import { AddVehicleDialog } from "@/components/vehicle/AddVehicleDialog";
 import { Button } from "@/components/ui/button";
@@ -54,21 +55,22 @@ const serviceTypes = [
 ];
 
 // Serviços disponíveis por tipo (fullDay = dia todo, price = 0 = sob consulta)
+// laborCost = custo de mão de obra (onde o cashback pode ser aplicado)
 const services = {
   revisao: [
-    { id: "troca-oleo", name: "Troca de Óleo", icon: Droplets, duration: 30, price: 150, fullDay: false },
-    { id: "filtros", name: "Troca de Filtros", icon: Settings, duration: 20, price: 80, fullDay: false },
-    { id: "freios", name: "Revisão de Freios", icon: Car, duration: 60, price: 200, fullDay: false },
-    { id: "suspensao", name: "Revisão de Suspensão", icon: Wrench, duration: 90, price: 0, fullDay: false },
-    { id: "alinhamento", name: "Alinhamento e Balanceamento", icon: Car, duration: 45, price: 120, fullDay: false },
-    { id: "revisao-completa", name: "Revisão Completa", icon: Settings, duration: 480, price: 0, fullDay: true },
+    { id: "troca-oleo", name: "Troca de Óleo", icon: Droplets, duration: 30, price: 150, laborCost: 80, fullDay: false },
+    { id: "filtros", name: "Troca de Filtros", icon: Settings, duration: 20, price: 80, laborCost: 40, fullDay: false },
+    { id: "freios", name: "Revisão de Freios", icon: Car, duration: 60, price: 200, laborCost: 120, fullDay: false },
+    { id: "suspensao", name: "Revisão de Suspensão", icon: Wrench, duration: 90, price: 0, laborCost: 0, fullDay: false },
+    { id: "alinhamento", name: "Alinhamento e Balanceamento", icon: Car, duration: 45, price: 120, laborCost: 80, fullDay: false },
+    { id: "revisao-completa", name: "Revisão Completa", icon: Settings, duration: 480, price: 0, laborCost: 0, fullDay: true },
   ],
   diagnostico: [
-    { id: "eletrica", name: "Diagnóstico Elétrico", icon: Zap, duration: 480, price: 150, fullDay: true },
-    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 480, price: 0, fullDay: true },
-    { id: "injecao", name: "Diagnóstico de Injeção", icon: Droplets, duration: 480, price: 180, fullDay: true },
-    { id: "geral", name: "Check-up Geral", icon: Stethoscope, duration: 480, price: 250, fullDay: true },
-    { id: "pericia", name: "Perícia Completa", icon: Stethoscope, duration: 480, price: 0, fullDay: true },
+    { id: "eletrica", name: "Diagnóstico Elétrico", icon: Zap, duration: 480, price: 150, laborCost: 150, fullDay: true },
+    { id: "motor", name: "Diagnóstico de Motor", icon: Settings, duration: 480, price: 0, laborCost: 0, fullDay: true },
+    { id: "injecao", name: "Diagnóstico de Injeção", icon: Droplets, duration: 480, price: 180, laborCost: 180, fullDay: true },
+    { id: "geral", name: "Check-up Geral", icon: Stethoscope, duration: 480, price: 250, laborCost: 250, fullDay: true },
+    { id: "pericia", name: "Perícia Completa", icon: Stethoscope, duration: 480, price: 0, laborCost: 0, fullDay: true },
   ],
 };
 
@@ -112,6 +114,10 @@ const NovoAgendamento = () => {
   
   // Step 5: Payment option
   const [payInAdvance, setPayInAdvance] = useState(false);
+  
+  // Cashback
+  const [useCashback, setUseCashback] = useState(false);
+  const availableCashback = 298.50; // Mock - seria buscado do banco de dados
 
   // Para fluxo de promoção: filtra veículos elegíveis
   const eligibleVehicles = useMemo(() => {
@@ -200,6 +206,7 @@ const NovoAgendamento = () => {
     : availableServices.filter(s => selectedServices.includes(s.id));
   const totalDuration = selectedServiceDetails.reduce((acc, s) => acc + s.duration, 0);
   const subtotal = selectedServiceDetails.reduce((acc, s) => acc + s.price, 0);
+  const totalLaborCost = selectedServiceDetails.reduce((acc, s) => acc + (s.laborCost || 0), 0);
   
   // Desconto da promoção ou progressivo
   const getDiscount = () => {
@@ -217,9 +224,16 @@ const NovoAgendamento = () => {
   const discountAmount = Math.round(subtotal * (discount.percent / 100));
   const priceAfterDiscount = subtotal - discountAmount;
   
+  // Cashback: só pode ser usado se NÃO tiver promoção e aplica só na mão de obra
+  const hasPromotion = discount.percent > 0;
+  const canUseCashback = !hasPromotion && !isPromoFlow && totalLaborCost > 0 && availableCashback > 0;
+  const cashbackToApply = useCashback && canUseCashback 
+    ? Math.min(availableCashback, totalLaborCost) 
+    : 0;
+  
   const hasVariablePrice = selectedServiceDetails.some(s => s.price === 0);
-  const advanceBonus = (payInAdvance && !hasVariablePrice) ? Math.round(priceAfterDiscount * 0.05) : 0;
-  const finalPrice = priceAfterDiscount - advanceBonus;
+  const advanceBonus = (payInAdvance && !hasVariablePrice) ? Math.round((priceAfterDiscount - cashbackToApply) * 0.05) : 0;
+  const finalPrice = priceAfterDiscount - cashbackToApply - advanceBonus;
   
   const variablePriceServices = selectedServiceDetails.filter(s => s.price === 0);
 
@@ -1028,6 +1042,57 @@ const NovoAgendamento = () => {
 
               <div className="h-px bg-border" />
 
+              {/* Cashback Option */}
+              {canUseCashback && (
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setUseCashback(!useCashback)}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-3 rounded-xl transition-all",
+                      useCashback ? "bg-primary/20 ring-2 ring-primary" : "bg-muted/50"
+                    )}
+                  >
+                    <Checkbox 
+                      checked={useCashback}
+                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center gap-2">
+                        <Wallet className="w-4 h-4 text-primary" />
+                        <span className="font-medium text-foreground">Usar meu cashback</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Saldo: R$ {availableCashback.toFixed(2).replace('.', ',')} • Aplicável na mão de obra
+                      </p>
+                    </div>
+                    {useCashback && (
+                      <span className="text-sm font-bold text-primary">-R$ {cashbackToApply.toFixed(2).replace('.', ',')}</span>
+                    )}
+                  </button>
+                  
+                  {useCashback && (
+                    <div className="flex items-start gap-2 p-3 rounded-xl bg-primary/10 border border-primary/20">
+                      <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      <p className="text-xs text-primary">
+                        <span className="font-medium">Cashback aplicado!</span> Desconto de R$ {cashbackToApply.toFixed(2).replace('.', ',')} na mão de obra (máx: R$ {totalLaborCost}).
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Info: Cashback não pode ser usado com promoções */}
+              {hasPromotion && availableCashback > 0 && !isPromoFlow && (
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-muted/50 border border-muted">
+                  <AlertCircle className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    Você tem R$ {availableCashback.toFixed(2).replace('.', ',')} de cashback, mas ele não pode ser combinado com promoções.
+                  </p>
+                </div>
+              )}
+
+              {canUseCashback && <div className="h-px bg-border" />}
+
               {/* Advance Payment Bonus */}
               {!hasVariablePrice ? (
                 <div className="space-y-3">
@@ -1081,17 +1146,17 @@ const NovoAgendamento = () => {
               <div className="flex items-center justify-between pt-2">
                 <span className="text-foreground font-medium">Total final</span>
                 <div className="text-right">
-                  {(discount.percent > 0 || payInAdvance) && !hasVariablePrice && (
+                  {(discount.percent > 0 || payInAdvance || useCashback) && !hasVariablePrice && (
                     <span className="text-xs text-emerald-500 block">
-                      Economia de R$ {discountAmount + advanceBonus}
+                      Economia de R$ {(discountAmount + advanceBonus + cashbackToApply).toFixed(2).replace('.', ',')}
                     </span>
                   )}
                   {hasVariablePrice ? (
                     <span className="text-xl font-bold text-foreground">
-                      R$ {finalPrice} <span className="text-sm text-amber-500">+ consulta</span>
+                      R$ {finalPrice.toFixed(2).replace('.', ',')} <span className="text-sm text-amber-500">+ consulta</span>
                     </span>
                   ) : (
-                    <span className="text-2xl font-bold text-primary">R$ {finalPrice}</span>
+                    <span className="text-2xl font-bold text-primary">R$ {finalPrice.toFixed(2).replace('.', ',')}</span>
                   )}
                 </div>
               </div>
