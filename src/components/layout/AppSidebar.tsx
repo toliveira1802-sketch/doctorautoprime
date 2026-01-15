@@ -42,7 +42,7 @@ export function AppSidebar({ variant = "client" }: AppSidebarProps) {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const collapsed = state === "collapsed";
 
   const items = variant === "admin" ? adminItems : clientItems;
@@ -50,8 +50,8 @@ export function AppSidebar({ variant = "client" }: AppSidebarProps) {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 
