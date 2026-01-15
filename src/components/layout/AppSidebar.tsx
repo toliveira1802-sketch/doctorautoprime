@@ -1,7 +1,7 @@
 import { 
   Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, 
   Plus, Car, Star, TrendingUp, DollarSign, FileText, ChevronDown,
-  ClipboardList, Gauge, UserCog
+  ClipboardList, Gauge, UserCog, LayoutDashboard
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -93,10 +93,21 @@ const sistemaModule: AdminMenuGroup = {
   ],
 };
 
+// MODULE: Gestão (dashboards customizados)
+const gestaoModule: AdminMenuGroup = {
+  label: "Gestão",
+  icon: LayoutDashboard,
+  roles: ["admin"],
+  items: [
+    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["admin"] },
+  ],
+};
+
 // All admin modules - easy to separate in the future
 const adminModules: AdminMenuGroup[] = [
   operacionalModule,
   dashboardModule,
+  gestaoModule,
   sistemaModule,
 ];
 

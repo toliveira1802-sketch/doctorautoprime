@@ -559,6 +559,136 @@ export type Database = {
           },
         ]
       }
+      gestao_dados_manuais: {
+        Row: {
+          chave: string
+          created_at: string | null
+          data_referencia: string | null
+          id: string
+          valor: string
+          widget_id: string | null
+        }
+        Insert: {
+          chave: string
+          created_at?: string | null
+          data_referencia?: string | null
+          id?: string
+          valor: string
+          widget_id?: string | null
+        }
+        Update: {
+          chave?: string
+          created_at?: string | null
+          data_referencia?: string | null
+          id?: string
+          valor?: string
+          widget_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gestao_dados_manuais_widget_id_fkey"
+            columns: ["widget_id"]
+            isOneToOne: false
+            referencedRelation: "gestao_widgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gestao_dashboards: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          created_at: string | null
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gestao_widgets: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          created_at: string | null
+          dashboard_id: string
+          fonte_dados: string
+          icone: string | null
+          id: string
+          ordem: number | null
+          query_config: Json | null
+          tamanho: string | null
+          tipo: Database["public"]["Enums"]["widget_type"]
+          titulo: string
+          updated_at: string | null
+          valor_fixo: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          dashboard_id: string
+          fonte_dados: string
+          icone?: string | null
+          id?: string
+          ordem?: number | null
+          query_config?: Json | null
+          tamanho?: string | null
+          tipo?: Database["public"]["Enums"]["widget_type"]
+          titulo: string
+          updated_at?: string | null
+          valor_fixo?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          dashboard_id?: string
+          fonte_dados?: string
+          icone?: string | null
+          id?: string
+          ordem?: number | null
+          query_config?: Json | null
+          tamanho?: string | null
+          tipo?: Database["public"]["Enums"]["widget_type"]
+          titulo?: string
+          updated_at?: string | null
+          valor_fixo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gestao_widgets_dashboard_id_fkey"
+            columns: ["dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "gestao_dashboards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mechanic_daily_feedback: {
         Row: {
           created_at: string
@@ -1456,6 +1586,16 @@ export type Database = {
         | "flow_abandoned"
       item_priority: "critical" | "half_life" | "good"
       service_type: "revisao" | "diagnostico"
+      widget_type:
+        | "card_numero"
+        | "card_percentual"
+        | "grafico_linha"
+        | "grafico_barra"
+        | "grafico_pizza"
+        | "lista"
+        | "tabela"
+        | "gauge"
+        | "texto"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1613,6 +1753,17 @@ export const Constants = {
       ],
       item_priority: ["critical", "half_life", "good"],
       service_type: ["revisao", "diagnostico"],
+      widget_type: [
+        "card_numero",
+        "card_percentual",
+        "grafico_linha",
+        "grafico_barra",
+        "grafico_pizza",
+        "lista",
+        "tabela",
+        "gauge",
+        "texto",
+      ],
     },
   },
 } as const

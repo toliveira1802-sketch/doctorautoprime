@@ -36,6 +36,8 @@ import ServicoDetalhes from "./pages/ServicoDetalhes";
 import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
 import Blog from "./pages/Blog";
+import GestaoDashboards from "./pages/gestao/GestaoDashboards";
+import GestaoDashboardView from "./pages/gestao/GestaoDashboardView";
 const queryClient = new QueryClient();
 
 // Protected Route component - saves intended destination before redirecting to login
@@ -293,6 +295,27 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <AdminDocumentacao />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      {/* Gestão Routes */}
+      <Route 
+        path="/gestao" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <GestaoDashboards />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/gestao/dashboard/:dashboardId" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <GestaoDashboardView />
             </AdminRoute>
           </ProtectedRoute>
         } 
