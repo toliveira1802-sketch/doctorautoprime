@@ -22,7 +22,7 @@ import Reagendamento from "./pages/Reagendamento";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminDashboardOverview from "./pages/admin/AdminDashboardOverview";
 import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
-import AdminNovaOS from "./pages/admin/AdminNovaOS";
+
 import AdminOrdensServico from "./pages/admin/AdminOrdensServico";
 import AdminOSDetalhes from "./pages/admin/AdminOSDetalhes";
 import AdminPatioDetalhes from "./pages/admin/AdminPatioDetalhes";
@@ -203,16 +203,6 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <AdminDashboardOverview />
-            </AdminRoute>
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/admin/nova-os" 
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminNovaOS />
             </AdminRoute>
           </ProtectedRoute>
         } 
