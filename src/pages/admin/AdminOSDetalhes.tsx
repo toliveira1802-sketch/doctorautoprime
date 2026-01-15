@@ -129,12 +129,13 @@ export default function AdminOSDetalhes() {
   const [fotosOpen, setFotosOpen] = useState(isNewOS);
   const [servicosOpen, setServicosOpen] = useState(isNewOS);
   const [upsellOpen, setUpsellOpen] = useState(isNewOS);
-  const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro' | 'precompra'>('entrada');
+  const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro' | 'precompra' | 'geral'>('entrada');
   
   // Checklist states
   const [checklistEntrada, setChecklistEntrada] = useState<Record<string, boolean>>({});
   const [checklistDyno, setChecklistDyno] = useState<Record<string, boolean>>({});
   const [checklistPreCompra, setChecklistPreCompra] = useState<Record<string, boolean>>({});
+  const [checklistGeral, setChecklistGeral] = useState<Record<string, boolean>>({});
 
   // Fetch OS data
   const { data: os, isLoading, error } = useQuery({
@@ -536,87 +537,119 @@ export default function AdminOSDetalhes() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="pt-0 space-y-4">
-                    <Tabs value={checklistType} onValueChange={(v) => setChecklistType(v as 'entrada' | 'dinamometro' | 'precompra')}>
-                      <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="entrada" className="flex items-center gap-1 text-xs md:text-sm">
-                          <ClipboardCheck className="w-4 h-4" />
+                    <Tabs value={checklistType} onValueChange={(v) => setChecklistType(v as 'entrada' | 'dinamometro' | 'precompra' | 'geral')}>
+                      <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="entrada" className="flex items-center gap-1 text-xs">
+                          <ClipboardCheck className="w-3 h-3" />
                           <span className="hidden sm:inline">Entrada</span>
                         </TabsTrigger>
-                        <TabsTrigger value="dinamometro" className="flex items-center gap-1 text-xs md:text-sm">
-                          <Gauge className="w-4 h-4" />
-                          <span className="hidden sm:inline">Dinamômetro</span>
+                        <TabsTrigger value="dinamometro" className="flex items-center gap-1 text-xs">
+                          <Gauge className="w-3 h-3" />
+                          <span className="hidden sm:inline">Dyno</span>
                         </TabsTrigger>
-                        <TabsTrigger value="precompra" className="flex items-center gap-1 text-xs md:text-sm">
-                          <ShieldCheck className="w-4 h-4" />
+                        <TabsTrigger value="precompra" className="flex items-center gap-1 text-xs">
+                          <ShieldCheck className="w-3 h-3" />
                           <span className="hidden sm:inline">Pré-Compra</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="geral" className="flex items-center gap-1 text-xs">
+                          <FileText className="w-3 h-3" />
+                          <span className="hidden sm:inline">Geral</span>
                         </TabsTrigger>
                       </TabsList>
 
-                      {/* Checklist Entrada */}
-                      <TabsContent value="entrada" className="mt-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {[
-                            { key: "nivelOleo", label: "Nível de Óleo" },
-                            { key: "nivelAgua", label: "Nível de Água" },
-                            { key: "freios", label: "Freios" },
-                            { key: "pneus", label: "Pneus" },
-                            { key: "luzes", label: "Luzes" },
-                            { key: "bateria", label: "Bateria" },
-                            { key: "correia", label: "Correia" },
-                            { key: "suspensao", label: "Suspensão" },
-                          ].map((item) => (
-                            <div key={item.key} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`entrada-${item.key}`}
-                                checked={checklistEntrada[item.key] || false}
-                                onCheckedChange={(checked) => {
-                                  const updated = { ...checklistEntrada, [item.key]: checked === true };
-                                  setChecklistEntrada(updated);
-                                  updateOSMutation.mutate({ checklist_entrada: updated });
-                                }}
-                              />
-                              <label htmlFor={`entrada-${item.key}`} className="text-sm font-medium leading-none cursor-pointer">
-                                {item.label}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </TabsContent>
-
-                      {/* Checklist Dinamômetro */}
-                      <TabsContent value="dinamometro" className="mt-4 space-y-4">
+                      {/* Checklist Entrada - Com itens obrigatórios */}
+                      <TabsContent value="entrada" className="mt-4 space-y-4">
+                        {/* Itens Obrigatórios */}
                         <div className="space-y-3">
-                          <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
-                            <Activity className="w-4 h-4" />
-                            Verificações
+                          <h4 className="font-semibold text-sm flex items-center gap-2 text-red-600">
+                            <AlertTriangle className="w-4 h-4" />
+                            Obrigatórios
                           </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-red-500/5 border border-red-500/20 rounded-lg">
                             {[
-                              { key: "combustivelAdequado", label: "Combustível adequado" },
-                              { key: "oleoNivel", label: "Óleo no nível correto" },
-                              { key: "arrefecimentoOk", label: "Arrefecimento ok" },
-                              { key: "pneusCalibrados", label: "Pneus calibrados" },
-                              { key: "correiasPolias", label: "Correias e polias" },
-                              { key: "escapamentoOk", label: "Escapamento ok" },
-                              { key: "sensorOxigenio", label: "Sensor de oxigênio" },
-                              { key: "ignioOk", label: "Sistema de ignição" },
+                              { key: "nivelOleo", label: "Nível de Óleo" },
+                              { key: "nivelAgua", label: "Nível de Água" },
+                              { key: "freios", label: "Freios" },
+                              { key: "kmAtual", label: "KM Atual Registrado" },
                             ].map((item) => (
                               <div key={item.key} className="flex items-center space-x-2">
                                 <Checkbox
-                                  id={`dyno-${item.key}`}
-                                  checked={checklistDyno[item.key] || false}
+                                  id={`entrada-obr-${item.key}`}
+                                  checked={checklistEntrada[item.key] || false}
                                   onCheckedChange={(checked) => {
-                                    const updated = { ...checklistDyno, [item.key]: checked === true };
-                                    setChecklistDyno(updated);
-                                    updateOSMutation.mutate({ checklist_dinamometro: updated });
+                                    const updated = { ...checklistEntrada, [item.key]: checked === true };
+                                    setChecklistEntrada(updated);
+                                    updateOSMutation.mutate({ checklist_entrada: updated });
                                   }}
                                 />
-                                <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
+                                <label htmlFor={`entrada-obr-${item.key}`} className="text-sm font-medium leading-none cursor-pointer">
                                   {item.label}
                                 </label>
                               </div>
                             ))}
                           </div>
+                        </div>
+                        {/* Itens Opcionais */}
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-sm text-muted-foreground">Verificações Adicionais</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {[
+                              { key: "pneus", label: "Pneus" },
+                              { key: "luzes", label: "Luzes" },
+                              { key: "bateria", label: "Bateria" },
+                              { key: "correia", label: "Correia" },
+                              { key: "suspensao", label: "Suspensão" },
+                              { key: "limpadores", label: "Limpadores" },
+                              { key: "arCondicionado", label: "Ar Condicionado" },
+                              { key: "vidros", label: "Vidros" },
+                            ].map((item) => (
+                              <div key={item.key} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`entrada-${item.key}`}
+                                  checked={checklistEntrada[item.key] || false}
+                                  onCheckedChange={(checked) => {
+                                    const updated = { ...checklistEntrada, [item.key]: checked === true };
+                                    setChecklistEntrada(updated);
+                                    updateOSMutation.mutate({ checklist_entrada: updated });
+                                  }}
+                                />
+                                <label htmlFor={`entrada-${item.key}`} className="text-sm leading-none cursor-pointer">
+                                  {item.label}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      {/* Checklist Dinamômetro */}
+                      <TabsContent value="dinamometro" className="mt-4 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {[
+                            { key: "combustivelAdequado", label: "Combustível adequado" },
+                            { key: "oleoNivel", label: "Óleo no nível correto" },
+                            { key: "arrefecimentoOk", label: "Arrefecimento ok" },
+                            { key: "pneusCalibrados", label: "Pneus calibrados" },
+                            { key: "correiasPolias", label: "Correias e polias" },
+                            { key: "escapamentoOk", label: "Escapamento ok" },
+                            { key: "sensorOxigenio", label: "Sensor de oxigênio" },
+                            { key: "ignioOk", label: "Sistema de ignição" },
+                          ].map((item) => (
+                            <div key={item.key} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`dyno-${item.key}`}
+                                checked={checklistDyno[item.key] || false}
+                                onCheckedChange={(checked) => {
+                                  const updated = { ...checklistDyno, [item.key]: checked === true };
+                                  setChecklistDyno(updated);
+                                  updateOSMutation.mutate({ checklist_dinamometro: updated });
+                                }}
+                              />
+                              <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
+                                {item.label}
+                              </label>
+                            </div>
+                          ))}
                         </div>
                       </TabsContent>
 
@@ -646,6 +679,58 @@ export default function AdminOSDetalhes() {
                                 }}
                               />
                               <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
+                                {item.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+
+                      {/* Checklist Geral - Com muitos itens opcionais */}
+                      <TabsContent value="geral" className="mt-4 space-y-4">
+                        <p className="text-xs text-muted-foreground">Verificações completas para inspeção detalhada</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {[
+                            { key: "parabrisa", label: "Parabrisa" },
+                            { key: "retrovisores", label: "Retrovisores" },
+                            { key: "cintos", label: "Cintos de segurança" },
+                            { key: "airbag", label: "Indicador Airbag" },
+                            { key: "buzina", label: "Buzina" },
+                            { key: "travaPortas", label: "Trava das portas" },
+                            { key: "vidrosEletricos", label: "Vidros elétricos" },
+                            { key: "bancosAjuste", label: "Ajuste dos bancos" },
+                            { key: "arCondicionadoFunc", label: "Funcionamento A/C" },
+                            { key: "aquecedor", label: "Aquecedor" },
+                            { key: "radioSom", label: "Rádio/Som" },
+                            { key: "painel", label: "Painel de instrumentos" },
+                            { key: "volanteFolga", label: "Folga do volante" },
+                            { key: "pedais", label: "Pedais" },
+                            { key: "freioMao", label: "Freio de mão" },
+                            { key: "cambioFunc", label: "Funcionamento câmbio" },
+                            { key: "embreagem", label: "Embreagem" },
+                            { key: "partidaMotor", label: "Partida do motor" },
+                            { key: "marcha", label: "Marcha lenta" },
+                            { key: "aceleracao", label: "Aceleração" },
+                            { key: "escapamento", label: "Escapamento" },
+                            { key: "direcao", label: "Direção" },
+                            { key: "amortecedores", label: "Amortecedores" },
+                            { key: "pneuEstepe", label: "Pneu estepe" },
+                            { key: "ferramentas", label: "Ferramentas" },
+                            { key: "triangulo", label: "Triângulo" },
+                            { key: "macaco", label: "Macaco" },
+                            { key: "chaveRodas", label: "Chave de rodas" },
+                          ].map((item) => (
+                            <div key={item.key} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`geral-${item.key}`}
+                                checked={checklistGeral[item.key] || false}
+                                onCheckedChange={(checked) => {
+                                  const updated = { ...checklistGeral, [item.key]: checked === true };
+                                  setChecklistGeral(updated);
+                                  // Save to a general checklist field if needed
+                                }}
+                              />
+                              <label htmlFor={`geral-${item.key}`} className="text-sm cursor-pointer">
                                 {item.label}
                               </label>
                             </div>
@@ -738,120 +823,6 @@ export default function AdminOSDetalhes() {
                     {os.diagnostico || "Aguardando diagnóstico"}
                   </p>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* AI Proactive Sales Assistant - Internal Only */}
-            <Card className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10 border-purple-500/30">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Sparkles className="w-5 h-5 text-purple-500" />
-                  Assistente de Vendas IA
-                  <Badge variant="outline" className="ml-auto bg-purple-500/20 text-purple-600 border-purple-500/30 text-xs">
-                    Interno
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Cashback incentive */}
-                {(() => {
-                  const currentTotal = totalAprovado || totalOrcado || 0;
-                  const nextTier = currentTotal < 500 ? 500 : currentTotal < 1000 ? 1000 : currentTotal < 2000 ? 2000 : 5000;
-                  const remaining = nextTier - currentTotal;
-                  const cashbackPercent = nextTier >= 2000 ? 10 : nextTier >= 1000 ? 7 : 5;
-                  
-                  if (remaining > 0 && remaining < nextTier) {
-                    return (
-                      <div className="p-3 rounded-lg bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Gift className="w-4 h-4 text-green-600" />
-                          <span className="font-semibold text-green-700 text-sm">Oportunidade de Cashback!</span>
-                        </div>
-                        <p className="text-sm text-foreground">
-                          Faltam apenas <strong className="text-green-600">{formatCurrency(remaining)}</strong> para o cliente ganhar{" "}
-                          <strong className="text-green-600">{cashbackPercent}% de cashback</strong> na próxima visita!
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          💡 Sugira: troca de filtros, alinhamento, ou revisão de ar-condicionado
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-
-                {/* Upsell suggestions based on vehicle/km */}
-                <div className="p-3 rounded-lg bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-4 h-4 text-blue-600" />
-                    <span className="font-semibold text-blue-700 text-sm">Sugestões de Venda</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm p-2 bg-background/50 rounded">
-                      <span>Higienização do A/C</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-600 font-medium">R$ 189</span>
-                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => {
-                          setNewItem({ descricao: "Higienização do Ar Condicionado", tipo: "servico", quantidade: 1, valor_unitario: 189 });
-                          setShowAddItemDialog(true);
-                        }}>
-                          <Plus className="w-3 h-3 mr-1" />
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm p-2 bg-background/50 rounded">
-                      <span>Limpeza de Bicos</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-600 font-medium">R$ 280</span>
-                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => {
-                          setNewItem({ descricao: "Limpeza de Bicos Injetores", tipo: "servico", quantidade: 1, valor_unitario: 280 });
-                          setShowAddItemDialog(true);
-                        }}>
-                          <Plus className="w-3 h-3 mr-1" />
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm p-2 bg-background/50 rounded">
-                      <span>Cristalização de Faróis</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-600 font-medium">R$ 150</span>
-                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => {
-                          setNewItem({ descricao: "Cristalização de Faróis", tipo: "servico", quantidade: 1, valor_unitario: 150 });
-                          setShowAddItemDialog(true);
-                        }}>
-                          <Plus className="w-3 h-3 mr-1" />
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick actions */}
-                <div className="flex gap-2 flex-wrap">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="gap-1"
-                    onClick={() => setShowCalculator(true)}
-                  >
-                    <Calculator className="w-4 h-4" />
-                    Calculadora
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="gap-1"
-                    onClick={() => {
-                      toast.info("Funcionalidade em desenvolvimento");
-                    }}
-                  >
-                    <Zap className="w-4 h-4" />
-                    Simular Desconto
-                  </Button>
-                </div>
               </CardContent>
             </Card>
 
@@ -1090,48 +1061,13 @@ export default function AdminOSDetalhes() {
           </div>
 
           {/* Right Column - Status & Actions */}
-          <div className="space-y-6">
-            {/* Values Summary - Moved to top */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <DollarSign className="w-5 h-5" />
-                  Valores
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Orçado:</span>
-                  <span className="font-medium">{formatCurrency(totalOrcado || os.valor_orcado)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-green-600">Aprovado:</span>
-                  <span className="font-medium text-green-600">{formatCurrency(totalAprovado || os.valor_aprovado)}</span>
-                </div>
-                <div className="border-t border-border pt-3">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Final:</span>
-                    {isEditing ? (
-                      <Input
-                        type="number"
-                        className="w-32 text-right"
-                        value={editedOS.valor_final || 0}
-                        onChange={(e) => setEditedOS({ ...editedOS, valor_final: parseFloat(e.target.value) || 0 })}
-                      />
-                    ) : (
-                      <span className="font-bold text-lg">{formatCurrency(os.valor_final)}</span>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
+          <div className="space-y-4">
             {/* Status Card */}
             <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Status da OS</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Status da OS</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <Select value={os.status} onValueChange={handleStatusChange}>
                   <SelectTrigger className={cn(currentStatus.color)}>
                     <SelectValue />
@@ -1150,16 +1086,16 @@ export default function AdminOSDetalhes() {
                 </Select>
 
                 {/* Mechanic assignment */}
-                <div className="space-y-2">
-                  <Label>Mecânico Responsável</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs">Mecânico</Label>
                   <Select
                     value={os.mechanic_id || "none"}
                     onValueChange={(value) => {
                       updateOSMutation.mutate({ mechanic_id: value === "none" ? null : value });
                     }}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar mecânico" />
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Selecionar" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Não atribuído</SelectItem>
@@ -1174,42 +1110,42 @@ export default function AdminOSDetalhes() {
               </CardContent>
             </Card>
 
-            {/* Dates Card */}
+            {/* Dates Card - Compact */}
             <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Calendar className="w-5 h-5" />
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Calendar className="w-4 h-4" />
                   Datas
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
+              <CardContent className="space-y-1.5">
+                <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Entrada:</span>
                   <span>{formatDate(os.data_entrada)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Orçamento:</span>
                   <span>{formatDate(os.data_orcamento)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Aprovação:</span>
                   <span>{formatDate(os.data_aprovacao)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Conclusão:</span>
                   <span>{formatDate(os.data_conclusao)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Entrega:</span>
                   <span>{formatDate(os.data_entrega)}</span>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Observations */}
+            {/* Observations - Compact */}
             <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Observações</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Observações</CardTitle>
               </CardHeader>
               <CardContent>
                 {isEditing ? (
@@ -1217,13 +1153,122 @@ export default function AdminOSDetalhes() {
                     value={editedOS.observacoes || ""}
                     onChange={(e) => setEditedOS({ ...editedOS, observacoes: e.target.value })}
                     placeholder="Observações internas..."
-                    className="min-h-[100px]"
+                    className="min-h-[60px] text-sm"
                   />
                 ) : (
-                  <p className="text-sm text-foreground whitespace-pre-wrap">
+                  <p className="text-xs text-foreground whitespace-pre-wrap">
                     {os.observacoes || "Nenhuma observação"}
                   </p>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* AI Sales Assistant - Compact */}
+            <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  Assistente IA
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {/* Cashback hint */}
+                {(() => {
+                  const currentTotal = totalAprovado || totalOrcado || 0;
+                  const nextTier = currentTotal < 500 ? 500 : currentTotal < 1000 ? 1000 : currentTotal < 2000 ? 2000 : 5000;
+                  const remaining = nextTier - currentTotal;
+                  const cashbackPercent = nextTier >= 2000 ? 10 : nextTier >= 1000 ? 7 : 5;
+                  
+                  if (remaining > 0 && remaining < nextTier) {
+                    return (
+                      <div className="p-2 rounded bg-green-500/10 border border-green-500/20">
+                        <p className="text-xs">
+                          <Gift className="w-3 h-3 inline mr-1 text-green-600" />
+                          Faltam <strong className="text-green-600">{formatCurrency(remaining)}</strong> para {cashbackPercent}% cashback
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Quick suggestions */}
+                <div className="space-y-1">
+                  {[
+                    { desc: "Higienização A/C", valor: 189 },
+                    { desc: "Limpeza de Bicos", valor: 280 },
+                    { desc: "Cristalização Faróis", valor: 150 },
+                  ].map((sug) => (
+                    <div key={sug.desc} className="flex items-center justify-between text-xs p-1.5 bg-background/50 rounded">
+                      <span className="truncate">{sug.desc}</span>
+                      <Button size="sm" variant="ghost" className="h-5 px-2 text-xs" onClick={() => {
+                        setNewItem({ descricao: sug.desc, tipo: "servico", quantidade: 1, valor_unitario: sug.valor });
+                        setShowAddItemDialog(true);
+                      }}>
+                        +R${sug.valor}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Values + Tools */}
+            <Card className="bg-card/50 border-border/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <DollarSign className="w-4 h-4" />
+                  Valores
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Orçado:</span>
+                    <span className="font-medium">{formatCurrency(totalOrcado || os.valor_orcado)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600">Aprovado:</span>
+                    <span className="font-medium text-green-600">{formatCurrency(totalAprovado || os.valor_aprovado)}</span>
+                  </div>
+                  <div className="border-t border-border pt-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium text-sm">Final:</span>
+                      {isEditing ? (
+                        <Input
+                          type="number"
+                          className="w-28 h-8 text-right text-sm"
+                          value={editedOS.valor_final || 0}
+                          onChange={(e) => setEditedOS({ ...editedOS, valor_final: parseFloat(e.target.value) || 0 })}
+                        />
+                      ) : (
+                        <span className="font-bold text-lg">{formatCurrency(os.valor_final)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Calculator and Discount buttons */}
+                <div className="flex gap-2 pt-2 border-t border-border">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 h-8 text-xs gap-1"
+                    onClick={() => setShowCalculator(true)}
+                  >
+                    <Calculator className="w-3 h-3" />
+                    Calculadora
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 h-8 text-xs gap-1"
+                    onClick={() => toast.info("Funcionalidade em desenvolvimento")}
+                  >
+                    <Zap className="w-3 h-3" />
+                    Desconto
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
