@@ -31,7 +31,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { 
-  userVehicles as sharedVehicles, 
   mockPromotions, 
   type PrimePromotion 
 } from "@/data/promotions";
@@ -41,12 +40,15 @@ import {
   clearSession,
   type FlowType,
 } from "@/utils/analytics";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock de veículos cadastrados
-const mockVehicles = sharedVehicles.map((v, i) => ({
-  ...v,
-  year: i === 0 ? "2020" : "2022"
-}));
+interface UserVehicle {
+  id: string;
+  model: string;
+  plate: string;
+  brand: string | null;
+  year?: string;
+}
 
 // Tipos de atendimento
 const serviceTypes = [
@@ -96,6 +98,10 @@ const NovoAgendamento = () => {
   // Para fluxo normal: começa no veículo (step 1)
   const [step, setStep] = useState(isPromoFlow ? 1 : 1);
   
+  // Vehicles from database
+  const [vehicles, setVehicles] = useState<UserVehicle[]>([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
+  
   // Step 1: Vehicle
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   const [newVehicleModel, setNewVehicleModel] = useState("");
@@ -119,18 +125,47 @@ const NovoAgendamento = () => {
   const [useCashback, setUseCashback] = useState(false);
   const availableCashback = 298.50; // Mock - seria buscado do banco de dados
 
+  // Fetch vehicles from database
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoadingVehicles(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("vehicles")
+          .select("id, model, plate, brand")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        setVehicles(data || []);
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+      } finally {
+        setLoadingVehicles(false);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
+
   // Para fluxo de promoção: filtra veículos elegíveis
   const eligibleVehicles = useMemo(() => {
-    if (!promotion) return mockVehicles;
-    if (promotion.vehicleModels.length === 0) return mockVehicles;
+    if (!promotion) return vehicles;
+    if (promotion.vehicleModels.length === 0) return vehicles;
     
-    return mockVehicles.filter(v => 
+    return vehicles.filter(v => 
       promotion.vehicleModels.some(model => 
         v.model.toLowerCase().includes(model.toLowerCase()) ||
         model.toLowerCase().includes(v.model.toLowerCase())
       )
     );
-  }, [promotion]);
+  }, [promotion, vehicles]);
 
   // Auto-seleciona veículo se só tem um elegível no fluxo de promoção
   useEffect(() => {
@@ -252,8 +287,8 @@ const NovoAgendamento = () => {
     if (isNewVehicle) {
       return { model: newVehicleModel, plate: newVehiclePlate };
     }
-    const vehicles = isPromoFlow ? eligibleVehicles : mockVehicles;
-    return vehicles.find(v => v.id === selectedVehicle);
+    const vehicleList = isPromoFlow ? eligibleVehicles : vehicles;
+    return vehicleList.find(v => v.id === selectedVehicle);
   };
 
   const canProceed = () => {
@@ -326,30 +361,92 @@ const NovoAgendamento = () => {
     );
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const vehicleDisplay = getVehicleDisplay();
     const dateStr = selectedDate ? format(selectedDate, "EEEE, dd/MM/yyyy", { locale: ptBR }) : "";
     const flowType: FlowType = isPromoFlow ? "promo" : "normal";
     
-    // Track completion
-    trackFunnelEvent({
-      eventType: "flow_completed",
-      flowType,
-      promoId: promotion?.id,
-      promoTitle: promotion?.title,
-      vehicleModel: vehicleDisplay?.model,
-      stepNumber: maxSteps,
-      totalSteps: maxSteps,
-    });
-    clearSession();
-    
-    navigate("/agendamento-sucesso", {
-      state: {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Você precisa estar logado para agendar.");
+        return;
+      }
+
+      // Get vehicle ID - if new vehicle, create it first
+      let vehicleId = selectedVehicle;
+      
+      if (isNewVehicle && newVehicleModel && newVehiclePlate) {
+        const { data: newVehicle, error: vehicleError } = await supabase
+          .from("vehicles")
+          .insert({
+            user_id: user.id,
+            model: newVehicleModel.trim(),
+            plate: newVehiclePlate.trim().toUpperCase(),
+          })
+          .select()
+          .single();
+        
+        if (vehicleError) throw vehicleError;
+        vehicleId = newVehicle.id;
+      }
+
+      // Create appointment
+      const { data: appointment, error: appointmentError } = await supabase
+        .from("appointments")
+        .insert({
+          user_id: user.id,
+          vehicle_id: vehicleId,
+          appointment_date: selectedDate?.toISOString().split("T")[0],
+          appointment_time: selectedTime && !selectedTime.includes("Dia inteiro") ? selectedTime : null,
+          is_full_day: hasFullDayService || isDiagnostico,
+          status: "pendente",
+          subtotal: subtotal,
+          discount_amount: discountAmount,
+          final_price: finalPrice,
+          pay_in_advance: payInAdvance,
+          promotion_id: promotion?.id || null,
+        })
+        .select()
+        .single();
+
+      if (appointmentError) throw appointmentError;
+
+      // Add services to appointment
+      const servicesToAdd = selectedServiceDetails.map(service => ({
+        appointment_id: appointment.id,
+        service_id: service.id,
+        price_at_booking: service.price,
+      }));
+
+      // Note: service_id expects UUID but we have string IDs from mock services
+      // For now, skip this step - would need real service IDs from database
+
+      // Track completion
+      trackFunnelEvent({
+        eventType: "flow_completed",
+        flowType,
+        promoId: promotion?.id,
         promoTitle: promotion?.title,
         vehicleModel: vehicleDisplay?.model,
-        date: dateStr,
-      }
-    });
+        stepNumber: maxSteps,
+        totalSteps: maxSteps,
+      });
+      clearSession();
+      
+      toast.success("Agendamento realizado com sucesso!");
+      
+      navigate("/agendamento-sucesso", {
+        state: {
+          promoTitle: promotion?.title,
+          vehicleModel: vehicleDisplay?.model,
+          date: dateStr,
+        }
+      });
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      toast.error("Erro ao criar agendamento. Tente novamente.");
+    }
   };
 
   const formatDuration = (minutes: number) => {
@@ -672,9 +769,9 @@ const NovoAgendamento = () => {
             <h2 className="text-lg font-medium text-foreground">Selecione o veículo</h2>
             
             {/* Veículos cadastrados */}
-            {mockVehicles.length > 0 && (
+            {vehicles.length > 0 && (
               <div className="space-y-3">
-                {mockVehicles.map((vehicle) => (
+                {vehicles.map((vehicle) => (
                   <button
                     key={vehicle.id}
                     onClick={() => {
@@ -723,7 +820,7 @@ const NovoAgendamento = () => {
             )}
 
             {/* Separador */}
-            {(mockVehicles.length > 0 || (isNewVehicle && newVehicleModel)) && (
+            {(vehicles.length > 0 || (isNewVehicle && newVehicleModel)) && (
               <div className="flex items-center gap-3 py-2">
                 <div className="flex-1 h-px bg-border" />
                 <span className="text-sm text-muted-foreground">ou</span>
