@@ -2,21 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Search, Check, X, Clock, Phone, MessageSquare, Eye, ChevronDown, Plus } from "lucide-react";
+import { Calendar, Search, Clock, Phone, Plus, FileText, CalendarClock, UserX } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
 
 type AppointmentStatus = 
   | "pendente" 
@@ -90,26 +81,17 @@ const mockAppointments: Appointment[] = [
   },
 ];
 
-const statusConfig: Record<AppointmentStatus, { label: string; color: string; icon: typeof Clock }> = {
-  pendente: { label: "⏳ Pendente", color: "bg-amber-500/20 text-amber-500", icon: Clock },
-  confirmado: { label: "✅ Confirmado", color: "bg-emerald-500/20 text-emerald-500", icon: Check },
-  concluido: { label: "🎉 Concluído", color: "bg-muted text-muted-foreground", icon: Check },
-  cancelado: { label: "❌ Cancelado", color: "bg-destructive/20 text-destructive", icon: X },
-  diagnostico: { label: "🧠 Diagnóstico", color: "bg-purple-500/20 text-purple-600", icon: Clock },
-  aguardando_pecas: { label: "😤 Aguardando Peças", color: "bg-orange-500/20 text-orange-600", icon: Clock },
-  pronto_iniciar: { label: "🫵 Pronto para Iniciar", color: "bg-blue-500/20 text-blue-600", icon: Clock },
-  em_execucao: { label: "🛠️ Em Execução", color: "bg-amber-500/20 text-amber-600", icon: Clock },
-  pronto_retirada: { label: "💰 Pronto Retirada", color: "bg-emerald-500/20 text-emerald-600", icon: Clock },
+const statusConfig: Record<AppointmentStatus, { label: string; color: string }> = {
+  pendente: { label: "⏳ Pendente", color: "bg-amber-500/20 text-amber-500" },
+  confirmado: { label: "✅ Confirmado", color: "bg-emerald-500/20 text-emerald-500" },
+  concluido: { label: "🎉 Concluído", color: "bg-muted text-muted-foreground" },
+  cancelado: { label: "❌ Cancelado", color: "bg-destructive/20 text-destructive" },
+  diagnostico: { label: "🧠 Diagnóstico", color: "bg-purple-500/20 text-purple-600" },
+  aguardando_pecas: { label: "😤 Aguardando Peças", color: "bg-orange-500/20 text-orange-600" },
+  pronto_iniciar: { label: "🫵 Pronto para Iniciar", color: "bg-blue-500/20 text-blue-600" },
+  em_execucao: { label: "🛠️ Em Execução", color: "bg-amber-500/20 text-amber-600" },
+  pronto_retirada: { label: "💰 Pronto Retirada", color: "bg-emerald-500/20 text-emerald-600" },
 };
-
-const osStatuses: AppointmentStatus[] = [
-  "diagnostico",
-  "aguardando_pecas",
-  "pronto_iniciar",
-  "em_execucao",
-  "pronto_retirada",
-  "concluido",
-];
 
 const AdminAgendamentos = () => {
   const navigate = useNavigate();
@@ -128,27 +110,32 @@ const AdminAgendamentos = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleStatusChange = (id: string, newStatus: AppointmentStatus) => {
+  const handleOpenOS = (apt: Appointment) => {
+    // Navigate to nova-os with pre-filled data
+    navigate("/admin/nova-os", { 
+      state: { 
+        fromAppointment: apt.id,
+        client: apt.client,
+        phone: apt.phone,
+        vehicle: apt.vehicle,
+        plate: apt.plate,
+        service: apt.service
+      } 
+    });
+    toast.success("Abrindo OS para " + apt.client);
+  };
+
+  const handleReagendar = (apt: Appointment) => {
+    // TODO: Open reschedule modal or navigate
+    toast.info("Reagendamento para " + apt.client);
+  };
+
+  const handleCancelarERecuperar = (apt: Appointment) => {
     setAppointments((prev) =>
-      prev.map((apt) => (apt.id === id ? { ...apt, status: newStatus } : apt))
+      prev.map((a) => (a.id === apt.id ? { ...a, status: "cancelado" as AppointmentStatus } : a))
     );
-    toast.success(`Status alterado para ${statusConfig[newStatus].label}`);
-  };
-
-  const handleConfirm = (id: string) => {
-    handleStatusChange(id, "confirmado");
-  };
-
-  const handleCancel = (id: string) => {
-    handleStatusChange(id, "cancelado");
-  };
-
-  const handleComplete = (id: string) => {
-    handleStatusChange(id, "concluido");
-  };
-
-  const handleViewPatio = (id: string) => {
-    navigate(`/admin/patio/${id}`);
+    // TODO: Send to recovery base
+    toast.warning("Lead enviado para recuperação: " + apt.client);
   };
 
   return (
@@ -177,127 +164,91 @@ const AdminAgendamentos = () => {
         {/* Appointments List */}
         <div className="space-y-4">
           {filteredAppointments.length > 0 ? (
-            filteredAppointments.map((apt) => {
-              const StatusIcon = statusConfig[apt.status].icon;
-              
-              return (
-                <Card key={apt.id} className="glass-card border-none overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="flex flex-col lg:flex-row">
-                      {/* Main Info */}
-                      <div className="flex-1 p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-foreground">{apt.client}</h3>
-                            <p className="text-sm text-muted-foreground flex items-center gap-2">
-                              <Phone className="w-3 h-3" />
-                              {apt.phone}
-                            </p>
-                          </div>
-                          <span className={cn(
-                            "text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1",
-                            statusConfig[apt.status].color
-                          )}>
-                            <StatusIcon className="w-3 h-3" />
-                            {statusConfig[apt.status].label}
-                          </span>
+            filteredAppointments.map((apt) => (
+              <Card key={apt.id} className="glass-card border-none overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Main Info */}
+                    <div className="flex-1 p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{apt.client}</h3>
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Phone className="w-3 h-3" />
+                            {apt.phone}
+                          </p>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p className="text-muted-foreground">Veículo</p>
-                            <p className="text-foreground font-medium">{apt.vehicle} • {apt.plate}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Serviço</p>
-                            <p className="text-foreground font-medium">{apt.service}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Data/Hora</p>
-                            <p className="text-foreground font-medium">
-                              {format(apt.date, "dd/MM/yyyy", { locale: ptBR })}
-                              {apt.isFullDay ? " (Dia inteiro)" : ` às ${apt.time}`}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Valor</p>
-                            <p className="text-foreground font-medium">
-                              {apt.finalPrice > 0 ? `R$ ${apt.finalPrice.toFixed(2)}` : "Sob consulta"}
-                              {apt.payInAdvance && (
-                                <span className="text-xs text-emerald-500 ml-2">Pago</span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusConfig[apt.status].color}`}>
+                          {statusConfig[apt.status].label}
+                        </span>
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex lg:flex-col gap-2 p-4 bg-muted/30 lg:w-56">
-                        {/* Status Dropdown */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex-1 justify-between"
-                            >
-                              <span className="truncate">{statusConfig[apt.status].label}</span>
-                              <ChevronDown className="w-4 h-4 ml-2 shrink-0" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel>Agendamento</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleStatusChange(apt.id, "pendente")}>
-                              ⏳ Pendente
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(apt.id, "confirmado")}>
-                              ✅ Confirmado
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(apt.id, "cancelado")}>
-                              ❌ Cancelado
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Pátio</DropdownMenuLabel>
-                            {osStatuses.map((status) => (
-                              <DropdownMenuItem 
-                                key={status} 
-                                onClick={() => handleStatusChange(apt.id, status)}
-                              >
-                                {statusConfig[status].label}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {/* View Pátio Button */}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => handleViewPatio(apt.id)}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          Ver Pátio
-                        </Button>
-
-                        {/* WhatsApp */}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => {
-                            window.open(`https://wa.me/55${apt.phone.replace(/\D/g, "")}`, "_blank");
-                          }}
-                        >
-                          <MessageSquare className="w-4 h-4 mr-1" />
-                          WhatsApp
-                        </Button>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Veículo</p>
+                          <p className="text-foreground font-medium">{apt.vehicle} • {apt.plate}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Serviço</p>
+                          <p className="text-foreground font-medium">{apt.service}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Data/Hora</p>
+                          <p className="text-foreground font-medium">
+                            {format(apt.date, "dd/MM/yyyy", { locale: ptBR })}
+                            {apt.isFullDay ? " (Dia inteiro)" : ` às ${apt.time}`}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Valor</p>
+                          <p className="text-foreground font-medium">
+                            {apt.finalPrice > 0 ? `R$ ${apt.finalPrice.toFixed(2)}` : "Sob consulta"}
+                            {apt.payInAdvance && (
+                              <span className="text-xs text-emerald-500 ml-2">Pago</span>
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })
+
+                    {/* Actions - 3 clear paths */}
+                    <div className="flex lg:flex-col gap-2 p-4 bg-muted/30 lg:w-56">
+                      {/* Abrir OS - Cliente chegou */}
+                      <Button
+                        size="sm"
+                        className="flex-1 gradient-primary text-primary-foreground"
+                        onClick={() => handleOpenOS(apt)}
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Abrir OS
+                      </Button>
+
+                      {/* Reagendar */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleReagendar(apt)}
+                      >
+                        <CalendarClock className="w-4 h-4 mr-2" />
+                        Reagendar
+                      </Button>
+
+                      {/* Cancelar e Recuperar */}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleCancelarERecuperar(apt)}
+                      >
+                        <UserX className="w-4 h-4 mr-2" />
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <div className="text-center py-12">
               <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
