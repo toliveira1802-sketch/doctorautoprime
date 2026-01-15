@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FolderPlus, FileText, Table, ListChecks, BarChart3, FileSpreadsheet } from "lucide-react";
+import { FolderPlus, FileText, Table, ListChecks, BarChart3, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -32,9 +32,10 @@ const colorOptions = [
 
 interface AddDirectoryDialogProps {
   onSuccess?: () => void;
+  children?: ReactNode;
 }
 
-export function AddDirectoryDialog({ onSuccess }: AddDirectoryDialogProps) {
+export function AddDirectoryDialog({ onSuccess, children }: AddDirectoryDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [nome, setNome] = useState("");
@@ -83,12 +84,7 @@ export function AddDirectoryDialog({ onSuccess }: AddDirectoryDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          size="lg"
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
