@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Bell, Gift, ChevronRight, Sparkles } from "lucide-react";
+import { Bell, Gift, ChevronRight, Sparkles, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -11,48 +11,148 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { 
-  userVehicles, 
-  getActivePromotions,
-  type PrimePromotion 
-} from "@/data/promotions";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Promotion {
+  id: string;
+  title: string;
+  description: string | null;
+  discount_label: string;
+  discount_percent: number;
+  valid_to: string;
+  vehicle_models: string[] | null;
+}
+
+interface Alert {
+  id: string;
+  title: string;
+  alert_type: string;
+  status: string;
+}
+
+interface UserVehicle {
+  id: string;
+  model: string;
+  brand: string | null;
+}
 
 export function ActionButtons() {
   const navigate = useNavigate();
   const [showPromos, setShowPromos] = useState(false);
-  const [clickedPromoIds, setClickedPromoIds] = useState<string[]>([]);
-  
-  const userVehicleModels = userVehicles.map(v => v.model);
-  const activePromotions = getActivePromotions(userVehicleModels);
-  const promoCount = activePromotions.length;
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [pendingAlerts, setPendingAlerts] = useState<Alert[]>([]);
+  const [userVehicles, setUserVehicles] = useState<UserVehicle[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handlePromoClick = (promo: PrimePromotion) => {
-    if (!clickedPromoIds.includes(promo.id)) {
-      setClickedPromoIds(prev => [...prev, promo.id]);
-      console.log(`[TRACKING] Home promo clicked: ${promo.id} - ${promo.title}`);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch user vehicles
+      const { data: vehicles } = await supabase
+        .from("vehicles")
+        .select("id, model, brand")
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+
+      setUserVehicles(vehicles || []);
+
+      // Fetch active promotions
+      const { data: promos } = await supabase
+        .from("promotions")
+        .select("id, title, description, discount_label, discount_percent, valid_to, vehicle_models")
+        .eq("is_active", true)
+        .gte("valid_to", new Date().toISOString().split("T")[0]);
+
+      // Filter promotions that match user's vehicle models
+      const userModels = (vehicles || []).map(v => v.model.toLowerCase());
+      const matchedPromos = (promos || []).filter(promo => {
+        if (!promo.vehicle_models || promo.vehicle_models.length === 0) {
+          return true; // Universal promotion
+        }
+        return promo.vehicle_models.some(model =>
+          userModels.some(userModel => 
+            userModel.includes(model.toLowerCase()) || 
+            model.toLowerCase().includes(userModel)
+          )
+        );
+      });
+
+      setPromotions(matchedPromos);
+
+      // Fetch pending alerts
+      const { data: alerts } = await supabase
+        .from("alerts")
+        .select("id, title, alert_type, status")
+        .eq("user_id", user.id)
+        .in("status", ["scheduled", "sent"])
+        .order("due_date", { ascending: true });
+
+      setPendingAlerts(alerts || []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePromoClick = async (promo: Promotion) => {
+    // Track promo click
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("promo_clicks").insert({
+        promotion_id: promo.id,
+        user_id: user.id,
+        source: "home"
+      });
     }
     
     toast.success("Oferta selecionada!", {
       description: "Redirecionando para agendamento...",
     });
     setShowPromos(false);
-    navigate("/novo-agendamento", { state: { promotion: promo } });
+    navigate("/novo-agendamento", { 
+      state: { 
+        promotion: {
+          id: promo.id,
+          title: promo.title,
+          description: promo.description,
+          discount: promo.discount_label,
+          vehicleModels: promo.vehicle_models || [],
+          validTo: new Date(promo.valid_to)
+        } 
+      } 
+    });
   };
 
-  const handleWaitlistClick = () => {
-    console.log("[TRACKING] Home waitlist interest clicked");
+  const handleWaitlistClick = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from("waitlist_interests").insert({
+      user_id: user?.id || null,
+      source: "home_promos"
+    });
+    
     toast.info("Interesse registrado!", {
       description: "Você será notificado quando tivermos promoções.",
     });
   };
 
+  const promoCount = promotions.length;
+  const alertCount = pendingAlerts.length;
+
   const actions = [
     {
       icon: Bell,
-      label: "Lembrete",
-      subtitle: "2 pendentes",
+      label: "Lembretes",
+      subtitle: alertCount > 0 ? `${alertCount} pendente${alertCount > 1 ? "s" : ""}` : "Nenhum pendente",
       color: "text-amber-500",
-      onClick: () => toast.info("Em breve!", { description: "Lembretes em desenvolvimento." }),
+      badge: alertCount > 0 ? alertCount : null,
+      onClick: () => navigate("/avisos"),
     },
     {
       icon: Gift,
@@ -63,6 +163,14 @@ export function ActionButtons() {
       onClick: () => setShowPromos(true),
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -104,14 +212,14 @@ export function ActionButtons() {
           </SheetHeader>
 
           <div className="overflow-y-auto h-full pb-20 space-y-4">
-            {activePromotions.length > 0 ? (
-              activePromotions.map((promo) => {
-                const eligibleVehicle = userVehicles.find(v => 
-                  promo.vehicleModels.length === 0 ||
-                  promo.vehicleModels.some(model => 
-                    v.model.toLowerCase().includes(model.split(" ").pop()?.toLowerCase() || "")
-                  )
-                );
+            {promotions.length > 0 ? (
+              promotions.map((promo) => {
+                const eligibleVehicle = userVehicles.find(v => {
+                  if (!promo.vehicle_models || promo.vehicle_models.length === 0) return true;
+                  return promo.vehicle_models.some(model =>
+                    v.model.toLowerCase().includes(model.toLowerCase())
+                  );
+                });
                 
                 return (
                   <button
@@ -127,7 +235,7 @@ export function ActionButtons() {
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-foreground">{promo.title}</p>
                           <span className="text-xs font-bold text-emerald-500 bg-emerald-500/20 px-2 py-0.5 rounded-full">
-                            {promo.discount}
+                            {promo.discount_label}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
@@ -135,11 +243,11 @@ export function ActionButtons() {
                         </p>
                         <div className="flex items-center justify-between mt-2">
                           <span className="text-xs text-muted-foreground">
-                            Válido até {format(promo.validTo, "dd/MM", { locale: ptBR })}
+                            Válido até {format(new Date(promo.valid_to), "dd/MM", { locale: ptBR })}
                           </span>
                           {eligibleVehicle && (
                             <span className="text-xs text-primary font-medium">
-                              Para seu {eligibleVehicle.model}
+                              Para seu {eligibleVehicle.brand || ''} {eligibleVehicle.model}
                             </span>
                           )}
                         </div>
