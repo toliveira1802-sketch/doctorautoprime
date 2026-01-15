@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Car, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { Car, ChevronDown, ChevronRight, Loader2, Plus } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -8,6 +8,7 @@ import {
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { AddVehicleDialog } from "@/components/vehicle/AddVehicleDialog";
 
 interface Vehicle {
   id: string;
@@ -70,7 +71,12 @@ export function MyVehiclesSection() {
               </div>
               <div className="text-left">
                 <p className="font-semibold text-foreground">MEUS VEÍCULOS</p>
-                <p className="text-sm text-muted-foreground">{vehicleSummary || "Nenhum veículo"}</p>
+                <p className="text-sm text-muted-foreground">
+                  {vehicles.length > 0 
+                    ? `${vehicles.length} veículo${vehicles.length > 1 ? 's' : ''}`
+                    : "Nenhum veículo"
+                  }
+                </p>
               </div>
             </div>
             {isOpen ? (
@@ -108,11 +114,18 @@ export function MyVehiclesSection() {
               </div>
             ))}
 
-            {vehicles.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum veículo cadastrado
-              </p>
-            )}
+            {/* Botão para adicionar veículo */}
+            <div className="ml-4">
+              <AddVehicleDialog 
+                onVehicleAdded={fetchVehicles}
+                trigger={
+                  <button className="w-full p-3 rounded-xl border-2 border-dashed border-primary/30 flex items-center justify-center gap-2 text-primary hover:bg-primary/5 transition-colors">
+                    <Plus className="w-4 h-4" />
+                    <span className="text-sm font-medium">Adicionar veículo</span>
+                  </button>
+                }
+              />
+            </div>
           </div>
         </CollapsibleContent>
       </Collapsible>

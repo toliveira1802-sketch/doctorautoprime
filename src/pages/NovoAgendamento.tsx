@@ -23,7 +23,7 @@ import {
   Info,
   Wallet
 } from "lucide-react";
-import { AddVehicleDialog } from "@/components/vehicle/AddVehicleDialog";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -733,14 +733,13 @@ const NovoAgendamento = () => {
 
             {/* Botão de adicionar novo veículo */}
             {!isNewVehicle && (
-              <AddVehicleDialog
-                onVehicleAdded={(vehicle) => {
-                  setNewVehicleModel(vehicle.model);
-                  setNewVehiclePlate(vehicle.plate);
-                  setIsNewVehicle(true);
-                  setSelectedVehicle(null);
-                }}
-              />
+              <button 
+                onClick={() => setIsNewVehicle(true)}
+                className="w-full p-4 rounded-xl border-2 border-dashed border-primary/30 flex items-center justify-center gap-3 text-primary hover:bg-primary/5 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="font-medium">Adicionar Veículo</span>
+              </button>
             )}
           </div>
         )}
