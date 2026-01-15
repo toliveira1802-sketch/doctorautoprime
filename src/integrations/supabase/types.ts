@@ -1854,6 +1854,7 @@ export type Database = {
       }
     }
     Functions: {
+      can_manage_roles: { Args: { _user_id: string }; Returns: boolean }
       has_admin_access: { Args: never; Returns: boolean }
       has_any_role: { Args: { _roles: string[] }; Returns: boolean }
       has_role: {
@@ -1864,6 +1865,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_dev: { Args: { _user_id: string }; Returns: boolean }
       use_invite: {
         Args: { invite_code: string; user_uuid: string }
         Returns: boolean

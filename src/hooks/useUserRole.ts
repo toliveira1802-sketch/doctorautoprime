@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type UserRole = "admin" | "gestao" | "user";
+export type UserRole = "dev" | "admin" | "gestao" | "user";
 
 export function useUserRole() {
   const [role, setRole] = useState<UserRole | null>(null);
@@ -54,9 +54,15 @@ export function useUserRole() {
 
   return {
     role,
+    isDev: role === "dev",
     isAdmin: role === "admin",
     isGestao: role === "gestao",
-    hasAdminAccess: role === "admin" || role === "gestao",
+    // Dev has access to everything, gestao is management level
+    hasGestaoAccess: role === "dev" || role === "gestao",
+    // Admin access includes dev, gestao, and admin
+    hasAdminAccess: role === "dev" || role === "admin" || role === "gestao",
+    // Can manage roles: only dev and gestao
+    canManageRoles: role === "dev" || role === "gestao",
     isUser: role === "user",
     isLoading,
   };
