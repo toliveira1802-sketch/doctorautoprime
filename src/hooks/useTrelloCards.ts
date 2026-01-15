@@ -56,8 +56,8 @@ const listNameToStatus: Record<string, PatioStatus> = {
   "veiculo entregue": "concluido",
 };
 
-// ID do board "Fluxo oficina - Doctor Bosch"
-const BOARD_ID = "688cdaa40319999113a5e73b";
+// ID do board do Trello
+const BOARD_ID = "NkhINjF2";
 
 // Função para extrair placa, veículo e cliente do nome do card
 // Formato típico: "PLACA VEICULO CLIENTE" ou "PLACA VEICULO"
