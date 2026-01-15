@@ -149,27 +149,14 @@ export default function AdminOrdensServico() {
   // Stats
   const stats = {
     total: ordensServico.length,
+    finalizadas: ordensServico.filter(os => os.status === "concluido" || os.status === "entregue").length,
     orcamento: ordensServico.filter(os => os.status === "orcamento").length,
     aprovado: ordensServico.filter(os => os.status === "aprovado" || os.status === "parcial").length,
     recusado: ordensServico.filter(os => os.status === "recusado").length,
-    emExecucao: ordensServico.filter(os => os.status === "em_execucao").length,
-    concluido: ordensServico.filter(os => os.status === "concluido" || os.status === "entregue").length,
     valorTotal: ordensServico
       .filter(os => os.status === "concluido" || os.status === "entregue")
       .reduce((acc, os) => acc + (os.valor_final || 0), 0),
   };
-
-  // Get rejected items count
-  const rejectedItemsCount = ordensServico.reduce((acc, os) => {
-    return acc + (os.itens?.filter(item => item.status === "recusado").length || 0);
-  }, 0);
-
-  // Get all rejected items for the tab
-  const rejectedItems = ordensServico.flatMap(os => 
-    (os.itens || [])
-      .filter(item => item.status === "recusado")
-      .map(item => ({ ...item, os }))
-  );
 
   const toggleRow = (id: string) => {
     const newExpanded = new Set(expandedRows);
@@ -215,7 +202,7 @@ export default function AdminOrdensServico() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <Card className="bg-card/50 border-border/50">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
@@ -252,15 +239,6 @@ export default function AdminOrdensServico() {
               <p className="text-2xl font-bold mt-1 text-red-600">{stats.recusado}</p>
             </CardContent>
           </Card>
-          <Card className="bg-purple-500/10 border-purple-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <Wrench className="w-4 h-4 text-purple-500" />
-                <span className="text-sm text-purple-600">Execução</span>
-              </div>
-              <p className="text-2xl font-bold mt-1 text-purple-600">{stats.emExecucao}</p>
-            </CardContent>
-          </Card>
           <Card className="bg-emerald-500/10 border-emerald-500/20">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
@@ -274,21 +252,13 @@ export default function AdminOrdensServico() {
 
         {/* Tabs for different views */}
         <Tabs defaultValue="todas" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid">
+          <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid">
             <TabsTrigger value="todas">Todas as OS</TabsTrigger>
-            <TabsTrigger value="recusadas" className="relative">
-              Recusadas
-              {stats.recusado > 0 && (
-                <Badge variant="destructive" className="ml-2 h-5 px-1.5 text-xs">
-                  {stats.recusado}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="itens-rejeitados" className="relative">
-              Itens Rejeitados
-              {rejectedItemsCount > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs bg-orange-500/20 text-orange-600">
-                  {rejectedItemsCount}
+            <TabsTrigger value="finalizadas" className="relative">
+              Finalizadas
+              {stats.finalizadas > 0 && (
+                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs bg-emerald-500/20 text-emerald-600">
+                  {stats.finalizadas}
                 </Badge>
               )}
             </TabsTrigger>
@@ -503,126 +473,58 @@ export default function AdminOrdensServico() {
             )}
           </TabsContent>
 
-          <TabsContent value="recusadas" className="space-y-4 mt-4">
-            {ordensServico.filter(os => os.status === "recusado").length === 0 ? (
+          <TabsContent value="finalizadas" className="space-y-4 mt-4">
+            {ordensServico.filter(os => os.status === "concluido" || os.status === "entregue").length === 0 ? (
               <Card className="bg-card/50 border-border/50">
                 <CardContent className="p-12 text-center">
-                  <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">Nenhuma OS recusada</h3>
-                  <p className="text-muted-foreground">Todas as ordens de serviço estão em andamento ou concluídas</p>
+                  <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Nenhuma OS finalizada</h3>
+                  <p className="text-muted-foreground">As ordens concluídas aparecerão aqui</p>
                 </CardContent>
               </Card>
             ) : (
               <div className="space-y-4">
                 {ordensServico
-                  .filter(os => os.status === "recusado")
+                  .filter(os => os.status === "concluido" || os.status === "entregue")
                   .map((os) => (
-                    <Card key={os.id} className="bg-red-500/5 border-red-500/20">
+                    <Card key={os.id} className="bg-emerald-500/5 border-emerald-500/20">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div className="space-y-2">
                             <div className="flex items-center gap-3">
                               <span className="font-mono font-bold text-lg">{os.numero_os}</span>
-                              <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20">
-                                <XCircle className="w-3 h-3 mr-1" />
-                                Recusada
+                              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                {os.status === "entregue" ? "Entregue" : "Concluído"}
                               </Badge>
                             </div>
                             <div>
                               <p className="font-medium text-foreground">{os.client_name}</p>
                               <p className="text-sm text-muted-foreground">{os.plate} - {os.vehicle}</p>
                             </div>
-                            {os.motivo_recusa && (
-                              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                                <p className="text-sm font-medium text-red-600 mb-1">Motivo da recusa:</p>
-                                <p className="text-sm text-foreground">{os.motivo_recusa}</p>
-                              </div>
-                            )}
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
                                 Entrada: {formatShortDate(os.data_entrada)}
                               </span>
                               <span className="flex items-center gap-1">
-                                <DollarSign className="w-4 h-4" />
-                                Orçado: {formatCurrency(os.valor_orcado)}
+                                <DollarSign className="w-4 h-4 text-emerald-600" />
+                                <span className="text-emerald-600 font-medium">
+                                  Final: {formatCurrency(os.valor_final)}
+                                </span>
                               </span>
                             </div>
                           </div>
                           <div className="flex flex-col gap-2">
-                            {os.client_phone && (
-                              <Button variant="outline" size="sm" asChild>
-                                <a href={`tel:${os.client_phone}`}>
-                                  <Phone className="w-4 h-4 mr-2" />
-                                  Ligar
-                                </a>
-                              </Button>
-                            )}
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedOS(os)}>
+                            <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/ordens-servico/${os.id}`)}>
                               <Eye className="w-4 h-4 mr-2" />
-                              Detalhes
+                              Ver OS
                             </Button>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="itens-rejeitados" className="space-y-4 mt-4">
-            {rejectedItems.length === 0 ? (
-              <Card className="bg-card/50 border-border/50">
-                <CardContent className="p-12 text-center">
-                  <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">Nenhum item rejeitado</h3>
-                  <p className="text-muted-foreground">Todos os itens dos orçamentos foram aprovados</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="border border-border/50 rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead>OS</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Motivo</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rejectedItems.map((item) => (
-                      <TableRow key={item.id} className="hover:bg-muted/30">
-                        <TableCell className="font-mono font-medium">
-                          {item.os.numero_os}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-foreground">{item.os.client_name}</p>
-                            <p className="text-xs text-muted-foreground">{item.os.plate}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">{item.descricao}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {item.tipo === "servico" ? "Serviço" : "Peça"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatCurrency(item.valor_total)}
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <p className="text-sm text-red-600 truncate">
-                            {item.motivo_recusa || "Não informado"}
-                          </p>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
               </div>
             )}
           </TabsContent>
