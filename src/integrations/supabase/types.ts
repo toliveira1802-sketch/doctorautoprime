@@ -1875,7 +1875,7 @@ export type Database = {
       alert_status: "scheduled" | "sent" | "read" | "dismissed" | "completed"
       alert_target: "client" | "admin"
       alert_type: "pending_items" | "oil_change" | "seasonal" | "custom"
-      app_role: "admin" | "user" | "gestao"
+      app_role: "admin" | "user" | "gestao" | "dev"
       appointment_status:
         | "pendente"
         | "confirmado"
@@ -2040,7 +2040,7 @@ export const Constants = {
       alert_status: ["scheduled", "sent", "read", "dismissed", "completed"],
       alert_target: ["client", "admin"],
       alert_type: ["pending_items", "oil_change", "seasonal", "custom"],
-      app_role: ["admin", "user", "gestao"],
+      app_role: ["admin", "user", "gestao", "dev"],
       appointment_status: [
         "pendente",
         "confirmado",
