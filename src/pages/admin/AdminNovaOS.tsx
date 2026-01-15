@@ -135,20 +135,20 @@ export default function AdminNovaOS() {
   // Parecer pré-compra
   const [parecerPreCompra, setParecerPreCompra] = useState<'recomendada' | 'ressalvas' | 'nao_comprar' | ''>('');
 
-  // Produtos Isca com Upsell
-  interface ProdutoIsca {
+  // Produtos Upsell
+  interface ProdutoUpsell {
     id: string;
     nome: string;
     preco: number;
-    upsells: { id: string; nome: string; preco: number; selecionado: boolean }[];
+    adicionais: { id: string; nome: string; preco: number; selecionado: boolean }[];
   }
 
-  const produtosIscaDisponiveis: ProdutoIsca[] = [
+  const produtosUpsellDisponiveis: ProdutoUpsell[] = [
     {
       id: '1',
       nome: 'Troca de Óleo',
       preco: 150,
-      upsells: [
+      adicionais: [
         { id: '1a', nome: 'Filtro de Óleo Premium', preco: 45, selecionado: false },
         { id: '1b', nome: 'Aditivo para Motor', preco: 35, selecionado: false },
         { id: '1c', nome: 'Limpeza de Cárter', preco: 80, selecionado: false },
@@ -158,7 +158,7 @@ export default function AdminNovaOS() {
       id: '2',
       nome: 'Alinhamento',
       preco: 120,
-      upsells: [
+      adicionais: [
         { id: '2a', nome: 'Balanceamento', preco: 80, selecionado: false },
         { id: '2b', nome: 'Rodízio de Pneus', preco: 40, selecionado: false },
         { id: '2c', nome: 'Geometria Completa', preco: 150, selecionado: false },
@@ -168,7 +168,7 @@ export default function AdminNovaOS() {
       id: '3',
       nome: 'Diagnóstico Eletrônico',
       preco: 80,
-      upsells: [
+      adicionais: [
         { id: '3a', nome: 'Limpeza de Bicos', preco: 180, selecionado: false },
         { id: '3b', nome: 'Reset de ECU', preco: 60, selecionado: false },
         { id: '3c', nome: 'Atualização de Software', preco: 120, selecionado: false },
@@ -178,7 +178,7 @@ export default function AdminNovaOS() {
       id: '4',
       nome: 'Revisão de Freios',
       preco: 100,
-      upsells: [
+      adicionais: [
         { id: '4a', nome: 'Pastilhas Cerâmicas', preco: 250, selecionado: false },
         { id: '4b', nome: 'Troca de Fluido', preco: 80, selecionado: false },
         { id: '4c', nome: 'Discos Ventilados', preco: 450, selecionado: false },
@@ -188,7 +188,7 @@ export default function AdminNovaOS() {
       id: '5',
       nome: 'Check-up Completo',
       preco: 200,
-      upsells: [
+      adicionais: [
         { id: '5a', nome: 'Higienização A/C', preco: 120, selecionado: false },
         { id: '5b', nome: 'Troca de Filtros', preco: 150, selecionado: false },
         { id: '5c', nome: 'Limpeza de Radiador', preco: 90, selecionado: false },
@@ -196,25 +196,25 @@ export default function AdminNovaOS() {
     },
   ];
 
-  const [produtosSelecionados, setProdutosSelecionados] = useState<ProdutoIsca[]>([]);
+  const [produtosSelecionados, setProdutosSelecionados] = useState<ProdutoUpsell[]>([]);
   const [produtosOpen, setProdutosOpen] = useState(false);
 
-  const adicionarProdutoIsca = (produto: ProdutoIsca) => {
+  const adicionarProdutoUpsell = (produto: ProdutoUpsell) => {
     if (!produtosSelecionados.find(p => p.id === produto.id)) {
-      setProdutosSelecionados([...produtosSelecionados, { ...produto, upsells: produto.upsells.map(u => ({ ...u })) }]);
+      setProdutosSelecionados([...produtosSelecionados, { ...produto, adicionais: produto.adicionais.map(u => ({ ...u })) }]);
     }
   };
 
-  const removerProdutoIsca = (produtoId: string) => {
+  const removerProdutoUpsell = (produtoId: string) => {
     setProdutosSelecionados(produtosSelecionados.filter(p => p.id !== produtoId));
   };
 
-  const toggleUpsell = (produtoId: string, upsellId: string) => {
+  const toggleAdicional = (produtoId: string, adicionalId: string) => {
     setProdutosSelecionados(produtosSelecionados.map(p => {
       if (p.id === produtoId) {
         return {
           ...p,
-          upsells: p.upsells.map(u => u.id === upsellId ? { ...u, selecionado: !u.selecionado } : u)
+          adicionais: p.adicionais.map(u => u.id === adicionalId ? { ...u, selecionado: !u.selecionado } : u)
         };
       }
       return p;
@@ -223,8 +223,8 @@ export default function AdminNovaOS() {
 
   const calcularTotalProdutos = () => {
     return produtosSelecionados.reduce((total, p) => {
-      const upsellsTotal = p.upsells.filter(u => u.selecionado).reduce((t, u) => t + u.preco, 0);
-      return total + p.preco + upsellsTotal;
+      const adicionaisTotal = p.adicionais.filter(u => u.selecionado).reduce((t, u) => t + u.preco, 0);
+      return total + p.preco + adicionaisTotal;
     }, 0);
   };
 
@@ -1134,15 +1134,15 @@ export default function AdminNovaOS() {
           </Card>
         </Collapsible>
 
-        {/* Produtos Isca com Upsell */}
+        {/* Produtos Upsell */}
         <Collapsible open={produtosOpen} onOpenChange={setProdutosOpen}>
           <Card className="bg-card/50 border-border/50">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <CardTitle className="flex items-center justify-between text-lg">
                   <div className="flex items-center gap-2">
-                    <Target className="w-5 h-5" />
-                    Produtos Isca
+                    <TrendingUp className="w-5 h-5" />
+                    Upsell
                     {produtosSelecionados.length > 0 && (
                       <Badge variant="secondary" className="ml-2">
                         {produtosSelecionados.length} | R$ {calcularTotalProdutos().toFixed(2)}
@@ -1163,14 +1163,14 @@ export default function AdminNovaOS() {
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground font-medium">Adicionar produto:</p>
                   <div className="flex flex-wrap gap-2">
-                    {produtosIscaDisponiveis
+                    {produtosUpsellDisponiveis
                       .filter(p => !produtosSelecionados.find(ps => ps.id === p.id))
                       .map(produto => (
                         <Button
                           key={produto.id}
                           variant="outline"
                           size="sm"
-                          onClick={() => adicionarProdutoIsca(produto)}
+                          onClick={() => adicionarProdutoUpsell(produto)}
                           className="gap-2"
                         >
                           <Plus className="w-3 h-3" />
@@ -1181,14 +1181,14 @@ export default function AdminNovaOS() {
                   </div>
                 </div>
 
-                {/* Produtos Selecionados com Upsells */}
+                {/* Produtos Selecionados com Adicionais */}
                 {produtosSelecionados.length > 0 ? (
                   <div className="space-y-3">
                     {produtosSelecionados.map(produto => (
                       <div key={produto.id} className="border border-border rounded-lg p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Target className="w-5 h-5 text-primary" />
+                            <TrendingUp className="w-5 h-5 text-primary" />
                             <div>
                               <p className="font-semibold">{produto.nome}</p>
                               <p className="text-sm text-muted-foreground">R$ {produto.preco.toFixed(2)}</p>
@@ -1197,46 +1197,46 @@ export default function AdminNovaOS() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => removerProdutoIsca(produto.id)}
+                            onClick={() => removerProdutoUpsell(produto.id)}
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
 
-                        {/* Upsells */}
+                        {/* Adicionais */}
                         <div className="pl-8 space-y-2">
                           <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" />
-                            Sugestões de Upsell:
+                            <ChevronRight className="w-3 h-3" />
+                            Serviços Adicionais:
                           </p>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                            {produto.upsells.map(upsell => (
+                            {produto.adicionais.map(adicional => (
                               <button
-                                key={upsell.id}
-                                onClick={() => toggleUpsell(produto.id, upsell.id)}
+                                key={adicional.id}
+                                onClick={() => toggleAdicional(produto.id, adicional.id)}
                                 className={`p-2 rounded-lg border text-left transition-all ${
-                                  upsell.selecionado 
+                                  adicional.selecionado 
                                     ? 'border-primary bg-primary/10 ring-1 ring-primary' 
                                     : 'border-border hover:border-primary/50 hover:bg-muted/50'
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium">{upsell.nome}</span>
-                                  {upsell.selecionado && <CheckCircle className="w-4 h-4 text-primary" />}
+                                  <span className="text-sm font-medium">{adicional.nome}</span>
+                                  {adicional.selecionado && <CheckCircle className="w-4 h-4 text-primary" />}
                                 </div>
-                                <span className="text-xs text-muted-foreground">+ R$ {upsell.preco.toFixed(2)}</span>
+                                <span className="text-xs text-muted-foreground">+ R$ {adicional.preco.toFixed(2)}</span>
                               </button>
                             ))}
                           </div>
                         </div>
 
                         {/* Subtotal do Produto */}
-                        {produto.upsells.some(u => u.selecionado) && (
+                        {produto.adicionais.some(u => u.selecionado) && (
                           <div className="pl-8 pt-2 border-t border-dashed">
                             <p className="text-sm">
                               Subtotal: <span className="font-semibold">
-                                R$ {(produto.preco + produto.upsells.filter(u => u.selecionado).reduce((t, u) => t + u.preco, 0)).toFixed(2)}
+                                R$ {(produto.preco + produto.adicionais.filter(u => u.selecionado).reduce((t, u) => t + u.preco, 0)).toFixed(2)}
                               </span>
                             </p>
                           </div>
@@ -1247,15 +1247,15 @@ export default function AdminNovaOS() {
                     {/* Total Geral */}
                     <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold">Total Produtos Isca:</span>
+                        <span className="font-semibold">Total Upsell:</span>
                         <span className="text-xl font-bold text-primary">R$ {calcularTotalProdutos().toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-6 text-muted-foreground">
-                    <Target className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Selecione produtos isca para sugerir ao cliente</p>
+                    <TrendingUp className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Selecione produtos para sugerir ao cliente</p>
                   </div>
                 )}
               </CardContent>
