@@ -13,9 +13,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddVehicleDialogProps {
-  onVehicleAdded: (vehicle: { model: string; plate: string }) => void;
+  onVehicleAdded?: () => void;
   trigger?: React.ReactNode;
 }
 
@@ -26,10 +27,8 @@ export function AddVehicleDialog({ onVehicleAdded, trigger }: AddVehicleDialogPr
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatPlate = (value: string) => {
-    // Remove tudo que não é letra ou número
     const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     
-    // Formata como ABC-1234 ou ABC1D23 (Mercosul)
     if (cleaned.length <= 3) {
       return cleaned;
     } else if (cleaned.length <= 7) {
@@ -44,7 +43,6 @@ export function AddVehicleDialog({ onVehicleAdded, trigger }: AddVehicleDialogPr
 
   const validatePlate = (plate: string) => {
     const cleaned = plate.replace(/[^A-Z0-9]/gi, "");
-    // Placa antiga (ABC-1234) ou Mercosul (ABC1D23)
     return /^[A-Z]{3}[0-9]{4}$/.test(cleaned) || /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/.test(cleaned);
   };
 
@@ -61,16 +59,43 @@ export function AddVehicleDialog({ onVehicleAdded, trigger }: AddVehicleDialogPr
 
     setIsSubmitting(true);
     
-    // Simula salvamento (aqui integraria com Supabase)
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    onVehicleAdded({ model: model.trim(), plate: plate.toUpperCase() });
-    
-    toast.success("Veículo cadastrado!");
-    setModel("");
-    setPlate("");
-    setOpen(false);
-    setIsSubmitting(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Você precisa estar logado");
+        return;
+      }
+
+      const plateClean = plate.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+      
+      const { error } = await supabase
+        .from("vehicles")
+        .insert({
+          user_id: user.id,
+          model: model.trim(),
+          plate: plateClean,
+        });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("Esta placa já está cadastrada");
+        } else {
+          throw error;
+        }
+        return;
+      }
+      
+      toast.success("Veículo cadastrado com sucesso!");
+      setModel("");
+      setPlate("");
+      setOpen(false);
+      onVehicleAdded?.();
+    } catch (error) {
+      console.error("Error adding vehicle:", error);
+      toast.error("Erro ao cadastrar veículo");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -117,7 +142,7 @@ export function AddVehicleDialog({ onVehicleAdded, trigger }: AddVehicleDialogPr
               className="h-12 uppercase"
             />
             <p className="text-xs text-muted-foreground">
-              Com a placa, buscamos automaticamente os dados do veículo
+              Formatos aceitos: ABC-1234 ou ABC1D23
             </p>
           </div>
         </div>
