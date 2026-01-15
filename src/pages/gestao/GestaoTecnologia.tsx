@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "@/components/gestao/ExportButtons";
+import { AddDirectoryDialog } from "@/components/gestao/AddDirectoryDialog";
 import { exportToPDF, exportToExcel, type ReportData } from "@/utils/exportReport";
-import { Laptop, Users, Database, Activity, Loader2, Clock } from "lucide-react";
+import { Laptop, Users, Database, Activity, Loader2, Clock, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend 
@@ -133,11 +135,19 @@ export default function GestaoTecnologia() {
               Métricas de uso e performance do sistema
             </p>
           </div>
-          <ExportButtons
-            onExportPDF={() => exportToPDF(getReportData())}
-            onExportExcel={() => exportToExcel(getReportData())}
-            isLoading={isLoading}
-          />
+          <div className="flex items-center gap-2">
+            <AddDirectoryDialog>
+              <Button variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Diretório
+              </Button>
+            </AddDirectoryDialog>
+            <ExportButtons
+              onExportPDF={() => exportToPDF(getReportData())}
+              onExportExcel={() => exportToExcel(getReportData())}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
 
         {isLoading ? (

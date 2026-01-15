@@ -3,9 +3,11 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "@/components/gestao/ExportButtons";
+import { AddDirectoryDialog } from "@/components/gestao/AddDirectoryDialog";
 import { exportToPDF, exportToExcel, type ReportData } from "@/utils/exportReport";
-import { UserCog, Users, Clock, Award, TrendingUp, Loader2 } from "lucide-react";
+import { UserCog, Users, Clock, Award, TrendingUp, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface Mechanic {
   id: string;
@@ -131,11 +133,19 @@ export default function GestaoRH() {
               Gestão de pessoas e indicadores de RH
             </p>
           </div>
-          <ExportButtons
-            onExportPDF={() => exportToPDF(getReportData())}
-            onExportExcel={() => exportToExcel(getReportData())}
-            isLoading={isLoading}
-          />
+          <div className="flex items-center gap-2">
+            <AddDirectoryDialog>
+              <Button variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Diretório
+              </Button>
+            </AddDirectoryDialog>
+            <ExportButtons
+              onExportPDF={() => exportToPDF(getReportData())}
+              onExportExcel={() => exportToExcel(getReportData())}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
 
         {isLoading ? (
