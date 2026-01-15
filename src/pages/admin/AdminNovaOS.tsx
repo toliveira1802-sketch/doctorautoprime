@@ -20,12 +20,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface ClientWithVehicle {
   id: string;
@@ -44,6 +51,7 @@ const timeSlots = [
 
 export default function AdminNovaOS() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState<ClientWithVehicle | null>(null);
   const [date, setDate] = useState<Date>();
@@ -52,25 +60,30 @@ export default function AdminNovaOS() {
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // New client dialog state
+  const [showNewClientDialog, setShowNewClientDialog] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
+  const [newClientPhone, setNewClientPhone] = useState("");
+  const [newClientPlate, setNewClientPlate] = useState("");
+  const [newClientModel, setNewClientModel] = useState("");
+  const [isCreatingClient, setIsCreatingClient] = useState(false);
+
   // Fetch clients with vehicles for search
   const { data: clients = [] } = useQuery({
     queryKey: ["admin-clients-vehicles"],
     queryFn: async () => {
-      // Get all profiles (admin can see all)
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, user_id, full_name, phone");
 
       if (profilesError) throw profilesError;
 
-      // Get all vehicles (admin can see all)
       const { data: vehicles, error: vehiclesError } = await supabase
         .from("vehicles")
         .select("id, user_id, plate, model, brand");
 
       if (vehiclesError) throw vehiclesError;
 
-      // Combine profiles with their vehicles
       const clientsWithVehicles: ClientWithVehicle[] = [];
       
       for (const profile of profiles || []) {
@@ -88,7 +101,6 @@ export default function AdminNovaOS() {
             });
           }
         } else {
-          // Client without vehicle
           clientsWithVehicles.push({
             id: profile.id,
             user_id: profile.user_id,
@@ -115,6 +127,112 @@ export default function AdminNovaOS() {
     setSelectedClient(client);
     setSearchQuery("");
     setIsSearching(false);
+  };
+
+  const handleCreateClient = async () => {
+    if (!newClientName.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+    if (!newClientPhone.trim()) {
+      toast.error("Telefone é obrigatório");
+      return;
+    }
+
+    setIsCreatingClient(true);
+
+    try {
+      // Get current user to use as admin creating the client
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      // Create a temporary user_id for the client (in a real scenario, you'd create an auth user)
+      // For now, we'll use the admin's user_id and create the profile/vehicle
+      // This is a simplified approach - ideally you'd have a proper user creation flow
+      
+      // First check if there's an existing profile with this phone
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id, user_id")
+        .eq("phone", newClientPhone.replace(/\D/g, ""))
+        .single();
+
+      let userId: string;
+      let profileId: string;
+
+      if (existingProfile) {
+        userId = existingProfile.user_id;
+        profileId = existingProfile.id;
+        
+        // Update the profile name if needed
+        await supabase
+          .from("profiles")
+          .update({ full_name: newClientName })
+          .eq("id", profileId);
+      } else {
+        // For admin-created clients without auth, we'll use a generated UUID
+        // In production, you might want to invite the user via email/SMS
+        userId = crypto.randomUUID();
+        
+        const { data: newProfile, error: profileError } = await supabase
+          .from("profiles")
+          .insert({
+            user_id: userId,
+            full_name: newClientName,
+            phone: newClientPhone.replace(/\D/g, ""),
+          })
+          .select()
+          .single();
+
+        if (profileError) throw profileError;
+        profileId = newProfile.id;
+      }
+
+      let vehicleId = "";
+
+      // Create vehicle if plate is provided
+      if (newClientPlate.trim()) {
+        const { data: newVehicle, error: vehicleError } = await supabase
+          .from("vehicles")
+          .insert({
+            user_id: userId,
+            plate: newClientPlate.toUpperCase().replace(/[^A-Z0-9]/g, ""),
+            model: newClientModel || "Não informado",
+          })
+          .select()
+          .single();
+
+        if (vehicleError) throw vehicleError;
+        vehicleId = newVehicle.id;
+      }
+
+      // Refresh the clients list
+      await queryClient.invalidateQueries({ queryKey: ["admin-clients-vehicles"] });
+
+      // Auto-select the new client
+      setSelectedClient({
+        id: `${profileId}-${vehicleId}`,
+        user_id: userId,
+        name: newClientName,
+        phone: newClientPhone,
+        plate: newClientPlate || "Sem veículo",
+        vehicle_id: vehicleId,
+      });
+
+      // Close dialog and reset form
+      setShowNewClientDialog(false);
+      setNewClientName("");
+      setNewClientPhone("");
+      setNewClientPlate("");
+      setNewClientModel("");
+
+      toast.success("Cliente cadastrado com sucesso!");
+    } catch (error) {
+      console.error("Error creating client:", error);
+      toast.error("Erro ao cadastrar cliente. Tente novamente.");
+    } finally {
+      setIsCreatingClient(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -160,6 +278,13 @@ export default function AdminNovaOS() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Nova OS</h1>
+          <Button
+            variant="outline"
+            onClick={() => setShowNewClientDialog(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Cliente
+          </Button>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -225,7 +350,12 @@ export default function AdminNovaOS() {
                       ) : (
                         <div className="p-4 text-center">
                           <p className="text-muted-foreground text-sm">Nenhum cliente encontrado</p>
-                          <Button variant="link" size="sm" className="mt-2">
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            className="mt-2"
+                            onClick={() => setShowNewClientDialog(true)}
+                          >
                             <Plus className="w-4 h-4 mr-1" />
                             Cadastrar novo cliente
                           </Button>
@@ -330,6 +460,77 @@ export default function AdminNovaOS() {
           </Button>
         </div>
       </div>
+
+      {/* New Client Dialog */}
+      <Dialog open={showNewClientDialog} onOpenChange={setShowNewClientDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Novo Cliente</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome *</Label>
+              <Input
+                id="name"
+                placeholder="Nome completo"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefone *</Label>
+              <Input
+                id="phone"
+                placeholder="(11) 99999-9999"
+                value={newClientPhone}
+                onChange={(e) => setNewClientPhone(e.target.value)}
+              />
+            </div>
+            <div className="border-t border-border pt-4">
+              <p className="text-sm text-muted-foreground mb-3">Veículo (opcional)</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="plate">Placa</Label>
+                  <Input
+                    id="plate"
+                    placeholder="ABC-1234"
+                    value={newClientPlate}
+                    onChange={(e) => setNewClientPlate(e.target.value.toUpperCase())}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="model">Modelo</Label>
+                  <Input
+                    id="model"
+                    placeholder="Ex: Civic, Corolla..."
+                    value={newClientModel}
+                    onChange={(e) => setNewClientModel(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowNewClientDialog(false)}
+              disabled={isCreatingClient}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateClient} disabled={isCreatingClient}>
+              {isCreatingClient ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Cadastrar"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
