@@ -371,20 +371,6 @@ export default function AdminNovaOS() {
               Cancelar
             </Button>
             <Button 
-              type="button"
-              variant="secondary"
-              className="flex-1"
-              disabled={isSubmitting}
-              onClick={() => createOS(true)}
-            >
-              {isSubmitting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Zap className="w-4 h-4 mr-2" />
-              )}
-              Criar Rápido
-            </Button>
-            <Button 
               type="submit" 
               className="flex-1 gradient-primary"
               disabled={isSubmitting}
