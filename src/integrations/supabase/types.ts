@@ -669,7 +669,16 @@ export type Database = {
       alert_target: "client" | "admin"
       alert_type: "pending_items" | "oil_change" | "seasonal" | "custom"
       app_role: "admin" | "user"
-      appointment_status: "pendente" | "confirmado" | "concluido" | "cancelado"
+      appointment_status:
+        | "pendente"
+        | "confirmado"
+        | "concluido"
+        | "cancelado"
+        | "diagnostico"
+        | "aguardando_pecas"
+        | "pronto_iniciar"
+        | "em_execucao"
+        | "pronto_retirada"
       event_type: "workshop" | "meetup" | "carwash" | "training" | "other"
       funnel_step:
         | "flow_started"
@@ -812,7 +821,17 @@ export const Constants = {
       alert_target: ["client", "admin"],
       alert_type: ["pending_items", "oil_change", "seasonal", "custom"],
       app_role: ["admin", "user"],
-      appointment_status: ["pendente", "confirmado", "concluido", "cancelado"],
+      appointment_status: [
+        "pendente",
+        "confirmado",
+        "concluido",
+        "cancelado",
+        "diagnostico",
+        "aguardando_pecas",
+        "pronto_iniciar",
+        "em_execucao",
+        "pronto_retirada",
+      ],
       event_type: ["workshop", "meetup", "carwash", "training", "other"],
       funnel_step: [
         "flow_started",
