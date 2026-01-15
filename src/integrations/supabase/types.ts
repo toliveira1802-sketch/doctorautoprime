@@ -766,6 +766,42 @@ export type Database = {
         }
         Relationships: []
       }
+      melhorias_sugestoes: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          descricao: string
+          id: string
+          prioridade: string | null
+          status: string | null
+          titulo: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          descricao: string
+          id?: string
+          prioridade?: string | null
+          status?: string | null
+          titulo: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          descricao?: string
+          id?: string
+          prioridade?: string | null
+          status?: string | null
+          titulo?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       metas_financeiras: {
         Row: {
           ano: number

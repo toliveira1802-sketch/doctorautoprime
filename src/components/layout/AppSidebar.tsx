@@ -1,7 +1,7 @@
 import { 
   Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, 
   Plus, Car, Star, TrendingUp, DollarSign, FileText, ChevronDown,
-  ClipboardList, Gauge, UserCog, LayoutDashboard
+  ClipboardList, Gauge, UserCog, LayoutDashboard, Lightbulb
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -89,6 +89,7 @@ const sistemaModule: AdminMenuGroup = {
   icon: Settings,
   roles: ["admin", "oficina"],
   items: [
+    { title: "Melhorias", url: "/gestao/melhorias", icon: Lightbulb, roles: ["admin", "oficina"] },
     { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["admin", "oficina"] },
     { title: "Documentação", url: "/admin/documentacao", icon: FileText, roles: ["admin", "oficina"] },
   ],

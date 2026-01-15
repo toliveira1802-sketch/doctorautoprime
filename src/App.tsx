@@ -38,6 +38,7 @@ import NotFound from "./pages/NotFound";
 import Blog from "./pages/Blog";
 import GestaoDashboards from "./pages/gestao/GestaoDashboards";
 import GestaoDashboardView from "./pages/gestao/GestaoDashboardView";
+import GestaoMelhorias from "./pages/gestao/GestaoMelhorias";
 const queryClient = new QueryClient();
 
 // Protected Route component - saves intended destination before redirecting to login
@@ -316,6 +317,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <GestaoDashboardView />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/gestao/melhorias" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <GestaoMelhorias />
             </AdminRoute>
           </ProtectedRoute>
         } 
