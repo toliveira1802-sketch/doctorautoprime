@@ -1,4 +1,4 @@
-import { Home, Calendar, FileSearch, User } from "lucide-react";
+import { Home, Calendar, FileSearch } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,6 @@ const navItems: NavItem[] = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Calendar, label: "Agenda", path: "/agenda" },
   { icon: FileSearch, label: "Histórico", path: "/historico" },
-  { icon: User, label: "Perfil", path: "/perfil" },
 ];
 
 export function BottomNavigation() {

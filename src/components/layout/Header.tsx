@@ -1,7 +1,10 @@
 import { MessageCircle, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 export function Header() {
+  const navigate = useNavigate();
+
   return (
     <header className="sticky top-0 z-40 pt-safe-top">
       <div className="glass-card mx-4 mt-4 rounded-2xl">
@@ -19,7 +22,10 @@ export function Header() {
             <button className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors touch-target">
               <MessageCircle className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
             </button>
-            <button className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors touch-target">
+            <button 
+              onClick={() => navigate("/perfil")}
+              className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors touch-target"
+            >
               <User className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
             </button>
           </div>
