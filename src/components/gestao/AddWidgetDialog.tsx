@@ -25,10 +25,13 @@ const FONTES_DADOS = [
   { value: "manual", label: "Valor Manual" },
 ];
 
-const TIPOS_WIDGET: { value: WidgetType; label: string }[] = [
-  { value: "card_numero", label: "Card com Número" },
-  { value: "card_percentual", label: "Card com Percentual" },
-  { value: "texto", label: "Texto" },
+const TIPOS_WIDGET: { value: WidgetType; label: string; description?: string }[] = [
+  { value: "card_numero", label: "Card com Número", description: "Exibe um valor numérico" },
+  { value: "card_percentual", label: "Card com Percentual", description: "Exibe um percentual com barra" },
+  { value: "grafico_linha", label: "Gráfico de Linha", description: "Evolução ao longo do tempo" },
+  { value: "grafico_barra", label: "Gráfico de Barras", description: "Comparação entre categorias" },
+  { value: "grafico_pizza", label: "Gráfico de Pizza", description: "Distribuição proporcional" },
+  { value: "texto", label: "Texto", description: "Exibe texto ou valor" },
 ];
 
 const TAMANHOS = [
