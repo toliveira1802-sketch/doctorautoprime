@@ -511,31 +511,7 @@ export default function AdminOSDetalhes() {
               </CardContent>
             </Card>
 
-            {/* Diagnosis */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Wrench className="w-5 h-5" />
-                  Diagnóstico
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isEditing ? (
-                  <Textarea
-                    value={editedOS.diagnostico || ""}
-                    onChange={(e) => setEditedOS({ ...editedOS, diagnostico: e.target.value })}
-                    className="min-h-[100px]"
-                    placeholder="Diagnóstico técnico..."
-                  />
-                ) : (
-                  <p className="text-foreground whitespace-pre-wrap">
-                    {os.diagnostico || "Aguardando diagnóstico"}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Checklist Section */}
+            {/* Checklist Section - Moved below problem description */}
             <Collapsible open={checklistOpen} onOpenChange={setChecklistOpen}>
               <Card className="bg-card/50 border-border/50">
                 <CollapsibleTrigger asChild>
@@ -682,6 +658,89 @@ export default function AdminOSDetalhes() {
               </Card>
             </Collapsible>
 
+            {/* Fotos e Vídeos Section - Between Checklist and Diagnosis */}
+            <Collapsible open={fotosOpen} onOpenChange={setFotosOpen}>
+              <Card className="bg-card/50 border-border/50">
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between text-lg">
+                      <div className="flex items-center gap-2">
+                        <Camera className="w-5 h-5" />
+                        Fotos e Vídeos
+                        {os.fotos_entrada && os.fotos_entrada.length > 0 && (
+                          <Badge variant="secondary" className="ml-2">{os.fotos_entrada.length} arquivos</Badge>
+                        )}
+                      </div>
+                      {fotosOpen ? (
+                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 space-y-4">
+                    {/* Upload buttons */}
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Camera className="w-4 h-4" />
+                        Adicionar Foto
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Video className="w-4 h-4" />
+                        Adicionar Vídeo
+                      </Button>
+                    </div>
+                    
+                    {os.fotos_entrada && os.fotos_entrada.length > 0 ? (
+                      <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                        {os.fotos_entrada.map((foto, index) => (
+                          <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
+                            <img
+                              src={foto}
+                              alt={`Foto ${index + 1}`}
+                              className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => window.open(foto, '_blank')}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Image className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>Nenhuma foto ou vídeo registrado</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* Diagnosis - After Fotos/Videos */}
+            <Card className="bg-card/50 border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Wrench className="w-5 h-5" />
+                  Diagnóstico
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isEditing ? (
+                  <Textarea
+                    value={editedOS.diagnostico || ""}
+                    onChange={(e) => setEditedOS({ ...editedOS, diagnostico: e.target.value })}
+                    className="min-h-[100px]"
+                    placeholder="Diagnóstico técnico..."
+                  />
+                ) : (
+                  <p className="text-foreground whitespace-pre-wrap">
+                    {os.diagnostico || "Aguardando diagnóstico"}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
             {/* AI Proactive Sales Assistant - Internal Only */}
             <Card className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10 border-purple-500/30">
               <CardHeader className="pb-3">
@@ -796,65 +855,6 @@ export default function AdminOSDetalhes() {
               </CardContent>
             </Card>
 
-            {/* Fotos e Vídeos Section */}
-            <Collapsible open={fotosOpen} onOpenChange={setFotosOpen}>
-              <Card className="bg-card/50 border-border/50">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                    <CardTitle className="flex items-center justify-between text-lg">
-                      <div className="flex items-center gap-2">
-                        <Camera className="w-5 h-5" />
-                        Fotos e Vídeos
-                        {os.fotos_entrada && os.fotos_entrada.length > 0 && (
-                          <Badge variant="secondary" className="ml-2">{os.fotos_entrada.length} arquivos</Badge>
-                        )}
-                      </div>
-                      {fotosOpen ? (
-                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0 space-y-4">
-                    {/* Upload buttons */}
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Camera className="w-4 h-4" />
-                        Adicionar Foto
-                      </Button>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Video className="w-4 h-4" />
-                        Adicionar Vídeo
-                      </Button>
-                    </div>
-                    
-                    {os.fotos_entrada && os.fotos_entrada.length > 0 ? (
-                      <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                        {os.fotos_entrada.map((foto, index) => (
-                          <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
-                            <img
-                              src={foto}
-                              alt={`Foto ${index + 1}`}
-                              className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => window.open(foto, '_blank')}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Image className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>Nenhuma foto ou vídeo registrado</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-
             {/* Items / Budget - Serviços e Peças */}
             <Card className="bg-card/50 border-border/50">
               <CardHeader className="flex flex-row items-center justify-between">
@@ -881,99 +881,205 @@ export default function AdminOSDetalhes() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {itens.map((item) => {
-                      const itemStatus = itemStatusConfig[item.status] || itemStatusConfig.pendente;
-                      return (
-                        <div
-                          key={item.id}
-                          className={cn(
-                            "flex items-start justify-between p-4 rounded-lg border",
-                            item.status === "recusado" && "bg-red-500/5 border-red-500/20",
-                            item.status === "aprovado" && "bg-green-500/5 border-green-500/20"
-                          )}
-                        >
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {item.tipo === "servico" ? "Serviço" : "Peça"}
-                              </Badge>
-                              <span className="font-medium">{item.descricao}</span>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
-                            </div>
-                            {item.motivo_recusa && (
-                              <p className="text-sm text-red-600">Motivo: {item.motivo_recusa}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Select
-                              value={item.status}
-                              onValueChange={(value) => {
-                                if (value === "recusado") {
-                                  const motivo = prompt("Motivo da recusa:");
-                                  updateItemStatusMutation.mutate({ 
-                                    itemId: item.id, 
-                                    status: value,
-                                    motivo_recusa: motivo || undefined
-                                  });
-                                } else {
-                                  updateItemStatusMutation.mutate({ itemId: item.id, status: value });
-                                }
-                              }}
-                            >
-                              <SelectTrigger className={cn("w-32", itemStatus.color)}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pendente">Pendente</SelectItem>
-                                <SelectItem value="aprovado">Aprovado</SelectItem>
-                                <SelectItem value="recusado">Recusado</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Remover item?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Esta ação não pode ser desfeita.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => deleteItemMutation.mutate(item.id)}
-                                  >
-                                    Remover
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
+                  <div className="space-y-6">
+                    {/* Serviços Section */}
+                    {itens.filter(i => i.tipo === "servico").length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 pb-2 border-b border-border">
+                          <Wrench className="w-4 h-4 text-primary" />
+                          <h4 className="font-semibold text-sm text-primary">SERVIÇOS</h4>
+                          <Badge variant="secondary" className="ml-auto text-xs">
+                            {itens.filter(i => i.tipo === "servico").length} itens
+                          </Badge>
                         </div>
-                      );
-                    })}
+                        {itens.filter(i => i.tipo === "servico").map((item) => {
+                          const itemStatus = itemStatusConfig[item.status] || itemStatusConfig.pendente;
+                          return (
+                            <div
+                              key={item.id}
+                              className={cn(
+                                "flex items-start justify-between p-4 rounded-lg border",
+                                item.status === "recusado" && "bg-red-500/5 border-red-500/20",
+                                item.status === "aprovado" && "bg-green-500/5 border-green-500/20"
+                              )}
+                            >
+                              <div className="flex-1 space-y-1">
+                                <span className="font-medium">{item.descricao}</span>
+                                <div className="text-sm text-muted-foreground">
+                                  {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
+                                </div>
+                                {item.motivo_recusa && (
+                                  <p className="text-sm text-red-600">Motivo: {item.motivo_recusa}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Select
+                                  value={item.status}
+                                  onValueChange={(value) => {
+                                    if (value === "recusado") {
+                                      const motivo = prompt("Motivo da recusa:");
+                                      updateItemStatusMutation.mutate({ 
+                                        itemId: item.id, 
+                                        status: value,
+                                        motivo_recusa: motivo || undefined
+                                      });
+                                    } else {
+                                      updateItemStatusMutation.mutate({ itemId: item.id, status: value });
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className={cn("w-32", itemStatus.color)}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="pendente">Pendente</SelectItem>
+                                    <SelectItem value="aprovado">Aprovado</SelectItem>
+                                    <SelectItem value="recusado">Recusado</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="text-destructive">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Remover item?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Esta ação não pode ser desfeita.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteItemMutation.mutate(item.id)}
+                                      >
+                                        Remover
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {/* Subtotal Serviços */}
+                        <div className="flex justify-between text-sm px-4 py-2 bg-muted/50 rounded">
+                          <span className="text-muted-foreground">Subtotal Serviços:</span>
+                          <span className="font-medium">
+                            {formatCurrency(itens.filter(i => i.tipo === "servico").reduce((acc, item) => acc + (item.valor_total || 0), 0))}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Totals */}
-                    <div className="border-t border-border pt-4 mt-4 space-y-2">
+                    {/* Peças Section */}
+                    {itens.filter(i => i.tipo === "peca").length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 pb-2 border-b border-border">
+                          <Car className="w-4 h-4 text-orange-500" />
+                          <h4 className="font-semibold text-sm text-orange-600">PEÇAS</h4>
+                          <Badge variant="secondary" className="ml-auto text-xs">
+                            {itens.filter(i => i.tipo === "peca").length} itens
+                          </Badge>
+                        </div>
+                        {itens.filter(i => i.tipo === "peca").map((item) => {
+                          const itemStatus = itemStatusConfig[item.status] || itemStatusConfig.pendente;
+                          return (
+                            <div
+                              key={item.id}
+                              className={cn(
+                                "flex items-start justify-between p-4 rounded-lg border",
+                                item.status === "recusado" && "bg-red-500/5 border-red-500/20",
+                                item.status === "aprovado" && "bg-green-500/5 border-green-500/20"
+                              )}
+                            >
+                              <div className="flex-1 space-y-1">
+                                <span className="font-medium">{item.descricao}</span>
+                                <div className="text-sm text-muted-foreground">
+                                  {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
+                                </div>
+                                {item.motivo_recusa && (
+                                  <p className="text-sm text-red-600">Motivo: {item.motivo_recusa}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Select
+                                  value={item.status}
+                                  onValueChange={(value) => {
+                                    if (value === "recusado") {
+                                      const motivo = prompt("Motivo da recusa:");
+                                      updateItemStatusMutation.mutate({ 
+                                        itemId: item.id, 
+                                        status: value,
+                                        motivo_recusa: motivo || undefined
+                                      });
+                                    } else {
+                                      updateItemStatusMutation.mutate({ itemId: item.id, status: value });
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className={cn("w-32", itemStatus.color)}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="pendente">Pendente</SelectItem>
+                                    <SelectItem value="aprovado">Aprovado</SelectItem>
+                                    <SelectItem value="recusado">Recusado</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="text-destructive">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Remover item?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Esta ação não pode ser desfeita.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteItemMutation.mutate(item.id)}
+                                      >
+                                        Remover
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {/* Subtotal Peças */}
+                        <div className="flex justify-between text-sm px-4 py-2 bg-muted/50 rounded">
+                          <span className="text-muted-foreground">Subtotal Peças:</span>
+                          <span className="font-medium">
+                            {formatCurrency(itens.filter(i => i.tipo === "peca").reduce((acc, item) => acc + (item.valor_total || 0), 0))}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Grand Totals */}
+                    <div className="border-t-2 border-border pt-4 space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Total Orçado:</span>
-                        <span className="font-medium">{formatCurrency(totalOrcado)}</span>
+                        <span className="font-semibold">{formatCurrency(totalOrcado)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-green-600">Total Aprovado:</span>
-                        <span className="font-medium text-green-600">{formatCurrency(totalAprovado)}</span>
+                        <span className="font-semibold text-green-600">{formatCurrency(totalAprovado)}</span>
                       </div>
                       {totalRecusado > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-red-600">Total Recusado:</span>
-                          <span className="font-medium text-red-600">{formatCurrency(totalRecusado)}</span>
+                          <span className="font-semibold text-red-600">{formatCurrency(totalRecusado)}</span>
                         </div>
                       )}
                     </div>
@@ -985,6 +1091,41 @@ export default function AdminOSDetalhes() {
 
           {/* Right Column - Status & Actions */}
           <div className="space-y-6">
+            {/* Values Summary - Moved to top */}
+            <Card className="bg-card/50 border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <DollarSign className="w-5 h-5" />
+                  Valores
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Orçado:</span>
+                  <span className="font-medium">{formatCurrency(totalOrcado || os.valor_orcado)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-green-600">Aprovado:</span>
+                  <span className="font-medium text-green-600">{formatCurrency(totalAprovado || os.valor_aprovado)}</span>
+                </div>
+                <div className="border-t border-border pt-3">
+                  <div className="flex justify-between">
+                    <span className="font-medium">Final:</span>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        className="w-32 text-right"
+                        value={editedOS.valor_final || 0}
+                        onChange={(e) => setEditedOS({ ...editedOS, valor_final: parseFloat(e.target.value) || 0 })}
+                      />
+                    ) : (
+                      <span className="font-bold text-lg">{formatCurrency(os.valor_final)}</span>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Status Card */}
             <Card className="bg-card/50 border-border/50">
               <CardHeader>
@@ -1061,41 +1202,6 @@ export default function AdminOSDetalhes() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Entrega:</span>
                   <span>{formatDate(os.data_entrega)}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Values Summary */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <DollarSign className="w-5 h-5" />
-                  Valores
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Orçado:</span>
-                  <span className="font-medium">{formatCurrency(totalOrcado || os.valor_orcado)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-green-600">Aprovado:</span>
-                  <span className="font-medium text-green-600">{formatCurrency(totalAprovado || os.valor_aprovado)}</span>
-                </div>
-                <div className="border-t border-border pt-3">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Final:</span>
-                    {isEditing ? (
-                      <Input
-                        type="number"
-                        className="w-32 text-right"
-                        value={editedOS.valor_final || 0}
-                        onChange={(e) => setEditedOS({ ...editedOS, valor_final: parseFloat(e.target.value) || 0 })}
-                      />
-                    ) : (
-                      <span className="font-bold text-lg">{formatCurrency(os.valor_final)}</span>
-                    )}
-                  </div>
                 </div>
               </CardContent>
             </Card>
