@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminRoute } from "./components/auth/AdminRoute";
+import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Historico from "./pages/Historico";
@@ -28,6 +29,7 @@ import AdminMechanicAnalytics from "./pages/admin/AdminMechanicAnalytics";
 import AdminClientes from "./pages/admin/AdminClientes";
 import AdminServicos from "./pages/admin/AdminServicos";
 import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
+import AdminFinanceiro from "./pages/admin/AdminFinanceiro";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
 import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
@@ -218,13 +220,23 @@ const AppRoutes = () => {
         path="/admin/analytics-mecanicos" 
         element={
           <ProtectedRoute>
-            <AdminRoute>
+            <AdminOnlyRoute>
               <AdminMechanicAnalytics />
-            </AdminRoute>
+            </AdminOnlyRoute>
           </ProtectedRoute>
         } 
       />
       <Route 
+        path="/admin/financeiro" 
+        element={
+          <ProtectedRoute>
+            <AdminOnlyRoute>
+              <AdminFinanceiro />
+            </AdminOnlyRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route
         path="/admin/clientes" 
         element={
           <ProtectedRoute>
