@@ -13,6 +13,7 @@ import VerifyOTP from "./pages/VerifyOTP";
 import BiometricSetup from "./pages/BiometricSetup";
 import Agenda from "./pages/Agenda";
 import Avisos from "./pages/Avisos";
+import Performance from "./pages/Performance";
 import NovoAgendamento from "./pages/NovoAgendamento";
 import AgendamentoSucesso from "./pages/AgendamentoSucesso";
 import Reagendamento from "./pages/Reagendamento";
@@ -66,6 +67,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Avisos />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/performance" 
+        element={
+          <ProtectedRoute>
+            <Performance />
           </ProtectedRoute>
         } 
       />
