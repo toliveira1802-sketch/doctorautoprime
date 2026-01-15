@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       alert_clicks: {
         Row: {
           action: string
@@ -165,13 +195,19 @@ export type Database = {
       }
       appointments: {
         Row: {
+          actual_completion: string | null
           appointment_date: string
           appointment_time: string | null
+          checklist_photos: string[] | null
+          client_notified: boolean | null
           created_at: string
           discount_amount: number
+          estimated_completion: string | null
           final_price: number
           id: string
           is_full_day: boolean
+          mechanic_id: string | null
+          mechanic_notes: string | null
           notes: string | null
           pay_in_advance: boolean
           promotion_id: string | null
@@ -182,13 +218,19 @@ export type Database = {
           vehicle_id: string | null
         }
         Insert: {
+          actual_completion?: string | null
           appointment_date: string
           appointment_time?: string | null
+          checklist_photos?: string[] | null
+          client_notified?: boolean | null
           created_at?: string
           discount_amount?: number
+          estimated_completion?: string | null
           final_price?: number
           id?: string
           is_full_day?: boolean
+          mechanic_id?: string | null
+          mechanic_notes?: string | null
           notes?: string | null
           pay_in_advance?: boolean
           promotion_id?: string | null
@@ -199,13 +241,19 @@ export type Database = {
           vehicle_id?: string | null
         }
         Update: {
+          actual_completion?: string | null
           appointment_date?: string
           appointment_time?: string | null
+          checklist_photos?: string[] | null
+          client_notified?: boolean | null
           created_at?: string
           discount_amount?: number
+          estimated_completion?: string | null
           final_price?: number
           id?: string
           is_full_day?: boolean
+          mechanic_id?: string | null
+          mechanic_notes?: string | null
           notes?: string | null
           pay_in_advance?: boolean
           promotion_id?: string | null
@@ -216,6 +264,13 @@ export type Database = {
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_mechanic_id_fkey"
+            columns: ["mechanic_id"]
+            isOneToOne: false
+            referencedRelation: "mechanics"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_promotion_id_fkey"
             columns: ["promotion_id"]
@@ -303,6 +358,41 @@ export type Database = {
         }
         Relationships: []
       }
+      feedbacks: {
+        Row: {
+          appointment_id: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funnel_events: {
         Row: {
           created_at: string
@@ -349,6 +439,119 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mechanic_daily_feedback: {
+        Row: {
+          created_at: string
+          feedback_date: string
+          given_by: string | null
+          id: string
+          mechanic_id: string | null
+          notes: string | null
+          performance_score: number | null
+          punctuality_score: number | null
+          quality_score: number | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_date?: string
+          given_by?: string | null
+          id?: string
+          mechanic_id?: string | null
+          notes?: string | null
+          performance_score?: number | null
+          punctuality_score?: number | null
+          quality_score?: number | null
+        }
+        Update: {
+          created_at?: string
+          feedback_date?: string
+          given_by?: string | null
+          id?: string
+          mechanic_id?: string | null
+          notes?: string | null
+          performance_score?: number | null
+          punctuality_score?: number | null
+          quality_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mechanic_daily_feedback_mechanic_id_fkey"
+            columns: ["mechanic_id"]
+            isOneToOne: false
+            referencedRelation: "mechanics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mechanics: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          specialty: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          specialty?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          specialty?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      patio_daily_feedback: {
+        Row: {
+          bottlenecks: string | null
+          created_at: string
+          feedback_date: string
+          flow_score: number | null
+          given_by: string | null
+          highlights: string | null
+          id: string
+          improvements: string | null
+          incidents_count: number | null
+          organization_score: number | null
+        }
+        Insert: {
+          bottlenecks?: string | null
+          created_at?: string
+          feedback_date?: string
+          flow_score?: number | null
+          given_by?: string | null
+          highlights?: string | null
+          id?: string
+          improvements?: string | null
+          incidents_count?: number | null
+          organization_score?: number | null
+        }
+        Update: {
+          bottlenecks?: string | null
+          created_at?: string
+          feedback_date?: string
+          flow_score?: number | null
+          given_by?: string | null
+          highlights?: string | null
+          id?: string
+          improvements?: string | null
+          incidents_count?: number | null
+          organization_score?: number | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -584,6 +787,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      status_history: {
+        Row: {
+          appointment_id: string | null
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_status: string
+          notes: string | null
+          previous_status: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_status: string
+          notes?: string | null
+          previous_status?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_status?: string
+          notes?: string | null
+          previous_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_history_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
