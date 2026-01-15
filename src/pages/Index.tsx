@@ -29,7 +29,7 @@ const Index = () => {
         <section className="py-4">
           <div className="flex justify-center gap-4">
             <a
-              href="https://instagram.com/drprime_oficial"
+              href="https://www.instagram.com/doctorauto.prime/"
               target="_blank"
               rel="noopener noreferrer"
               className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
