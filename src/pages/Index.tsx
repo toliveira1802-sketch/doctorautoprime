@@ -5,7 +5,7 @@ import { ActionButtons } from "@/components/home/ActionButtons";
 import { MyVehiclesSection } from "@/components/home/MyVehiclesSection";
 import { Youtube, Instagram, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 // TikTok icon component (Lucide doesn't have one)
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -19,6 +19,7 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 );
 
 const Index = () => {
+  const navigate = useNavigate();
   const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
@@ -40,11 +41,6 @@ const Index = () => {
     fetchUserName();
   }, []);
 
-  const handleBlogClick = () => {
-    toast.info("Blog em construção! 🚧", {
-      description: "Em breve teremos conteúdos exclusivos para você.",
-    });
-  };
 
   return (
     <div className="min-h-screen gradient-bg dark flex flex-col">
@@ -68,12 +64,12 @@ const Index = () => {
 
         {/* Social Links */}
         <section className="py-6 mt-auto">
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-between px-4">
             <a
               href="https://www.instagram.com/doctorauto.prime?igsh=ejRheXE2dzB2NGo%3D&utm_source=qr"
               target="_blank"
               rel="noopener noreferrer"
-              className="h-11 w-11 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
             >
               <Instagram className="h-5 w-5 text-white" />
             </a>
@@ -81,7 +77,7 @@ const Index = () => {
               href="https://www.youtube.com/@PerformanceDoctorAuto/shorts"
               target="_blank"
               rel="noopener noreferrer"
-              className="h-11 w-11 rounded-xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              className="h-12 w-12 rounded-xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
             >
               <Youtube className="h-5 w-5 text-white" />
             </a>
@@ -89,13 +85,13 @@ const Index = () => {
               href="https://www.tiktok.com/@doctorauto.prime"
               target="_blank"
               rel="noopener noreferrer"
-              className="h-11 w-11 rounded-xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              className="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
             >
               <TikTokIcon className="h-5 w-5 text-white" />
             </a>
             <button
-              onClick={handleBlogClick}
-              className="h-11 w-11 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              onClick={() => navigate("/blog")}
+              className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
             >
               <BookOpen className="h-5 w-5 text-white" />
             </button>

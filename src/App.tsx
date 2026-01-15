@@ -35,6 +35,7 @@ import AdminDocumentacao from "./pages/admin/AdminDocumentacao";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
 import VehicleDetails from "./pages/VehicleDetails";
 import NotFound from "./pages/NotFound";
+import Blog from "./pages/Blog";
 const queryClient = new QueryClient();
 
 // Protected Route component - saves intended destination before redirecting to login
@@ -98,6 +99,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Performance />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/blog" 
+        element={
+          <ProtectedRoute>
+            <Blog />
           </ProtectedRoute>
         } 
       />
