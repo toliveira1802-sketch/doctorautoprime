@@ -1,26 +1,14 @@
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
-  ArrowLeft, Car, Phone, Check, X, AlertTriangle, 
-  Calendar, Clock, Wrench, DollarSign, Loader2,
-  MessageSquare, CheckCircle, XCircle
+  ArrowLeft, Car, Phone, AlertTriangle, 
+  Clock, Loader2, CheckCircle, XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -77,11 +65,6 @@ const prioridadeConfig: Record<string, { label: string; description: string; bor
 export default function OrcamentoCliente() {
   const { osId } = useParams<{ osId: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  
-  const [showRecusaDialog, setShowRecusaDialog] = useState(false);
-  const [itemToRecuse, setItemToRecuse] = useState<string | null>(null);
-  const [motivoRecusa, setMotivoRecusa] = useState("");
 
   // Fetch OS data
   const { data: os, isLoading: loadingOS } = useQuery({
@@ -119,55 +102,11 @@ export default function OrcamentoCliente() {
     enabled: !!osId,
   });
 
-  // Approve item mutation
-  const approveItemMutation = useMutation({
-    mutationFn: async (itemId: string) => {
-      const { error } = await supabase
-        .from("ordens_servico_itens")
-        .update({ status: "aprovado" })
-        .eq("id", itemId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ordem-servico-itens-cliente", osId] });
-      toast.success("Item aprovado!");
-    },
-  });
-
-  // Refuse item mutation
-  const refuseItemMutation = useMutation({
-    mutationFn: async ({ itemId, motivo }: { itemId: string; motivo: string }) => {
-      const { error } = await supabase
-        .from("ordens_servico_itens")
-        .update({ status: "recusado", motivo_recusa: motivo })
-        .eq("id", itemId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ordem-servico-itens-cliente", osId] });
-      toast.success("Item recusado");
-      setShowRecusaDialog(false);
-      setItemToRecuse(null);
-      setMotivoRecusa("");
-    },
-  });
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(value);
-  };
-
-  const handleRecusar = (itemId: string) => {
-    setItemToRecuse(itemId);
-    setShowRecusaDialog(true);
-  };
-
-  const confirmRecusa = () => {
-    if (itemToRecuse) {
-      refuseItemMutation.mutate({ itemId: itemToRecuse, motivo: motivoRecusa });
-    }
   };
 
   // Calculate totals
@@ -250,7 +189,7 @@ export default function OrcamentoCliente() {
             </div>
           </div>
 
-          {/* Status ou Ações */}
+          {/* Status */}
           {isAprovado && (
             <div className="flex items-center gap-2 p-2 bg-green-500/20 rounded-lg">
               <CheckCircle className="w-4 h-4 text-green-600" />
@@ -271,29 +210,9 @@ export default function OrcamentoCliente() {
           )}
 
           {isPendente && (
-            <div className="flex gap-2">
-              <Button 
-                className="flex-1 bg-green-600 hover:bg-green-700"
-                onClick={() => approveItemMutation.mutate(item.id)}
-                disabled={approveItemMutation.isPending}
-              >
-                {approveItemMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Aprovar
-                  </>
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1 border-red-500 text-red-600 hover:bg-red-50"
-                onClick={() => handleRecusar(item.id)}
-              >
-                <X className="w-4 h-4 mr-2" />
-                Recusar
-              </Button>
+            <div className="flex items-center gap-2 p-2 bg-yellow-500/20 rounded-lg">
+              <Clock className="w-4 h-4 text-yellow-600" />
+              <span className="text-sm font-medium text-yellow-700">Aguardando aprovação</span>
             </div>
           )}
         </CardContent>
@@ -428,58 +347,11 @@ export default function OrcamentoCliente() {
           
           {itensPendentes.length > 0 && (
             <p className="text-xs text-center text-muted-foreground">
-              {itensPendentes.length} {itensPendentes.length === 1 ? 'item pendente' : 'itens pendentes'} de aprovação
+              {itensPendentes.length} {itensPendentes.length === 1 ? 'item aguardando' : 'itens aguardando'} aprovação
             </p>
-          )}
-
-          {itensPendentes.length === 0 && (
-            <Button className="w-full" size="lg">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Finalizar e Enviar para Oficina
-            </Button>
           )}
         </div>
       </div>
-
-      {/* Recusa Dialog */}
-      <Dialog open={showRecusaDialog} onOpenChange={setShowRecusaDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Motivo da Recusa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              Por favor, nos diga o motivo para não realizar este serviço agora. 
-              Isso nos ajuda a entender melhor suas necessidades.
-            </p>
-            <div className="space-y-2">
-              <Label>Motivo (opcional)</Label>
-              <Textarea
-                value={motivoRecusa}
-                onChange={(e) => setMotivoRecusa(e.target.value)}
-                placeholder="Ex: Vou fazer depois, sem orçamento no momento..."
-                className="min-h-[80px]"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRecusaDialog(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={confirmRecusa}
-              disabled={refuseItemMutation.isPending}
-            >
-              {refuseItemMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Confirmar Recusa"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
