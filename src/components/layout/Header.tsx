@@ -1,6 +1,7 @@
 import { MessageCircle, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { ViewSwitcher } from "./ViewSwitcher";
 
 export function Header() {
   const navigate = useNavigate();
@@ -12,10 +13,13 @@ export function Header() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <img src={logo} alt="Doctor Auto Prime" className="w-10 h-10 object-contain" />
-            <h1 className="font-bold text-lg text-foreground tracking-tight">
+            <h1 className="font-bold text-lg text-foreground tracking-tight hidden sm:block">
               Doctor Auto Prime
             </h1>
           </div>
+
+          {/* View Switcher - Only for thales */}
+          <ViewSwitcher />
 
           {/* Actions */}
           <div className="flex items-center gap-2">
