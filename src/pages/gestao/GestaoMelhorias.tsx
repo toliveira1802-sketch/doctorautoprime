@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AddDirectoryDialog } from "@/components/gestao/AddDirectoryDialog";
 import { toast } from "sonner";
-import { Plus, Lightbulb, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Plus, Lightbulb, Clock, CheckCircle, XCircle, Loader2, FolderPlus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -135,10 +136,18 @@ export default function GestaoMelhorias() {
               Envie suas ideias para melhorar o sistema
             </p>
           </div>
-          <Button onClick={() => setShowForm(!showForm)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Sugestão
-          </Button>
+          <div className="flex items-center gap-2">
+            <AddDirectoryDialog>
+              <Button variant="outline" size="sm">
+                <FolderPlus className="w-4 h-4 mr-2" />
+                Novo Diretório
+              </Button>
+            </AddDirectoryDialog>
+            <Button onClick={() => setShowForm(!showForm)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Sugestão
+            </Button>
+          </div>
         </div>
 
         {/* Form */}
