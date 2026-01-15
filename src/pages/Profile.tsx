@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Gift, Calendar, Settings, LogOut, ChevronRight, Award, Crown, Edit2, Camera } from "lucide-react";
+import { ArrowLeft, Gift, Calendar, Settings, LogOut, ChevronRight, Award, Crown, Edit2, Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -53,36 +53,28 @@ export default function Profile() {
           .from("profiles")
           .select("id, full_name, phone, cpf, avatar_url, birthday, loyalty_points, loyalty_level")
           .eq("user_id", authUser.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
-        setProfile(data);
-      } else {
-        // Mock data for demo
-        setProfile({
-          id: "1",
-          full_name: user?.user_metadata?.full_name || "Usuário",
-          phone: user?.phone || "(11) 99999-9999",
-          cpf: "***.***.***-00",
-          avatar_url: null,
-          birthday: "1990-05-15",
-          loyalty_points: 750,
-          loyalty_level: "silver",
-        });
+        
+        if (data) {
+          setProfile(data);
+        } else {
+          // Profile doesn't exist yet - show basic info
+          setProfile({
+            id: "",
+            full_name: authUser.user_metadata?.full_name || "Usuário",
+            phone: null,
+            cpf: null,
+            avatar_url: null,
+            birthday: null,
+            loyalty_points: 0,
+            loyalty_level: "bronze",
+          });
+        }
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-      // Use mock data on error
-      setProfile({
-        id: "1",
-        full_name: user?.user_metadata?.full_name || "Usuário",
-        phone: user?.phone || "(11) 99999-9999",
-        cpf: "***.***.***-00",
-        avatar_url: null,
-        birthday: "1990-05-15",
-        loyalty_points: 750,
-        loyalty_level: "silver",
-      });
     } finally {
       setLoading(false);
     }
@@ -120,7 +112,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -170,7 +162,9 @@ export default function Profile() {
                 <h2 className="mt-4 text-xl font-bold text-foreground">
                   {profile?.full_name || "Usuário"}
                 </h2>
-                <p className="text-muted-foreground">{profile?.phone}</p>
+                {profile?.phone && (
+                  <p className="text-muted-foreground">{profile.phone}</p>
+                )}
 
                 {/* Loyalty Badge */}
                 <Badge className={`mt-3 ${currentLoyalty.color} text-white px-4 py-1`}>
@@ -223,8 +217,7 @@ export default function Profile() {
           <MenuOption 
             icon={Gift} 
             label="Ofertas Exclusivas" 
-            badge="3"
-            onClick={() => toast.info("Em breve!")}
+            onClick={() => navigate("/agenda")}
           />
           <MenuOption 
             icon={Settings} 
