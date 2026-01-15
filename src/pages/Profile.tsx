@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Gift, Star, Calendar, Settings, LogOut, ChevronRight, Award, Crown, Edit2, Camera } from "lucide-react";
+import { ArrowLeft, Gift, Calendar, Settings, LogOut, ChevronRight, Award, Crown, Edit2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -15,7 +14,6 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
 import { LoyaltyCard } from "@/components/profile/LoyaltyCard";
-import { ServiceHistory } from "@/components/profile/ServiceHistory";
 
 interface Profile {
   id: string;
@@ -31,7 +29,7 @@ interface Profile {
 const loyaltyConfig = {
   bronze: { label: "Bronze", color: "bg-amber-700", nextLevel: "silver", pointsNeeded: 500, icon: Award },
   silver: { label: "Prata", color: "bg-slate-400", nextLevel: "gold", pointsNeeded: 1500, icon: Award },
-  gold: { label: "Ouro", color: "bg-yellow-500", nextLevel: "platinum", pointsNeeded: 3000, icon: Star },
+  gold: { label: "Ouro", color: "bg-yellow-500", nextLevel: "platinum", pointsNeeded: 3000, icon: Award },
   platinum: { label: "Platinum", color: "bg-gradient-to-r from-slate-600 to-slate-400", nextLevel: null, pointsNeeded: null, icon: Crown },
 };
 
@@ -212,9 +210,6 @@ export default function Profile() {
           level={profile?.loyalty_level || "bronze"}
           progress={progressToNext}
         />
-
-        {/* Service History */}
-        <ServiceHistory />
 
         <Separator className="my-6" />
 
