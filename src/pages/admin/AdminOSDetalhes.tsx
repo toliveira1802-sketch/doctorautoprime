@@ -621,26 +621,6 @@ export default function AdminOSDetalhes() {
                     )}
                   </div>
                 </div>
-                
-                {/* Scanner / Avarias */}
-                <div className="pt-4 border-t border-border">
-                  <Label className="text-muted-foreground flex items-center gap-2 mb-2">
-                    <Scan className="w-4 h-4" />
-                    Scanner / Avarias
-                  </Label>
-                  {isEditing ? (
-                    <Textarea
-                      value={scannerAvarias}
-                      onChange={(e) => setScannerAvarias(e.target.value)}
-                      placeholder="Códigos de erro, avarias identificadas no scanner..."
-                      className="min-h-[80px]"
-                    />
-                  ) : (
-                    <p className="text-sm text-foreground whitespace-pre-wrap p-3 bg-muted/50 rounded-lg min-h-[60px]">
-                      {scannerAvarias || "Nenhuma avaria registrada"}
-                    </p>
-                  )}
-                </div>
               </CardContent>
             </Card>
 
