@@ -55,33 +55,42 @@ const listNameToStatus: Record<string, PatioStatus> = {
 // ID do board do Trello
 const BOARD_ID = "NkhINjF2";
 
+// Regex para detectar placa brasileira (3 letras + 4 números/letras)
+const plateRegex = /\b([A-Z]{3}\d[A-Z0-9]\d{2}|[A-Z]{3}\d{4})\b/i;
+
 // Função para extrair placa, veículo e cliente do nome do card
-// Formato típico: "PLACA VEICULO CLIENTE" ou "PLACA VEICULO"
+// Formatos possíveis: 
+// "VEICULO PLACA" (ex: "FOCUS FGY1941")
+// "VEICULO MODELO PLACA" (ex: "BMW 320 G20 PLACA RJF1J39")
+// "VEICULO PLACA CLIENTE" (ex: "LIVINA VIDAL")
 function parseCardName(name: string): { plate: string; vehicle: string; client: string } {
-  const parts = name.trim().split(/\s+/);
+  const trimmedName = name.trim();
   
-  if (parts.length === 0) {
-    return { plate: "", vehicle: "", client: "" };
-  }
-
-  // Primeira parte geralmente é a placa
-  const plate = parts[0] || "";
+  // Tentar encontrar a placa no nome
+  const plateMatch = trimmedName.match(plateRegex);
   
-  // Se só tem uma parte, é só a placa
-  if (parts.length === 1) {
-    return { plate, vehicle: "", client: "" };
+  if (plateMatch) {
+    const plate = plateMatch[1].toUpperCase();
+    const plateIndex = trimmedName.toUpperCase().indexOf(plate);
+    
+    // Tudo antes da placa é o veículo
+    const beforePlate = trimmedName.substring(0, plateIndex).trim();
+    // Tudo depois da placa é o cliente
+    const afterPlate = trimmedName.substring(plateIndex + plate.length).trim();
+    
+    return {
+      plate,
+      vehicle: beforePlate || "Veículo",
+      client: afterPlate || "",
+    };
   }
-
-  // Se tem duas partes, segunda é o veículo
-  if (parts.length === 2) {
-    return { plate, vehicle: parts[1], client: "" };
-  }
-
-  // Se tem mais partes, segunda é veículo e o resto é cliente
-  const vehicle = parts[1];
-  const client = parts.slice(2).join(" ");
   
-  return { plate, vehicle, client };
+  // Se não encontrou placa, usa o nome todo como veículo
+  return {
+    plate: "",
+    vehicle: trimmedName,
+    client: "",
+  };
 }
 
 // Formatar data
