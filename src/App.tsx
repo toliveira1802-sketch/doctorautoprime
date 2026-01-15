@@ -24,6 +24,7 @@ import AdminDashboardOverview from "./pages/admin/AdminDashboardOverview";
 import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
 import AdminNovaOS from "./pages/admin/AdminNovaOS";
 import AdminOrdensServico from "./pages/admin/AdminOrdensServico";
+import AdminOSDetalhes from "./pages/admin/AdminOSDetalhes";
 import AdminPatioDetalhes from "./pages/admin/AdminPatioDetalhes";
 import AdminPatio from "./pages/admin/AdminPatio";
 import AdminMechanicFeedback from "./pages/admin/AdminMechanicFeedback";
@@ -222,6 +223,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <AdminOrdensServico />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/ordens-servico/:osId" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminOSDetalhes />
             </AdminRoute>
           </ProtectedRoute>
         } 
