@@ -82,16 +82,6 @@ const dashboardModule: AdminMenuGroup = {
   ],
 };
 
-// MODULE: Cadastros (admin + oficina)
-const cadastrosModule: AdminMenuGroup = {
-  label: "Cadastros",
-  icon: ClipboardList,
-  roles: ["admin", "oficina"],
-  items: [
-    { title: "Serviços", url: "/admin/servicos", icon: Wrench, roles: ["admin", "oficina"] },
-  ],
-};
-
 // MODULE: Sistema (admin + oficina)
 const sistemaModule: AdminMenuGroup = {
   label: "Sistema",
@@ -107,7 +97,6 @@ const sistemaModule: AdminMenuGroup = {
 const adminModules: AdminMenuGroup[] = [
   operacionalModule,
   dashboardModule,
-  cadastrosModule,
   sistemaModule,
 ];
 
