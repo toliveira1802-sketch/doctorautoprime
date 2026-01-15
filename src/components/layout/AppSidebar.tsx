@@ -1,4 +1,4 @@
-import { Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, Plus, Car, Star, TrendingUp } from "lucide-react";
+import { Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, Plus, Car, Star, TrendingUp, DollarSign } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole, type UserRole } from "@/hooks/useUserRole";
 
 const clientItems = [
   { title: "Home", url: "/", icon: Home },
@@ -24,16 +25,24 @@ const clientItems = [
   { title: "Serviços", url: "/servicos", icon: Wrench },
 ];
 
-const adminItems = [
-  { title: "Dashboard", url: "/admin", icon: BarChart3 },
-  { title: "Nova OS", url: "/admin/nova-os", icon: Plus },
-  { title: "Pátio", url: "/admin/patio", icon: Car },
-  { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar },
-  { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star },
-  { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp },
-  { title: "Clientes", url: "/admin/clientes", icon: Users },
-  { title: "Serviços", url: "/admin/servicos", icon: Wrench },
-  { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
+type AdminMenuItem = {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles: UserRole[];
+};
+
+const adminItems: AdminMenuItem[] = [
+  { title: "Dashboard", url: "/admin", icon: BarChart3, roles: ["admin", "oficina"] },
+  { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "oficina"] },
+  { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "oficina"] },
+  { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "oficina"] },
+  { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "oficina"] },
+  { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["admin"] },
+  { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["admin"] },
+  { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "oficina"] },
+  { title: "Serviços", url: "/admin/servicos", icon: Wrench, roles: ["admin", "oficina"] },
+  { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["admin", "oficina"] },
 ];
 
 interface AppSidebarProps {
@@ -45,9 +54,15 @@ export function AppSidebar({ variant = "client" }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { role } = useUserRole();
   const collapsed = state === "collapsed";
 
-  const items = variant === "admin" ? adminItems : clientItems;
+  // Filter admin items based on user role
+  const filteredAdminItems = adminItems.filter(item => 
+    role && item.roles.includes(role)
+  );
+
+  const items = variant === "admin" ? filteredAdminItems : clientItems;
   const groupLabel = variant === "admin" ? "Oficina" : "Menu";
 
   const isActive = (path: string) => location.pathname === path;

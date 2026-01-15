@@ -1354,6 +1354,8 @@ export type Database = {
       }
     }
     Functions: {
+      has_admin_access: { Args: never; Returns: boolean }
+      has_any_role: { Args: { _roles: string[] }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

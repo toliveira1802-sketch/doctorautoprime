@@ -1,12 +1,12 @@
 import { Navigate } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 
-interface AdminRouteProps {
+interface AdminOnlyRouteProps {
   children: React.ReactNode;
 }
 
-export function AdminRoute({ children }: AdminRouteProps) {
-  const { hasAdminAccess, isLoading } = useUserRole();
+export function AdminOnlyRoute({ children }: AdminOnlyRouteProps) {
+  const { isAdmin, isLoading } = useUserRole();
 
   if (isLoading) {
     return (
@@ -19,8 +19,8 @@ export function AdminRoute({ children }: AdminRouteProps) {
     );
   }
 
-  if (!hasAdminAccess) {
-    return <Navigate to="/" replace />;
+  if (!isAdmin) {
+    return <Navigate to="/admin" replace />;
   }
 
   return <>{children}</>;

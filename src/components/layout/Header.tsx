@@ -5,7 +5,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 
 export function Header() {
   const navigate = useNavigate();
-  const { isAdmin } = useUserRole();
+  const { hasAdminAccess } = useUserRole();
 
   return (
     <header className="sticky top-0 z-40 pt-safe-top">
@@ -21,7 +21,7 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {isAdmin && (
+            {hasAdminAccess && (
               <button 
                 onClick={() => navigate("/admin")}
                 className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors touch-target"
