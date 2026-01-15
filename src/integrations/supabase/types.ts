@@ -924,6 +924,9 @@ export type Database = {
       ordens_servico: {
         Row: {
           appointment_id: string | null
+          checklist_dinamometro: Json | null
+          checklist_entrada: Json | null
+          checklist_precompra: Json | null
           client_name: string | null
           client_phone: string | null
           created_at: string
@@ -935,7 +938,9 @@ export type Database = {
           data_orcamento: string | null
           descricao_problema: string | null
           diagnostico: string | null
+          fotos_entrada: string[] | null
           id: string
+          km_atual: string | null
           mechanic_id: string | null
           motivo_recusa: string | null
           numero_os: string
@@ -952,6 +957,9 @@ export type Database = {
         }
         Insert: {
           appointment_id?: string | null
+          checklist_dinamometro?: Json | null
+          checklist_entrada?: Json | null
+          checklist_precompra?: Json | null
           client_name?: string | null
           client_phone?: string | null
           created_at?: string
@@ -963,7 +971,9 @@ export type Database = {
           data_orcamento?: string | null
           descricao_problema?: string | null
           diagnostico?: string | null
+          fotos_entrada?: string[] | null
           id?: string
+          km_atual?: string | null
           mechanic_id?: string | null
           motivo_recusa?: string | null
           numero_os: string
@@ -980,6 +990,9 @@ export type Database = {
         }
         Update: {
           appointment_id?: string | null
+          checklist_dinamometro?: Json | null
+          checklist_entrada?: Json | null
+          checklist_precompra?: Json | null
           client_name?: string | null
           client_phone?: string | null
           created_at?: string
@@ -991,7 +1004,9 @@ export type Database = {
           data_orcamento?: string | null
           descricao_problema?: string | null
           diagnostico?: string | null
+          fotos_entrada?: string[] | null
           id?: string
+          km_atual?: string | null
           mechanic_id?: string | null
           motivo_recusa?: string | null
           numero_os?: string
