@@ -1,6 +1,8 @@
-import { Calendar, Users, Wrench, TrendingUp, Clock, CheckCircle } from "lucide-react";
+import { Calendar, Users, Wrench, Plus, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { useNavigate } from "react-router-dom";
 
 const stats = [
   {
@@ -11,25 +13,11 @@ const stats = [
     bgColor: "bg-primary/10",
   },
   {
-    title: "Pendentes",
-    value: "3",
-    icon: Clock,
-    color: "text-amber-500",
-    bgColor: "bg-amber-500/10",
-  },
-  {
-    title: "Concluídos Hoje",
-    value: "5",
-    icon: CheckCircle,
+    title: "Novos Clientes (Mês)",
+    value: "12",
+    icon: Users,
     color: "text-emerald-500",
     bgColor: "bg-emerald-500/10",
-  },
-  {
-    title: "Clientes Ativos",
-    value: "124",
-    icon: Users,
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10",
   },
 ];
 
@@ -47,11 +35,34 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 };
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-4">
+          <Button 
+            size="lg" 
+            className="h-20 text-lg gap-3"
+            onClick={() => navigate('/admin/agendamentos')}
+          >
+            <Calendar className="w-6 h-6" />
+            Novo Agendamento
+          </Button>
+          <Button 
+            size="lg" 
+            variant="secondary"
+            className="h-20 text-lg gap-3"
+            onClick={() => navigate('/admin/nova-os')}
+          >
+            <FileText className="w-6 h-6" />
+            Nova OS
+          </Button>
+        </div>
+
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {stats.map((stat) => (
             <Card key={stat.title} className="glass-card border-none">
               <CardContent className="p-4">
