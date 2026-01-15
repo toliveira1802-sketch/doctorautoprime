@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { 
   Search, Plus, User, Car, Loader2, FileText, 
   ClipboardCheck, Package, Wrench, ChevronDown, ChevronUp,
-  Camera, X, Image
+  Camera, X, Image, Gauge, Zap, Activity
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,8 +52,11 @@ export default function AdminNovaOS() {
   const [pecasOpen, setPecasOpen] = useState(false);
   const [servicosOpen, setServicosOpen] = useState(false);
 
-  // Checklist state
-  const [checklist, setChecklist] = useState({
+  // Checklist type selection
+  const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro'>('entrada');
+
+  // Checklist Entrada state
+  const [checklistEntrada, setChecklistEntrada] = useState({
     nivelOleo: false,
     nivelAgua: false,
     freios: false,
@@ -61,6 +65,39 @@ export default function AdminNovaOS() {
     bateria: false,
     correia: false,
     suspensao: false,
+  });
+
+  // Checklist Dinamômetro state
+  const [checklistDyno, setChecklistDyno] = useState({
+    // Antes de subir no rolo
+    combustivelAdequado: false,
+    oleoNivel: false,
+    arrefecimentoOk: false,
+    pneusCalibrados: false,
+    correiasPolias: false,
+    // Eletrônica
+    scannerSemFalhas: false,
+    monitorarIAT: false,
+    monitorarEGT: false,
+    pressaoCombustivel: false,
+    // Durante os pulls
+    afrEstavel: false,
+    knockControl: false,
+    pressaoTurbo: false,
+    temperaturaControle: false,
+    // Pós-dyno
+    verificarVazamentos: false,
+    lerFalhasPosTest: false,
+    analisarCurva: false,
+    compararBaseline: false,
+  });
+
+  // Dyno results
+  const [dynoResults, setDynoResults] = useState({
+    potenciaAntes: '',
+    potenciaDepois: '',
+    torqueAntes: '',
+    torqueDepois: '',
   });
 
   // Photos state
@@ -547,7 +584,7 @@ export default function AdminNovaOS() {
                 <CardTitle className="flex items-center justify-between text-lg">
                   <div className="flex items-center gap-2">
                     <ClipboardCheck className="w-5 h-5" />
-                    Checklist de Entrada
+                    Checklist
                   </div>
                   {checklistOpen ? (
                     <ChevronUp className="w-5 h-5 text-muted-foreground" />
@@ -558,35 +595,227 @@ export default function AdminNovaOS() {
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { key: "nivelOleo", label: "Nível de Óleo" },
-                    { key: "nivelAgua", label: "Nível de Água" },
-                    { key: "freios", label: "Freios" },
-                    { key: "pneus", label: "Pneus" },
-                    { key: "luzes", label: "Luzes" },
-                    { key: "bateria", label: "Bateria" },
-                    { key: "correia", label: "Correia" },
-                    { key: "suspensao", label: "Suspensão" },
-                  ].map((item) => (
-                    <div key={item.key} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={item.key}
-                        checked={checklist[item.key as keyof typeof checklist]}
-                        onCheckedChange={(checked) =>
-                          setChecklist({ ...checklist, [item.key]: checked === true })
-                        }
-                      />
-                      <label
-                        htmlFor={item.key}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
-                        {item.label}
-                      </label>
+              <CardContent className="pt-0 space-y-6">
+                {/* Checklist Type Selector */}
+                <Tabs value={checklistType} onValueChange={(v) => setChecklistType(v as 'entrada' | 'dinamometro')}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="entrada" className="flex items-center gap-2">
+                      <ClipboardCheck className="w-4 h-4" />
+                      Entrada
+                    </TabsTrigger>
+                    <TabsTrigger value="dinamometro" className="flex items-center gap-2">
+                      <Gauge className="w-4 h-4" />
+                      Dinamômetro
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Checklist Entrada */}
+                  <TabsContent value="entrada" className="mt-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[
+                        { key: "nivelOleo", label: "Nível de Óleo" },
+                        { key: "nivelAgua", label: "Nível de Água" },
+                        { key: "freios", label: "Freios" },
+                        { key: "pneus", label: "Pneus" },
+                        { key: "luzes", label: "Luzes" },
+                        { key: "bateria", label: "Bateria" },
+                        { key: "correia", label: "Correia" },
+                        { key: "suspensao", label: "Suspensão" },
+                      ].map((item) => (
+                        <div key={item.key} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`entrada-${item.key}`}
+                            checked={checklistEntrada[item.key as keyof typeof checklistEntrada]}
+                            onCheckedChange={(checked) =>
+                              setChecklistEntrada({ ...checklistEntrada, [item.key]: checked === true })
+                            }
+                          />
+                          <label
+                            htmlFor={`entrada-${item.key}`}
+                            className="text-sm font-medium leading-none cursor-pointer"
+                          >
+                            {item.label}
+                          </label>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </TabsContent>
+
+                  {/* Checklist Dinamômetro */}
+                  <TabsContent value="dinamometro" className="mt-4 space-y-6">
+                    {/* Antes de subir no rolo */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <Activity className="w-4 h-4" />
+                        Antes de subir no rolo
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                        {[
+                          { key: "combustivelAdequado", label: "Combustível adequado (octanagem confirmada)" },
+                          { key: "oleoNivel", label: "Óleo no nível correto" },
+                          { key: "arrefecimentoOk", label: "Sistema de arrefecimento ok" },
+                          { key: "pneusCalibrados", label: "Pneus calibrados" },
+                          { key: "correiasPolias", label: "Correias e polias revisadas" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`dyno-${item.key}`}
+                              checked={checklistDyno[item.key as keyof typeof checklistDyno]}
+                              onCheckedChange={(checked) =>
+                                setChecklistDyno({ ...checklistDyno, [item.key]: checked === true })
+                              }
+                            />
+                            <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Eletrônica */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <Zap className="w-4 h-4" />
+                        Eletrônica
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                        {[
+                          { key: "scannerSemFalhas", label: "Scanner sem falhas críticas" },
+                          { key: "monitorarIAT", label: "Monitorar IAT" },
+                          { key: "monitorarEGT", label: "Monitorar EGT (se aplicável)" },
+                          { key: "pressaoCombustivel", label: "Pressão de combustível" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`dyno-${item.key}`}
+                              checked={checklistDyno[item.key as keyof typeof checklistDyno]}
+                              onCheckedChange={(checked) =>
+                                setChecklistDyno({ ...checklistDyno, [item.key]: checked === true })
+                              }
+                            />
+                            <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Durante os pulls */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <Gauge className="w-4 h-4" />
+                        Durante os pulls
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                        {[
+                          { key: "afrEstavel", label: "AFR estável" },
+                          { key: "knockControl", label: "Knock control ativo?" },
+                          { key: "pressaoTurbo", label: "Pressão de turbo dentro do esperado" },
+                          { key: "temperaturaControle", label: "Temperatura sob controle" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`dyno-${item.key}`}
+                              checked={checklistDyno[item.key as keyof typeof checklistDyno]}
+                              onCheckedChange={(checked) =>
+                                setChecklistDyno({ ...checklistDyno, [item.key]: checked === true })
+                              }
+                            />
+                            <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Pós-dyno */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <ClipboardCheck className="w-4 h-4" />
+                        Pós-dyno
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                        {[
+                          { key: "verificarVazamentos", label: "Verificar vazamentos" },
+                          { key: "lerFalhasPosTest", label: "Ler falhas pós-teste" },
+                          { key: "analisarCurva", label: "Analisar curva de potência" },
+                          { key: "compararBaseline", label: "Comparar baseline x final" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`dyno-${item.key}`}
+                              checked={checklistDyno[item.key as keyof typeof checklistDyno]}
+                              onCheckedChange={(checked) =>
+                                setChecklistDyno({ ...checklistDyno, [item.key]: checked === true })
+                              }
+                            />
+                            <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Resultado */}
+                    <div className="space-y-3 border-t border-border pt-4">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        📌 Resultado: antes e depois
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Potência Antes (cv)</label>
+                          <Input
+                            type="number"
+                            placeholder="___"
+                            value={dynoResults.potenciaAntes}
+                            onChange={(e) => setDynoResults({ ...dynoResults, potenciaAntes: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Potência Depois (cv)</label>
+                          <Input
+                            type="number"
+                            placeholder="___"
+                            value={dynoResults.potenciaDepois}
+                            onChange={(e) => setDynoResults({ ...dynoResults, potenciaDepois: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Torque Antes (kgfm)</label>
+                          <Input
+                            type="number"
+                            placeholder="___"
+                            value={dynoResults.torqueAntes}
+                            onChange={(e) => setDynoResults({ ...dynoResults, torqueAntes: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Torque Depois (kgfm)</label>
+                          <Input
+                            type="number"
+                            placeholder="___"
+                            value={dynoResults.torqueDepois}
+                            onChange={(e) => setDynoResults({ ...dynoResults, torqueDepois: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      {dynoResults.potenciaAntes && dynoResults.potenciaDepois && (
+                        <div className="p-3 bg-primary/10 rounded-lg">
+                          <p className="text-sm font-medium">
+                            Ganho: {(Number(dynoResults.potenciaDepois) - Number(dynoResults.potenciaAntes)).toFixed(1)} cv
+                            {dynoResults.torqueAntes && dynoResults.torqueDepois && (
+                              <> | {(Number(dynoResults.torqueDepois) - Number(dynoResults.torqueAntes)).toFixed(1)} kgfm</>
+                            )}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </CollapsibleContent>
           </Card>
