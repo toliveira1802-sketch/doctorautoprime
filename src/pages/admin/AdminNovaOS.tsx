@@ -1,25 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Search, Plus, User, Car, Loader2 } from "lucide-react";
+import { Search, Plus, User, Car, Loader2, FileText } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -40,22 +25,16 @@ interface ClientWithVehicle {
   name: string;
   phone: string;
   plate: string;
+  model?: string;
+  brand?: string;
   vehicle_id: string;
 }
-
-const timeSlots = [
-  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
-  "11:00", "11:30", "13:00", "13:30", "14:00", "14:30",
-  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
-];
 
 export default function AdminNovaOS() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState<ClientWithVehicle | null>(null);
-  const [date, setDate] = useState<Date>();
-  const [time, setTime] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,6 +76,8 @@ export default function AdminNovaOS() {
               name: profile.full_name || "Sem nome",
               phone: profile.phone || "",
               plate: vehicle.plate,
+              model: vehicle.model,
+              brand: vehicle.brand || "",
               vehicle_id: vehicle.id,
             });
           }
@@ -142,15 +123,9 @@ export default function AdminNovaOS() {
     setIsCreatingClient(true);
 
     try {
-      // Get current user to use as admin creating the client
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Create a temporary user_id for the client (in a real scenario, you'd create an auth user)
-      // For now, we'll use the admin's user_id and create the profile/vehicle
-      // This is a simplified approach - ideally you'd have a proper user creation flow
-      
-      // First check if there's an existing profile with this phone
       const { data: existingProfile } = await supabase
         .from("profiles")
         .select("id, user_id")
@@ -164,14 +139,11 @@ export default function AdminNovaOS() {
         userId = existingProfile.user_id;
         profileId = existingProfile.id;
         
-        // Update the profile name if needed
         await supabase
           .from("profiles")
           .update({ full_name: newClientName })
           .eq("id", profileId);
       } else {
-        // For admin-created clients without auth, we'll use a generated UUID
-        // In production, you might want to invite the user via email/SMS
         userId = crypto.randomUUID();
         
         const { data: newProfile, error: profileError } = await supabase
@@ -190,7 +162,6 @@ export default function AdminNovaOS() {
 
       let vehicleId = "";
 
-      // Create vehicle if plate is provided
       if (newClientPlate.trim()) {
         const { data: newVehicle, error: vehicleError } = await supabase
           .from("vehicles")
@@ -206,20 +177,18 @@ export default function AdminNovaOS() {
         vehicleId = newVehicle.id;
       }
 
-      // Refresh the clients list
       await queryClient.invalidateQueries({ queryKey: ["admin-clients-vehicles"] });
 
-      // Auto-select the new client
       setSelectedClient({
         id: `${profileId}-${vehicleId}`,
         user_id: userId,
         name: newClientName,
         phone: newClientPhone,
         plate: newClientPlate || "Sem veículo",
+        model: newClientModel,
         vehicle_id: vehicleId,
       });
 
-      // Close dialog and reset form
       setShowNewClientDialog(false);
       setNewClientName("");
       setNewClientPhone("");
@@ -240,34 +209,25 @@ export default function AdminNovaOS() {
       toast.error("Selecione um cliente");
       return;
     }
-    if (!date) {
-      toast.error("Selecione uma data");
-      return;
-    }
-    if (!time) {
-      toast.error("Selecione um horário");
-      return;
-    }
 
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("appointments").insert({
+      const { error } = await supabase.from("appointments").insert([{
         user_id: selectedClient.user_id,
         vehicle_id: selectedClient.vehicle_id || null,
-        appointment_date: format(date, "yyyy-MM-dd"),
-        appointment_time: time,
+        appointment_date: new Date().toISOString().split('T')[0],
         notes: notes || null,
-        status: "pendente",
-      });
+        status: "confirmado" as const,
+      }]);
 
       if (error) throw error;
 
-      toast.success("OS criada com sucesso!");
+      toast.success("OS aberta com sucesso!");
       navigate("/admin/agendamentos");
     } catch (error) {
       console.error("Error creating OS:", error);
-      toast.error("Erro ao criar OS. Tente novamente.");
+      toast.error("Erro ao abrir OS. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -278,185 +238,163 @@ export default function AdminNovaOS() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Nova OS</h1>
-          <Button
-            variant="outline"
-            onClick={() => setShowNewClientDialog(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Cliente
-          </Button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Cliente */}
-          <Card className="bg-card/50 border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <User className="w-5 h-5" />
-                Cliente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {selectedClient ? (
-                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <div className="flex items-center justify-between">
+        {/* Cliente Card - Expanded */}
+        <Card className="bg-card/50 border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <User className="w-5 h-5" />
+              Cliente
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowNewClientDialog(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Cliente
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {selectedClient ? (
+              <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
                     <div>
-                      <p className="font-medium text-foreground">{selectedClient.name}</p>
+                      <p className="font-semibold text-foreground text-lg">{selectedClient.name}</p>
                       <p className="text-sm text-muted-foreground">{selectedClient.phone}</p>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Car className="w-3 h-3" /> {selectedClient.plate}
-                      </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedClient(null)}
-                    >
-                      Trocar
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar por nome, telefone ou placa..."
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setIsSearching(true);
-                      }}
-                      onFocus={() => setIsSearching(true)}
-                      className="pl-10"
-                    />
-                  </div>
-
-                  {isSearching && searchQuery && (
-                    <div className="border border-border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
-                      {filteredClients.length > 0 ? (
-                        filteredClients.map((client) => (
-                          <button
-                            key={client.id}
-                            onClick={() => handleSelectClient(client)}
-                            className="w-full p-3 text-left hover:bg-muted/50 border-b border-border last:border-0 transition-colors"
-                          >
-                            <p className="font-medium text-foreground">{client.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {client.phone} • {client.plate}
-                            </p>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="p-4 text-center">
-                          <p className="text-muted-foreground text-sm">Nenhum cliente encontrado</p>
-                          <Button 
-                            variant="link" 
-                            size="sm" 
-                            className="mt-2"
-                            onClick={() => setShowNewClientDialog(true)}
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Cadastrar novo cliente
-                          </Button>
-                        </div>
-                      )}
+                    <div className="flex items-center gap-2 p-2 bg-background/50 rounded-lg">
+                      <Car className="w-4 h-4 text-primary" />
+                      <div>
+                        <p className="font-medium text-foreground">{selectedClient.plate}</p>
+                        {selectedClient.model && (
+                          <p className="text-xs text-muted-foreground">
+                            {selectedClient.brand} {selectedClient.model}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedClient(null)}
+                  >
+                    Trocar
+                  </Button>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Data e Hora */}
-          <Card className="bg-card/50 border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <CalendarIcon className="w-5 h-5" />
-                Data e Hora
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Data</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP", { locale: ptBR }) : "Selecionar data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
               </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome, telefone ou placa..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setIsSearching(true);
+                    }}
+                    onFocus={() => setIsSearching(true)}
+                    className="pl-10 h-12 text-base"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label>Horário</Label>
-                <Select value={time} onValueChange={setTime}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecionar horário" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map((slot) => (
-                      <SelectItem key={slot} value={slot}>
-                        {slot}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isSearching && searchQuery && (
+                  <div className="border border-border rounded-lg overflow-hidden max-h-80 overflow-y-auto">
+                    {filteredClients.length > 0 ? (
+                      filteredClients.map((client) => (
+                        <button
+                          key={client.id}
+                          onClick={() => handleSelectClient(client)}
+                          className="w-full p-4 text-left hover:bg-muted/50 border-b border-border last:border-0 transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-foreground">{client.name}</p>
+                              <p className="text-sm text-muted-foreground">{client.phone}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-mono text-sm text-foreground">{client.plate}</p>
+                              {client.model && (
+                                <p className="text-xs text-muted-foreground">{client.model}</p>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-6 text-center">
+                        <p className="text-muted-foreground">Nenhum cliente encontrado</p>
+                        <Button 
+                          variant="link" 
+                          className="mt-2"
+                          onClick={() => setShowNewClientDialog(true)}
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Cadastrar novo cliente
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!isSearching && !searchQuery && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Digite para buscar um cliente existente ou cadastre um novo
+                  </p>
+                )}
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Observações */}
-          <Card className="bg-card/50 border-border/50 md:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-lg">Observações</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Observações iniciais (opcional)..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="min-h-[120px]"
-              />
-            </CardContent>
-          </Card>
-        </div>
+        {/* Observações */}
+        <Card className="bg-card/50 border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <FileText className="w-5 h-5" />
+              Observações Iniciais
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder="Descreva o problema relatado pelo cliente, sintomas do veículo, etc..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="min-h-[150px]"
+            />
+          </CardContent>
+        </Card>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-end">
+        <div className="flex gap-3">
           <Button
-            variant="outline"
-            onClick={() => navigate("/admin/agendamentos")}
-            disabled={isSubmitting}
+            onClick={handleSubmit}
+            disabled={isSubmitting || !selectedClient}
+            className="flex-1 h-14 text-lg gradient-primary"
           >
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Criando...
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Abrindo...
               </>
             ) : (
-              "Criar OS"
+              <>
+                <FileText className="w-5 h-5 mr-2" />
+                Abrir OS
+              </>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin")}
+            disabled={isSubmitting}
+            className="h-14"
+          >
+            Cancelar
           </Button>
         </div>
       </div>
@@ -502,7 +440,7 @@ export default function AdminNovaOS() {
                   <Label htmlFor="model">Modelo</Label>
                   <Input
                     id="model"
-                    placeholder="Ex: Civic, Corolla..."
+                    placeholder="Ex: Civic 2020"
                     value={newClientModel}
                     onChange={(e) => setNewClientModel(e.target.value)}
                   />
@@ -522,7 +460,7 @@ export default function AdminNovaOS() {
               {isCreatingClient ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Salvando...
+                  Cadastrando...
                 </>
               ) : (
                 "Cadastrar"
