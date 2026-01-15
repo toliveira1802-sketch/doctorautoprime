@@ -28,13 +28,43 @@ const roleConfig = {
   },
 };
 
+// Escudo do Corinthians em SVG
+function CorinthiansShield({ className }: { className?: string }) {
+  return (
+    <svg 
+      viewBox="0 0 100 120" 
+      className={className}
+      fill="none"
+    >
+      {/* Forma do escudo */}
+      <path 
+        d="M50 5 L95 20 L95 70 Q95 100 50 115 Q5 100 5 70 L5 20 Z" 
+        fill="#000000" 
+        stroke="#ffffff" 
+        strokeWidth="3"
+      />
+      {/* Âncoras (símbolo náutico do Corinthians) */}
+      <path 
+        d="M50 25 L50 85 M35 40 L65 40 M30 75 Q50 90 70 75" 
+        stroke="#ffffff" 
+        strokeWidth="4" 
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Detalhes da âncora */}
+      <circle cx="50" cy="25" r="5" fill="#ffffff" />
+      <path d="M35 80 L40 70 M65 80 L60 70" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // Componente especial da badge do Dev Corinthiano
 function DevBadge() {
   return (
     <div className="relative group">
       {/* Badge com listras do Corinthians */}
       <div 
-        className="relative overflow-hidden rounded-full px-3 py-1 flex items-center gap-1.5 border-2 border-black shadow-lg hover:scale-105 transition-transform cursor-default"
+        className="relative overflow-hidden rounded-full px-2.5 py-1 flex items-center gap-1.5 border-2 border-black shadow-lg hover:scale-105 transition-transform cursor-default"
         style={{
           background: `repeating-linear-gradient(
             90deg,
@@ -46,19 +76,23 @@ function DevBadge() {
         }}
       >
         {/* Overlay escuro para legibilidade */}
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-black/50" />
         
-        {/* Conteúdo */}
-        <Crown className="h-3.5 w-3.5 text-white relative z-10 drop-shadow-lg" />
-        <span className="text-xs font-bold text-white relative z-10 drop-shadow-lg tracking-wide">
-          DEV
+        {/* Escudo do Corinthians */}
+        <CorinthiansShield className="h-5 w-4 relative z-10 drop-shadow-lg" />
+        
+        {/* Texto */}
+        <span className="text-xs font-bold text-white relative z-10 drop-shadow-lg tracking-wide uppercase">
+          Dev
         </span>
+        
+        {/* Águia */}
         <span className="relative z-10 text-sm">🦅</span>
       </div>
       
       {/* Efeito de brilho animado */}
       <div 
-        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{
           background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`,
           animation: 'shimmer 2s infinite',
@@ -66,7 +100,7 @@ function DevBadge() {
       />
       
       {/* Tooltip no hover */}
-      <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+      <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
         <span className="text-[10px] bg-black text-white px-2 py-1 rounded shadow-lg">
           Vai Corinthians! 🖤🤍
         </span>
