@@ -69,31 +69,35 @@ const Index = () => {
               href="https://www.instagram.com/doctorauto.prime?igsh=ejRheXE2dzB2NGo%3D&utm_source=qr"
               target="_blank"
               rel="noopener noreferrer"
-              className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
             >
               <Instagram className="h-5 w-5 text-white" />
+              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
             </a>
             <a
               href="https://www.youtube.com/@PerformanceDoctorAuto/shorts"
               target="_blank"
               rel="noopener noreferrer"
-              className="h-12 w-12 rounded-xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
             >
               <Youtube className="h-5 w-5 text-white" />
+              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
             </a>
             <a
               href="https://www.tiktok.com/@doctorauto.prime"
               target="_blank"
               rel="noopener noreferrer"
-              className="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
             >
               <TikTokIcon className="h-5 w-5 text-white" />
+              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
             </a>
             <button
               onClick={() => navigate("/blog")}
-              className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
             >
               <BookOpen className="h-5 w-5 text-white" />
+              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
             </button>
           </div>
         </section>
