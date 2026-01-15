@@ -64,6 +64,8 @@ const operacionalModule: AdminMenuGroup = {
     { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "oficina"] },
     { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "oficina"] },
     { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "oficina"] },
+    { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "oficina"] },
+    { title: "Cronograma", url: "/admin/agenda-mecanicos", icon: ClipboardList, roles: ["admin", "oficina"] },
   ],
 };
 
