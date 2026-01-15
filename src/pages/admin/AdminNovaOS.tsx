@@ -44,7 +44,6 @@ export default function AdminNovaOS() {
   const [selectedClient, setSelectedClient] = useState<typeof mockClients[0] | null>(null);
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState<string>("");
-  const [serviceType, setServiceType] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
@@ -72,10 +71,6 @@ export default function AdminNovaOS() {
     }
     if (!time) {
       toast.error("Selecione um horário");
-      return;
-    }
-    if (!serviceType) {
-      toast.error("Selecione o tipo de serviço");
       return;
     }
 
@@ -222,26 +217,8 @@ export default function AdminNovaOS() {
             </CardContent>
           </Card>
 
-          {/* Tipo de Serviço */}
-          <Card className="bg-card/50 border-border/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Tipo de Serviço</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={serviceType} onValueChange={setServiceType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="revisao">Revisão</SelectItem>
-                  <SelectItem value="diagnostico">Diagnóstico</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-
           {/* Observações */}
-          <Card className="bg-card/50 border-border/50">
+          <Card className="bg-card/50 border-border/50 md:col-span-2">
             <CardHeader>
               <CardTitle className="text-lg">Observações</CardTitle>
             </CardHeader>
@@ -250,7 +227,7 @@ export default function AdminNovaOS() {
                 placeholder="Observações iniciais (opcional)..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[120px]"
               />
             </CardContent>
           </Card>
