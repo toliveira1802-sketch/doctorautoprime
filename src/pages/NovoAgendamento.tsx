@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Info
 } from "lucide-react";
+import { AddVehicleDialog } from "@/components/vehicle/AddVehicleDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -656,7 +657,8 @@ const NovoAgendamento = () => {
           <div className="space-y-4">
             <h2 className="text-lg font-medium text-foreground">Selecione o veículo</h2>
             
-            {mockVehicles.length > 0 && !isNewVehicle && (
+            {/* Veículos cadastrados */}
+            {mockVehicles.length > 0 && (
               <div className="space-y-3">
                 {mockVehicles.map((vehicle) => (
                   <button
@@ -682,7 +684,32 @@ const NovoAgendamento = () => {
               </div>
             )}
 
-            {mockVehicles.length > 0 && (
+            {/* Veículo novo adicionado via dialog */}
+            {isNewVehicle && newVehicleModel && newVehiclePlate && (
+              <div className="glass-card rounded-xl p-4 flex items-center gap-4 ring-2 ring-primary">
+                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Car className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">{newVehicleModel}</p>
+                  <p className="text-sm text-muted-foreground">{newVehiclePlate}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsNewVehicle(false);
+                    setNewVehicleModel("");
+                    setNewVehiclePlate("");
+                    setSelectedVehicle(null);
+                  }}
+                  className="text-xs text-muted-foreground underline"
+                >
+                  Remover
+                </button>
+              </div>
+            )}
+
+            {/* Separador */}
+            {(mockVehicles.length > 0 || (isNewVehicle && newVehicleModel)) && (
               <div className="flex items-center gap-3 py-2">
                 <div className="flex-1 h-px bg-border" />
                 <span className="text-sm text-muted-foreground">ou</span>
@@ -690,50 +717,16 @@ const NovoAgendamento = () => {
               </div>
             )}
 
-            {!isNewVehicle ? (
-              <button
-                onClick={() => {
+            {/* Botão de adicionar novo veículo */}
+            {!isNewVehicle && (
+              <AddVehicleDialog
+                onVehicleAdded={(vehicle) => {
+                  setNewVehicleModel(vehicle.model);
+                  setNewVehiclePlate(vehicle.plate);
                   setIsNewVehicle(true);
                   setSelectedVehicle(null);
                 }}
-                className="w-full glass-card rounded-xl p-4 flex items-center gap-4 border-2 border-dashed border-muted-foreground/30"
-              >
-                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <p className="font-medium text-muted-foreground">Informar outro veículo</p>
-              </button>
-            ) : (
-              <div className="glass-card rounded-xl p-4 space-y-4 ring-2 ring-primary">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                    <Car className="w-5 h-5 text-primary" />
-                  </div>
-                  <p className="font-medium text-foreground">Novo veículo</p>
-                </div>
-                <Input
-                  placeholder="Modelo (ex: VW Golf)"
-                  value={newVehicleModel}
-                  onChange={(e) => setNewVehicleModel(e.target.value)}
-                  className="bg-background/50"
-                />
-                <Input
-                  placeholder="Placa (ex: ABC-1234)"
-                  value={newVehiclePlate}
-                  onChange={(e) => setNewVehiclePlate(e.target.value.toUpperCase())}
-                  className="bg-background/50"
-                />
-                <button
-                  onClick={() => {
-                    setIsNewVehicle(false);
-                    setNewVehicleModel("");
-                    setNewVehiclePlate("");
-                  }}
-                  className="text-sm text-muted-foreground underline"
-                >
-                  Cancelar
-                </button>
-              </div>
+              />
             )}
           </div>
         )}
