@@ -29,13 +29,70 @@ export default function AdminNovaOS() {
     descricao_problema: "",
   });
 
-  // Buscar dados do veículo quando a placa mudar
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+
+  // Busca unificada por placa ou nome do cliente
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    
+    if (query.length < 3) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const { data: osData } = await supabase
+        .from("ordens_servico")
+        .select("id, plate, vehicle, client_name, client_phone, km_atual, created_at")
+        .or(`plate.ilike.%${query}%,client_name.ilike.%${query}%`)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (osData && osData.length > 0) {
+        // Remove duplicatas por placa, mantendo a mais recente
+        const uniqueByPlate = osData.reduce((acc: any[], curr) => {
+          if (!acc.find(item => item.plate === curr.plate)) {
+            acc.push(curr);
+          }
+          return acc;
+        }, []);
+        setSearchResults(uniqueByPlate);
+        setShowResults(true);
+      } else {
+        setSearchResults([]);
+        setShowResults(false);
+      }
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const selectResult = (result: any) => {
+    setFormData({
+      plate: result.plate || "",
+      vehicle: result.vehicle || "",
+      client_name: result.client_name || "",
+      client_phone: result.client_phone || "",
+      km_atual: result.km_atual || "",
+      descricao_problema: "",
+    });
+    setSearchQuery("");
+    setShowResults(false);
+    toast.success("Dados preenchidos!");
+  };
+
+  // Buscar dados do veículo quando a placa mudar (fallback)
   const searchByPlate = async (plateValue: string) => {
     if (plateValue.length < 7) return;
     
     setIsSearching(true);
     try {
-      // Buscar na última OS desse veículo
       const { data: osData } = await supabase
         .from("ordens_servico")
         .select("plate, vehicle, client_name, client_phone, km_atual")
@@ -55,7 +112,7 @@ export default function AdminNovaOS() {
         toast.success("Dados encontrados!");
       }
     } catch {
-      // Silencioso - não encontrou dados anteriores
+      // Silencioso
     } finally {
       setIsSearching(false);
     }
@@ -133,6 +190,58 @@ export default function AdminNovaOS() {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* Busca Rápida */}
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Search className="w-5 h-5" />
+                Busca Rápida
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <Input
+                  placeholder="Buscar por placa ou nome do cliente..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pr-10"
+                />
+                {isSearching ? (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                ) : (
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                )}
+                
+                {/* Resultados da busca */}
+                {showResults && searchResults.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-card border rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {searchResults.map((result) => (
+                      <button
+                        key={result.id}
+                        type="button"
+                        onClick={() => selectResult(result)}
+                        className="w-full px-4 py-3 text-left hover:bg-muted transition-colors border-b last:border-b-0"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-primary">{result.plate}</span>
+                          <span className="text-sm text-muted-foreground">{result.vehicle}</span>
+                        </div>
+                        {result.client_name && (
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {result.client_name} {result.client_phone && `• ${result.client_phone}`}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Digite pelo menos 3 caracteres para buscar
+              </p>
+            </CardContent>
+          </Card>
+
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -144,22 +253,15 @@ export default function AdminNovaOS() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="plate">Placa *</Label>
-                  <div className="relative">
-                    <Input
-                      id="plate"
-                      name="plate"
-                      placeholder="ABC-1234"
-                      value={formData.plate}
-                      onChange={handleChange}
-                      onBlur={handlePlateBlur}
-                      className="uppercase pr-10"
-                    />
-                    {isSearching ? (
-                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-                    ) : (
-                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    )}
-                  </div>
+                  <Input
+                    id="plate"
+                    name="plate"
+                    placeholder="ABC-1234"
+                    value={formData.plate}
+                    onChange={handleChange}
+                    onBlur={handlePlateBlur}
+                    className="uppercase"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="km_atual">KM Atual</Label>
