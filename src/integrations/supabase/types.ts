@@ -1438,9 +1438,12 @@ export type Database = {
         | "concluido"
         | "cancelado"
         | "diagnostico"
+        | "orcamento"
+        | "aguardando_aprovacao"
         | "aguardando_pecas"
         | "pronto_iniciar"
         | "em_execucao"
+        | "em_teste"
         | "pronto_retirada"
       event_type: "workshop" | "meetup" | "carwash" | "training" | "other"
       funnel_step:
@@ -1590,9 +1593,12 @@ export const Constants = {
         "concluido",
         "cancelado",
         "diagnostico",
+        "orcamento",
+        "aguardando_aprovacao",
         "aguardando_pecas",
         "pronto_iniciar",
         "em_execucao",
+        "em_teste",
         "pronto_retirada",
       ],
       event_type: ["workshop", "meetup", "carwash", "training", "other"],

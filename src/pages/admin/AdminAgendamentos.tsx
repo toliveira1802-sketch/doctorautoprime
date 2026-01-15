@@ -37,9 +37,12 @@ const statusConfig: Record<AppointmentStatus, { label: string; color: string }> 
   concluido: { label: "🎉 Concluído", color: "bg-muted text-muted-foreground" },
   cancelado: { label: "❌ Cancelado", color: "bg-destructive/20 text-destructive" },
   diagnostico: { label: "🧠 Diagnóstico", color: "bg-purple-500/20 text-purple-600" },
+  orcamento: { label: "📋 Orçamento", color: "bg-cyan-500/20 text-cyan-600" },
+  aguardando_aprovacao: { label: "⏳ Aguardando Aprovação", color: "bg-yellow-500/20 text-yellow-600" },
   aguardando_pecas: { label: "😤 Aguardando Peças", color: "bg-orange-500/20 text-orange-600" },
   pronto_iniciar: { label: "🫵 Pronto para Iniciar", color: "bg-blue-500/20 text-blue-600" },
   em_execucao: { label: "🛠️ Em Execução", color: "bg-amber-500/20 text-amber-600" },
+  em_teste: { label: "🧪 Em Teste", color: "bg-indigo-500/20 text-indigo-600" },
   pronto_retirada: { label: "💰 Pronto Retirada", color: "bg-emerald-500/20 text-emerald-600" },
 };
 
