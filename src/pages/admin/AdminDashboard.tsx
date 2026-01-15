@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, Users, DollarSign, FileText, Loader2, TrendingUp, X } from "lucide-react";
+import { Calendar, Users, DollarSign, FileText, Loader2, TrendingUp, RotateCcw, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -14,6 +14,8 @@ interface DashboardStats {
   newClientsMonth: number;
   monthlyRevenue: number;
   valueTodayDelivery: number;
+  returnsMonth: number;
+  cancelledMonth: number;
 }
 
 interface TodayAppointment {
@@ -39,6 +41,22 @@ interface ReadyToDeliver {
   valor_final: number;
 }
 
+interface ReturnVehicle {
+  id: string;
+  plate: string;
+  vehicle: string;
+  client_name: string;
+  data_entrega: string;
+}
+
+interface CancelledAppointment {
+  id: string;
+  client_name: string;
+  phone: string;
+  vehicle: string;
+  cancelled_at: string;
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({ 
@@ -46,6 +64,8 @@ const AdminDashboard = () => {
     newClientsMonth: 0,
     monthlyRevenue: 0,
     valueTodayDelivery: 0,
+    returnsMonth: 0,
+    cancelledMonth: 0,
   });
   const [loading, setLoading] = useState(true);
   
@@ -53,11 +73,15 @@ const AdminDashboard = () => {
   const [showAppointments, setShowAppointments] = useState(false);
   const [showNewClients, setShowNewClients] = useState(false);
   const [showReadyToDeliver, setShowReadyToDeliver] = useState(false);
+  const [showReturns, setShowReturns] = useState(false);
+  const [showCancelled, setShowCancelled] = useState(false);
   
   // Data for modals
   const [todayAppointments, setTodayAppointments] = useState<TodayAppointment[]>([]);
   const [newClients, setNewClients] = useState<NewClient[]>([]);
   const [readyToDeliver, setReadyToDeliver] = useState<ReadyToDeliver[]>([]);
+  const [returnVehicles, setReturnVehicles] = useState<ReturnVehicle[]>([]);
+  const [cancelledAppointments, setCancelledAppointments] = useState<CancelledAppointment[]>([]);
   const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
@@ -75,6 +99,8 @@ const AdminDashboard = () => {
         newClientsResult,
         monthlyRevenueResult,
         todayDeliveryResult,
+        returnsResult,
+        cancelledResult,
       ] = await Promise.all([
         supabase
           .from("appointments")
@@ -96,6 +122,21 @@ const AdminDashboard = () => {
           .from("ordens_servico")
           .select("valor_final")
           .eq("status", "pronto_retirada"),
+
+        // Retornos do mês (veículos que já vieram antes)
+        supabase
+          .from("ordens_servico")
+          .select("plate", { count: "exact", head: true })
+          .gte("data_entrada", monthStart)
+          .lte("data_entrada", monthEnd),
+
+        // Agendamentos cancelados do mês
+        supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "cancelado")
+          .gte("appointment_date", monthStart)
+          .lte("appointment_date", monthEnd),
       ]);
 
       const monthlyRevenue = monthlyRevenueResult.data?.reduce((sum, r) => sum + Number(r.valor || 0), 0) || 0;
@@ -106,6 +147,8 @@ const AdminDashboard = () => {
         newClientsMonth: newClientsResult.count || 0,
         monthlyRevenue,
         valueTodayDelivery,
+        returnsMonth: returnsResult.count || 0,
+        cancelledMonth: cancelledResult.count || 0,
       });
 
     } catch (error) {
@@ -191,6 +234,66 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchReturnVehicles = async () => {
+    setModalLoading(true);
+    try {
+      const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
+      const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
+      
+      const { data } = await supabase
+        .from("ordens_servico")
+        .select("id, plate, vehicle, client_name, data_entrada")
+        .gte("data_entrada", monthStart)
+        .lte("data_entrada", monthEnd)
+        .order("data_entrada", { ascending: false });
+
+      setReturnVehicles((data || []).map((os: any) => ({
+        id: os.id,
+        plate: os.plate,
+        vehicle: os.vehicle,
+        client_name: os.client_name || "Cliente",
+        data_entrega: os.data_entrada ? format(new Date(os.data_entrada), "dd/MM/yyyy") : "-",
+      })));
+    } catch (error) {
+      console.error("Error fetching return vehicles:", error);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const fetchCancelledAppointments = async () => {
+    setModalLoading(true);
+    try {
+      const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
+      const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
+      
+      const { data } = await supabase
+        .from("appointments")
+        .select(`
+          id,
+          updated_at,
+          vehicles (model, brand, plate),
+          profiles!appointments_user_id_fkey (full_name, phone)
+        `)
+        .eq("status", "cancelado")
+        .gte("appointment_date", monthStart)
+        .lte("appointment_date", monthEnd)
+        .order("updated_at", { ascending: false });
+
+      setCancelledAppointments((data || []).map((apt: any) => ({
+        id: apt.id,
+        client_name: apt.profiles?.full_name || "Cliente",
+        phone: apt.profiles?.phone || "-",
+        vehicle: apt.vehicles ? `${apt.vehicles.brand || ''} ${apt.vehicles.model} - ${apt.vehicles.plate}`.trim() : "Veículo",
+        cancelled_at: apt.updated_at ? format(new Date(apt.updated_at), "dd/MM/yyyy") : "-",
+      })));
+    } catch (error) {
+      console.error("Error fetching cancelled appointments:", error);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   const handleAppointmentsClick = () => {
     fetchTodayAppointments();
     setShowAppointments(true);
@@ -204,6 +307,16 @@ const AdminDashboard = () => {
   const handleReadyToDeliverClick = () => {
     fetchReadyToDeliver();
     setShowReadyToDeliver(true);
+  };
+
+  const handleReturnsClick = () => {
+    fetchReturnVehicles();
+    setShowReturns(true);
+  };
+
+  const handleCancelledClick = () => {
+    fetchCancelledAppointments();
+    setShowCancelled(true);
   };
 
   const statusLabels: Record<string, string> = {
@@ -324,6 +437,42 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Retorno do Mês */}
+          <Card 
+            className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
+            onClick={handleReturnsClick}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <RotateCcw className="w-6 h-6 text-purple-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{stats.returnsMonth}</p>
+                  <p className="text-sm text-muted-foreground">Retorno do Mês</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Agendamentos Cancelados */}
+          <Card 
+            className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
+            onClick={handleCancelledClick}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+                  <XCircle className="w-6 h-6 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{stats.cancelledMonth}</p>
+                  <p className="text-sm text-muted-foreground">Cancelados (Mês)</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -433,6 +582,78 @@ const AdminDashboard = () => {
               </div>
             ) : (
               <p className="text-center py-8 text-muted-foreground">Nenhum veículo pronto para retirada</p>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Retorno do Mês */}
+      <Dialog open={showReturns} onOpenChange={setShowReturns}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RotateCcw className="w-5 h-5 text-purple-500" />
+              Retornos do Mês
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            {modalLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : returnVehicles.length > 0 ? (
+              <div className="space-y-3">
+                {returnVehicles.map((rv) => (
+                  <div key={rv.id} className="p-3 rounded-lg bg-muted/50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-mono font-bold text-primary">{rv.plate}</p>
+                        <p className="text-sm text-muted-foreground">{rv.vehicle}</p>
+                        <p className="text-xs text-muted-foreground">{rv.client_name}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{rv.data_entrega}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground">Nenhum retorno este mês</p>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Agendamentos Cancelados */}
+      <Dialog open={showCancelled} onOpenChange={setShowCancelled}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-500" />
+              Agendamentos Cancelados
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            {modalLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : cancelledAppointments.length > 0 ? (
+              <div className="space-y-3">
+                {cancelledAppointments.map((ca) => (
+                  <div key={ca.id} className="p-3 rounded-lg bg-muted/50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{ca.client_name}</p>
+                        <p className="text-sm text-muted-foreground">{ca.phone}</p>
+                        <p className="text-xs text-muted-foreground">{ca.vehicle}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{ca.cancelled_at}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground">Nenhum cancelamento este mês</p>
             )}
           </ScrollArea>
         </DialogContent>
