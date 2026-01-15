@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_clicks: {
+        Row: {
+          action: string
+          alert_id: string
+          clicked_at: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          action?: string
+          alert_id: string
+          clicked_at?: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          alert_id?: string
+          clicked_at?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_clicks_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           alert_type: Database["public"]["Enums"]["alert_type"]
