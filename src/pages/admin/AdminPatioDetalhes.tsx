@@ -91,13 +91,13 @@ const statusOrder: OSStatus[] = [
   "concluido",
 ];
 
-const AdminOSDetalhes = () => {
+const AdminPatioDetalhes = () => {
   const navigate = useNavigate();
-  const { osId } = useParams();
+  const { patioId } = useParams();
 
   // Mock data - será substituído por dados reais
-  const [os, setOs] = useState({
-    id: osId,
+  const [patio, setPatio] = useState({
+    id: patioId,
     status: "diagnostico" as OSStatus,
     client: {
       name: "João Silva",
@@ -119,8 +119,8 @@ const AdminOSDetalhes = () => {
     ],
   });
 
-  const [notes, setNotes] = useState(os.notes);
-  const [trelloWebhook, setTrelloWebhook] = useState(os.trelloWebhook);
+  const [notes, setNotes] = useState(patio.notes);
+  const [trelloWebhook, setTrelloWebhook] = useState(patio.trelloWebhook);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleStatusChange = async (newStatus: OSStatus) => {
@@ -131,7 +131,7 @@ const AdminOSDetalhes = () => {
     
     const timestamp = new Date().toLocaleString("pt-BR");
     
-    setOs((prev) => ({
+    setPatio((prev) => ({
       ...prev,
       status: newStatus,
       statusHistory: [
@@ -148,11 +148,11 @@ const AdminOSDetalhes = () => {
           headers: { "Content-Type": "application/json" },
           mode: "no-cors",
           body: JSON.stringify({
-            osId: os.id,
+            patioId: patio.id,
             newStatus,
             statusLabel: statusConfig[newStatus].label,
-            vehicle: `${os.vehicle.brand} ${os.vehicle.model} - ${os.vehicle.plate}`,
-            client: os.client.name,
+            vehicle: `${patio.vehicle.brand} ${patio.vehicle.model} - ${patio.vehicle.plate}`,
+            client: patio.client.name,
             timestamp,
           }),
         });
@@ -171,7 +171,7 @@ const AdminOSDetalhes = () => {
   const handleSaveNotes = async () => {
     setIsSaving(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
-    setOs((prev) => ({ ...prev, notes }));
+    setPatio((prev) => ({ ...prev, notes }));
     toast.success("Observações salvas!");
     setIsSaving(false);
   };
@@ -179,16 +179,16 @@ const AdminOSDetalhes = () => {
   const handleSaveTrelloWebhook = async () => {
     setIsSaving(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
-    setOs((prev) => ({ ...prev, trelloWebhook }));
+    setPatio((prev) => ({ ...prev, trelloWebhook }));
     toast.success("Webhook do Trello configurado!");
     setIsSaving(false);
   };
 
   const getTimelineSteps = (): TimelineStep[] => {
-    const currentIndex = statusOrder.indexOf(os.status);
+    const currentIndex = statusOrder.indexOf(patio.status);
     
     return statusOrder.map((status, index) => {
-      const historyEntry = os.statusHistory.find((h) => h.status === status);
+      const historyEntry = patio.statusHistory.find((h) => h.status === status);
       
       return {
         id: status,
@@ -215,14 +215,14 @@ const AdminOSDetalhes = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground">OS #{os.id?.slice(0, 8)}</h1>
-            <p className="text-sm text-muted-foreground">Criada em {os.createdAt}</p>
+            <h1 className="text-2xl font-bold text-foreground">Pátio #{patio.id?.slice(0, 8)}</h1>
+            <p className="text-sm text-muted-foreground">Criada em {patio.createdAt}</p>
           </div>
           <div className={cn(
             "px-4 py-2 rounded-full text-sm font-medium border",
-            statusConfig[os.status].color
+            statusConfig[patio.status].color
           )}>
-            {statusConfig[os.status].label}
+            {statusConfig[patio.status].label}
           </div>
         </div>
 
@@ -240,18 +240,18 @@ const AdminOSDetalhes = () => {
                       Cliente
                     </h3>
                     <div className="space-y-2 text-sm">
-                      <p className="font-medium text-foreground">{os.client.name}</p>
+                      <p className="font-medium text-foreground">{patio.client.name}</p>
                       <p className="text-muted-foreground flex items-center gap-2">
                         <Phone className="w-3 h-3" />
-                        {os.client.phone}
+                        {patio.client.phone}
                       </p>
-                      <p className="text-muted-foreground">CPF: {os.client.cpf}</p>
+                      <p className="text-muted-foreground">CPF: {patio.client.cpf}</p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        window.open(`https://wa.me/55${os.client.phone.replace(/\D/g, "")}`, "_blank");
+                        window.open(`https://wa.me/55${patio.client.phone.replace(/\D/g, "")}`, "_blank");
                       }}
                     >
                       <MessageSquare className="w-4 h-4 mr-2" />
@@ -267,11 +267,11 @@ const AdminOSDetalhes = () => {
                     </h3>
                     <div className="space-y-2 text-sm">
                       <p className="font-medium text-foreground">
-                        {os.vehicle.brand} {os.vehicle.model}
+                        {patio.vehicle.brand} {patio.vehicle.model}
                       </p>
-                      <p className="text-muted-foreground">Placa: {os.vehicle.plate}</p>
+                      <p className="text-muted-foreground">Placa: {patio.vehicle.plate}</p>
                       <p className="text-muted-foreground">
-                        Ano: {os.vehicle.year} • Cor: {os.vehicle.color}
+                        Ano: {patio.vehicle.year} • Cor: {patio.vehicle.color}
                       </p>
                     </div>
                   </div>
@@ -284,7 +284,7 @@ const AdminOSDetalhes = () => {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Clock className="w-5 h-5 text-primary" />
-                  Timeline da OS
+                  Timeline do Pátio
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0">
@@ -382,7 +382,7 @@ const AdminOSDetalhes = () => {
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-4">
                 <Select
-                  value={os.status}
+                  value={patio.status}
                   onValueChange={(value) => handleStatusChange(value as OSStatus)}
                   disabled={isSaving}
                 >
@@ -402,13 +402,13 @@ const AdminOSDetalhes = () => {
                   {statusOrder.map((status) => (
                     <Button
                       key={status}
-                      variant={os.status === status ? "default" : "outline"}
+                      variant={patio.status === status ? "default" : "outline"}
                       size="sm"
                       onClick={() => handleStatusChange(status)}
-                      disabled={isSaving || os.status === status}
+                      disabled={isSaving || patio.status === status}
                       className={cn(
                         "text-xs h-auto py-2 px-3",
-                        os.status === status && "gradient-primary"
+                        patio.status === status && "gradient-primary"
                       )}
                     >
                       {statusConfig[status].icon}
@@ -460,7 +460,7 @@ const AdminOSDetalhes = () => {
               </CardHeader>
               <CardContent className="p-6 pt-0">
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {os.statusHistory.slice().reverse().map((entry, index) => (
+                  {patio.statusHistory.slice().reverse().map((entry, index) => (
                     <div 
                       key={index} 
                       className="flex items-start gap-3 text-sm border-b border-border/50 pb-3 last:border-0"
@@ -486,4 +486,4 @@ const AdminOSDetalhes = () => {
   );
 };
 
-export default AdminOSDetalhes;
+export default AdminPatioDetalhes;

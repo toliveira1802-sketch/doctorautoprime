@@ -147,8 +147,8 @@ const AdminAgendamentos = () => {
     handleStatusChange(id, "concluido");
   };
 
-  const handleViewOS = (id: string) => {
-    navigate(`/admin/os/${id}`);
+  const handleViewPatio = (id: string) => {
+    navigate(`/admin/patio/${id}`);
   };
 
   return (
@@ -283,7 +283,7 @@ const AdminAgendamentos = () => {
                           size="sm"
                           variant="outline"
                           className="flex-1"
-                          onClick={() => handleViewOS(apt.id)}
+                          onClick={() => handleViewPatio(apt.id)}
                         >
                           <Eye className="w-4 h-4 mr-1" />
                           Ver Pátio
