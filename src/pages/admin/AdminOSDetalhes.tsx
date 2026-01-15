@@ -63,7 +63,16 @@ interface OrdemServicoItem {
   valor_venda_sugerido: number | null;
   margem_aplicada: number | null;
   justificativa_desconto: string | null;
+  prioridade: 'verde' | 'amarelo' | 'vermelho' | null;
+  data_retorno_estimada: string | null;
 }
+
+// Configuração de prioridade/criticidade
+const prioridadeConfig: Record<string, { label: string; borderColor: string; bgColor: string }> = {
+  verde: { label: "Tranquilo", borderColor: "border-green-500", bgColor: "bg-green-500/5" },
+  amarelo: { label: "Médio", borderColor: "border-yellow-500", bgColor: "bg-yellow-500/5" },
+  vermelho: { label: "Imediato", borderColor: "border-red-500", bgColor: "bg-red-500/5" },
+};
 
 interface OrdemServico {
   id: string;
@@ -91,9 +100,12 @@ interface OrdemServico {
   checklist_precompra: Record<string, boolean> | null;
   fotos_entrada: string[] | null;
   km_atual: string | null;
-  // Optional fields that may not exist in DB yet
   google_drive_link?: string | null;
   scanner_avarias?: string | null;
+  enviado_gestao?: boolean;
+  enviado_gestao_em?: string | null;
+  remarketing_status?: string;
+  remarketing_data_prevista?: string | null;
 }
 
 const loyaltyBadgeConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
@@ -131,14 +143,24 @@ export default function AdminOSDetalhes() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedOS, setEditedOS] = useState<Partial<OrdemServico>>({});
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
+  const [showAddMaoDeObraDialog, setShowAddMaoDeObraDialog] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const [newItem, setNewItem] = useState({
     descricao: "",
-    tipo: "servico",
+    tipo: "peca",
     quantidade: 1,
     valor_custo: 0,
-    margem: 40, // default 40%
-    valor_unitario: 0, // será o valor de venda final
+    margem: 40,
+    valor_unitario: 0,
+    prioridade: "amarelo" as 'verde' | 'amarelo' | 'vermelho',
+    data_retorno_estimada: "",
+  });
+  const [newMaoDeObra, setNewMaoDeObra] = useState({
+    descricao: "",
+    quantidade: 1,
+    valor_unitario: 0,
+    prioridade: "amarelo" as 'verde' | 'amarelo' | 'vermelho',
+    data_retorno_estimada: "",
   });
   const [showJustificativaDialog, setShowJustificativaDialog] = useState(false);
   const [pendingItem, setPendingItem] = useState<typeof newItem | null>(null);
@@ -234,7 +256,7 @@ export default function AdminOSDetalhes() {
     },
   });
 
-  // Add item mutation
+  // Add item mutation (peças)
   const addItemMutation = useMutation({
     mutationFn: async (item: typeof newItem & { justificativa?: string }) => {
       const valor_venda_sugerido = item.valor_custo * (1 + item.margem / 100) * item.quantidade;
@@ -257,6 +279,8 @@ export default function AdminOSDetalhes() {
           margem_aplicada: margem_real,
           justificativa_desconto: item.justificativa || null,
           status: "pendente",
+          prioridade: item.prioridade,
+          data_retorno_estimada: item.data_retorno_estimada || null,
         }]);
       if (error) throw error;
     },
@@ -265,13 +289,49 @@ export default function AdminOSDetalhes() {
       recalculateTotal();
       toast.success("Item adicionado!");
       setShowAddItemDialog(false);
-      setNewItem({ descricao: "", tipo: "servico", quantidade: 1, valor_custo: 0, margem: 40, valor_unitario: 0 });
+      setNewItem({ descricao: "", tipo: "peca", quantidade: 1, valor_custo: 0, margem: 40, valor_unitario: 0, prioridade: "amarelo", data_retorno_estimada: "" });
       setJustificativa("");
       setPendingItem(null);
     },
     onError: (error) => {
       console.error("Error adding item:", error);
       toast.error("Erro ao adicionar item");
+    },
+  });
+
+  // Add mão de obra mutation (sem custo)
+  const addMaoDeObraMutation = useMutation({
+    mutationFn: async (item: typeof newMaoDeObra) => {
+      const valor_total = item.valor_unitario * item.quantidade;
+      
+      const { error } = await supabase
+        .from("ordens_servico_itens")
+        .insert([{
+          ordem_servico_id: osId,
+          descricao: item.descricao,
+          tipo: "mao_de_obra",
+          quantidade: item.quantidade,
+          valor_custo: 0,
+          valor_venda_sugerido: item.valor_unitario,
+          valor_unitario: item.valor_unitario,
+          valor_total,
+          margem_aplicada: 100,
+          status: "pendente",
+          prioridade: item.prioridade,
+          data_retorno_estimada: item.data_retorno_estimada || null,
+        }]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ordem-servico-itens", osId] });
+      recalculateTotal();
+      toast.success("Mão de obra adicionada!");
+      setShowAddMaoDeObraDialog(false);
+      setNewMaoDeObra({ descricao: "", quantidade: 1, valor_unitario: 0, prioridade: "amarelo", data_retorno_estimada: "" });
+    },
+    onError: (error) => {
+      console.error("Error adding mão de obra:", error);
+      toast.error("Erro ao adicionar mão de obra");
     },
   });
 
@@ -958,10 +1018,16 @@ export default function AdminOSDetalhes() {
                   <DollarSign className="w-5 h-5" />
                   Itens do Orçamento
                 </CardTitle>
-                <Button size="sm" onClick={() => setShowAddItemDialog(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Item
-                </Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setShowAddMaoDeObraDialog(true)}>
+                    <Wrench className="w-4 h-4 mr-2" />
+                    Mão de Obra
+                  </Button>
+                  <Button size="sm" onClick={() => setShowAddItemDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Item (Peça)
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {itens.length === 0 ? (
@@ -979,41 +1045,49 @@ export default function AdminOSDetalhes() {
                 ) : (
                   <div className="space-y-6">
                     {/* Mão de Obra Section */}
-                    {itens.filter(i => i.tipo === "servico").length > 0 && (
+                    {itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").length > 0 && (
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 pb-2 border-b border-border">
                           <Wrench className="w-4 h-4 text-primary" />
                           <h4 className="font-semibold text-sm text-primary">MÃO DE OBRA</h4>
                           <Badge variant="secondary" className="ml-auto text-xs">
-                            {itens.filter(i => i.tipo === "servico").length} itens
+                            {itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").length} itens
                           </Badge>
                         </div>
-                        {itens.filter(i => i.tipo === "servico").map((item) => {
+                        {itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").map((item) => {
                           const itemStatus = itemStatusConfig[item.status] || itemStatusConfig.pendente;
+                          const prioridadeCfg = prioridadeConfig[item.prioridade || 'amarelo'];
                           return (
                             <div
                               key={item.id}
                               className={cn(
-                                "flex items-start justify-between p-4 rounded-lg border",
-                                item.status === "recusado" && "bg-red-500/5 border-red-500/20",
-                                item.status === "aprovado" && "bg-green-500/5 border-green-500/20"
+                                "flex items-start justify-between p-4 rounded-lg border-2",
+                                prioridadeCfg.borderColor,
+                                prioridadeCfg.bgColor,
+                                item.status === "recusado" && "opacity-60"
                               )}
                             >
                               <div className="flex-1 space-y-1">
-                                <span className="font-medium">{item.descricao}</span>
-                                <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                                  <span>Custo: {formatCurrency(item.valor_custo || 0)}</span>
-                                  <span>Venda: {formatCurrency(item.valor_unitario)}</span>
-                                  <span className={cn(
-                                    "font-medium",
-                                    (item.margem_aplicada || 0) < MARGEM_MINIMA ? "text-red-600" : "text-green-600"
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{item.descricao}</span>
+                                  <Badge variant="outline" className={cn(
+                                    "text-[10px] px-1.5",
+                                    item.prioridade === 'vermelho' && "border-red-500 text-red-600",
+                                    item.prioridade === 'amarelo' && "border-yellow-500 text-yellow-600",
+                                    item.prioridade === 'verde' && "border-green-500 text-green-600"
                                   )}>
-                                    Margem: {(item.margem_aplicada || 0).toFixed(0)}%
-                                  </span>
+                                    {prioridadeCfg.label}
+                                  </Badge>
                                 </div>
                                 <div className="text-sm font-medium">
                                   {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
                                 </div>
+                                {item.data_retorno_estimada && (
+                                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" />
+                                    Retorno: {format(new Date(item.data_retorno_estimada), "dd/MM/yyyy", { locale: ptBR })}
+                                  </p>
+                                )}
                                 {item.justificativa_desconto && (
                                   <p className="text-xs text-amber-600 bg-amber-500/10 px-2 py-1 rounded">
                                     💬 {item.justificativa_desconto}
@@ -1075,11 +1149,11 @@ export default function AdminOSDetalhes() {
                             </div>
                           );
                         })}
-                        {/* Subtotal Serviços */}
+                        {/* Subtotal Mão de Obra */}
                         <div className="flex justify-between text-sm px-4 py-2 bg-muted/50 rounded">
-                          <span className="text-muted-foreground">Subtotal Serviços:</span>
+                          <span className="text-muted-foreground">Subtotal Mão de Obra:</span>
                           <span className="font-medium">
-                            {formatCurrency(itens.filter(i => i.tipo === "servico").reduce((acc, item) => acc + (item.valor_total || 0), 0))}
+                            {formatCurrency(itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").reduce((acc, item) => acc + (item.valor_total || 0), 0))}
                           </span>
                         </div>
                       </div>
@@ -1097,17 +1171,29 @@ export default function AdminOSDetalhes() {
                         </div>
                         {itens.filter(i => i.tipo === "peca").map((item) => {
                           const itemStatus = itemStatusConfig[item.status] || itemStatusConfig.pendente;
+                          const prioridadeCfg = prioridadeConfig[item.prioridade || 'amarelo'];
                           return (
                             <div
                               key={item.id}
                               className={cn(
-                                "flex items-start justify-between p-4 rounded-lg border",
-                                item.status === "recusado" && "bg-red-500/5 border-red-500/20",
-                                item.status === "aprovado" && "bg-green-500/5 border-green-500/20"
+                                "flex items-start justify-between p-4 rounded-lg border-2",
+                                prioridadeCfg.borderColor,
+                                prioridadeCfg.bgColor,
+                                item.status === "recusado" && "opacity-60"
                               )}
                             >
                               <div className="flex-1 space-y-1">
-                                <span className="font-medium">{item.descricao}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{item.descricao}</span>
+                                  <Badge variant="outline" className={cn(
+                                    "text-[10px] px-1.5",
+                                    item.prioridade === 'vermelho' && "border-red-500 text-red-600",
+                                    item.prioridade === 'amarelo' && "border-yellow-500 text-yellow-600",
+                                    item.prioridade === 'verde' && "border-green-500 text-green-600"
+                                  )}>
+                                    {prioridadeCfg.label}
+                                  </Badge>
+                                </div>
                                 <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                                   <span>Custo: {formatCurrency(item.valor_custo || 0)}</span>
                                   <span>Venda: {formatCurrency(item.valor_unitario)}</span>
@@ -1121,6 +1207,12 @@ export default function AdminOSDetalhes() {
                                 <div className="text-sm font-medium">
                                   {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
                                 </div>
+                                {item.data_retorno_estimada && (
+                                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" />
+                                    Retorno: {format(new Date(item.data_retorno_estimada), "dd/MM/yyyy", { locale: ptBR })}
+                                  </p>
+                                )}
                                 {item.justificativa_desconto && (
                                   <p className="text-xs text-amber-600 bg-amber-500/10 px-2 py-1 rounded">
                                     💬 {item.justificativa_desconto}
@@ -1358,8 +1450,8 @@ export default function AdminOSDetalhes() {
                       <span className="truncate">{sug.desc}</span>
                       <Button size="sm" variant="ghost" className="h-5 px-2 text-xs" onClick={() => {
                         const margem = ((sug.venda - sug.custo) / sug.custo) * 100;
-                        setNewItem({ descricao: sug.desc, tipo: "servico", quantidade: 1, valor_custo: sug.custo, margem, valor_unitario: sug.venda });
-                        setShowAddItemDialog(true);
+                        setNewMaoDeObra({ descricao: sug.desc, quantidade: 1, valor_unitario: sug.venda, prioridade: "amarelo", data_retorno_estimada: "" });
+                        setShowAddMaoDeObraDialog(true);
                       }}>
                         +R${sug.venda}
                       </Button>
@@ -1480,29 +1572,26 @@ export default function AdminOSDetalhes() {
         </div>
       </div>
 
-      {/* Add Item Dialog */}
+      {/* Add Item Dialog (Peças) */}
       <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Adicionar Item ao Orçamento</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Car className="w-5 h-5 text-orange-500" />
+              Adicionar Peça
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Descrição *</Label>
+              <Input
+                value={newItem.descricao}
+                onChange={(e) => setNewItem({ ...newItem, descricao: e.target.value })}
+                placeholder="Ex: Pastilha de freio dianteira"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select
-                  value={newItem.tipo}
-                  onValueChange={(value) => setNewItem({ ...newItem, tipo: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="servico">Mão de Obra</SelectItem>
-                    <SelectItem value="peca">Peça</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-2">
                 <Label>Quantidade</Label>
                 <Input
@@ -1512,15 +1601,27 @@ export default function AdminOSDetalhes() {
                   onChange={(e) => setNewItem({ ...newItem, quantidade: parseInt(e.target.value) || 1 })}
                 />
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Descrição *</Label>
-              <Input
-                value={newItem.descricao}
-                onChange={(e) => setNewItem({ ...newItem, descricao: e.target.value })}
-                placeholder="Ex: Troca de óleo"
-              />
+              <div className="space-y-2">
+                <Label>Criticidade</Label>
+                <Select
+                  value={newItem.prioridade}
+                  onValueChange={(value: 'verde' | 'amarelo' | 'vermelho') => setNewItem({ ...newItem, prioridade: value })}
+                >
+                  <SelectTrigger className={cn(
+                    "border-2",
+                    newItem.prioridade === 'vermelho' && "border-red-500",
+                    newItem.prioridade === 'amarelo' && "border-yellow-500",
+                    newItem.prioridade === 'verde' && "border-green-500"
+                  )}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vermelho">🔴 Imediato (Urgente)</SelectItem>
+                    <SelectItem value="amarelo">🟡 Médio</SelectItem>
+                    <SelectItem value="verde">🟢 Tranquilo (Precaução)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
             <div className="grid grid-cols-3 gap-3">
@@ -1601,6 +1702,26 @@ export default function AdminOSDetalhes() {
                 )}
               </div>
             )}
+
+            {/* Data de Retorno - obrigatória se prioridade for vermelho/amarelo */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Data de Retorno Estimada
+                {newItem.prioridade !== 'verde' && <span className="text-red-500">*</span>}
+              </Label>
+              <Input
+                type="date"
+                value={newItem.data_retorno_estimada}
+                onChange={(e) => setNewItem({ ...newItem, data_retorno_estimada: e.target.value })}
+                className={cn(
+                  newItem.prioridade !== 'verde' && !newItem.data_retorno_estimada && "border-red-500/50"
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                Data estimada para retorno do cliente (se não aprovar agora)
+              </p>
+            </div>
             
             <div className="p-3 bg-muted/50 rounded-lg space-y-1">
               <div className="flex justify-between text-sm">
@@ -1626,14 +1747,123 @@ export default function AdminOSDetalhes() {
                   addItemMutation.mutate(newItem);
                 }
               }}
-              disabled={!newItem.descricao.trim() || addItemMutation.isPending}
+              disabled={!newItem.descricao.trim() || addItemMutation.isPending || (newItem.prioridade !== 'verde' && !newItem.data_retorno_estimada)}
             >
               {addItemMutation.isPending ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Plus className="w-4 h-4 mr-2" />
               )}
-              Adicionar
+              Adicionar Peça
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Mão de Obra Dialog */}
+      <Dialog open={showAddMaoDeObraDialog} onOpenChange={setShowAddMaoDeObraDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-primary" />
+              Adicionar Mão de Obra
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Descrição *</Label>
+              <Input
+                value={newMaoDeObra.descricao}
+                onChange={(e) => setNewMaoDeObra({ ...newMaoDeObra, descricao: e.target.value })}
+                placeholder="Ex: Troca de pastilhas de freio"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Quantidade</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={newMaoDeObra.quantidade}
+                  onChange={(e) => setNewMaoDeObra({ ...newMaoDeObra, quantidade: parseInt(e.target.value) || 1 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Valor (R$)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={newMaoDeObra.valor_unitario}
+                  onChange={(e) => setNewMaoDeObra({ ...newMaoDeObra, valor_unitario: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Criticidade</Label>
+              <Select
+                value={newMaoDeObra.prioridade}
+                onValueChange={(value: 'verde' | 'amarelo' | 'vermelho') => setNewMaoDeObra({ ...newMaoDeObra, prioridade: value })}
+              >
+                <SelectTrigger className={cn(
+                  "border-2",
+                  newMaoDeObra.prioridade === 'vermelho' && "border-red-500",
+                  newMaoDeObra.prioridade === 'amarelo' && "border-yellow-500",
+                  newMaoDeObra.prioridade === 'verde' && "border-green-500"
+                )}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vermelho">🔴 Imediato (Urgente)</SelectItem>
+                  <SelectItem value="amarelo">🟡 Médio</SelectItem>
+                  <SelectItem value="verde">🟢 Tranquilo (Precaução)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Data de Retorno - obrigatória se prioridade for vermelho/amarelo */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Data de Retorno Estimada
+                {newMaoDeObra.prioridade !== 'verde' && <span className="text-red-500">*</span>}
+              </Label>
+              <Input
+                type="date"
+                value={newMaoDeObra.data_retorno_estimada}
+                onChange={(e) => setNewMaoDeObra({ ...newMaoDeObra, data_retorno_estimada: e.target.value })}
+                className={cn(
+                  newMaoDeObra.prioridade !== 'verde' && !newMaoDeObra.data_retorno_estimada && "border-red-500/50"
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                Data estimada para retorno do cliente (se não aprovar agora)
+              </p>
+            </div>
+            
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <div className="flex justify-between font-medium">
+                <span>Total:</span>
+                <span className="text-lg">{formatCurrency(newMaoDeObra.quantidade * newMaoDeObra.valor_unitario)}</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddMaoDeObraDialog(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => addMaoDeObraMutation.mutate(newMaoDeObra)}
+              disabled={!newMaoDeObra.descricao.trim() || addMaoDeObraMutation.isPending || (newMaoDeObra.prioridade !== 'verde' && !newMaoDeObra.data_retorno_estimada)}
+            >
+              {addMaoDeObraMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4 mr-2" />
+              )}
+              Adicionar Mão de Obra
             </Button>
           </DialogFooter>
         </DialogContent>
