@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Plus, Clock, Wrench, Star, Gift, Sparkles, ChevronRight, MapPin, Users, Droplets, GraduationCap, Loader2 } from "lucide-react";
+import { Calendar, Plus, Clock, Wrench, Gift, Sparkles, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -34,15 +34,13 @@ interface Promotion {
   discount_label: string;
   discount_percent: number;
   valid_to: string;
+  vehicle_models: string[] | null;
 }
 
-interface Event {
+interface UserVehicle {
   id: string;
-  title: string;
-  description: string | null;
-  event_date: string;
-  event_type: string;
-  location: string | null;
+  model: string;
+  brand: string | null;
 }
 
 const statusColors = {
@@ -57,19 +55,11 @@ const statusLabels = {
   concluido: "Concluído",
 };
 
-const eventIcons: Record<string, React.ElementType> = {
-  workshop: GraduationCap,
-  meetup: Users,
-  carwash: Droplets,
-  training: GraduationCap,
-  other: Star,
-};
-
 const Agenda = () => {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
+  const [userVehicles, setUserVehicles] = useState<UserVehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -80,6 +70,15 @@ const Agenda = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Fetch user vehicles
+      const { data: vehiclesData } = await supabase
+        .from("vehicles")
+        .select("id, model, brand")
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+
+      setUserVehicles(vehiclesData || []);
 
       // Fetch appointments
       const { data: appointmentsData } = await supabase
@@ -116,28 +115,61 @@ const Agenda = () => {
       // Fetch active promotions
       const { data: promotionsData } = await supabase
         .from("promotions")
-        .select("id, title, description, discount_label, discount_percent, valid_to")
+        .select("id, title, description, discount_label, discount_percent, valid_to, vehicle_models")
         .eq("is_active", true)
         .gte("valid_to", new Date().toISOString().split("T")[0])
         .order("valid_to", { ascending: true });
 
-      setPromotions(promotionsData || []);
+      // Filter promotions that match user's vehicle models
+      const userModels = (vehiclesData || []).map(v => v.model.toLowerCase());
+      const matchedPromos = (promotionsData || []).filter(promo => {
+        if (!promo.vehicle_models || promo.vehicle_models.length === 0) {
+          return true; // Universal promotion
+        }
+        return promo.vehicle_models.some(model =>
+          userModels.some(userModel => 
+            userModel.includes(model.toLowerCase()) || 
+            model.toLowerCase().includes(userModel)
+          )
+        );
+      });
 
-      // Fetch upcoming events
-      const { data: eventsData } = await supabase
-        .from("events")
-        .select("id, title, description, event_date, event_type, location")
-        .eq("is_active", true)
-        .gte("event_date", new Date().toISOString().split("T")[0])
-        .order("event_date", { ascending: true });
-
-      setEvents(eventsData || []);
+      setPromotions(matchedPromos);
 
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePromoClick = async (promo: Promotion) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("promo_clicks").insert({
+          promotion_id: promo.id,
+          user_id: user.id,
+          source: "agenda"
+        });
+      }
+    } catch (e) {}
+    
+    toast.success("Oferta selecionada!", {
+      description: "Redirecionando para agendamento...",
+    });
+    navigate("/novo-agendamento", { 
+      state: { 
+        promotion: {
+          id: promo.id,
+          title: promo.title,
+          description: promo.description,
+          discount: promo.discount_label,
+          vehicleModels: promo.vehicle_models || [],
+          validTo: new Date(promo.valid_to)
+        } 
+      } 
+    });
   };
 
   const handleWaitlistClick = async () => {
@@ -168,7 +200,7 @@ const Agenda = () => {
       <Header />
 
       <main className="flex-1 px-4 pt-4 overflow-y-auto pb-24">
-        <Accordion type="multiple" defaultValue={["agendamentos", "agendar", "promos", "eventos"]} className="space-y-3">
+        <Accordion type="multiple" defaultValue={[]} className="space-y-3">
           {/* 1. SEUS AGENDAMENTOS */}
           <AccordionItem value="agendamentos" className="glass-card rounded-xl border-none">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -176,7 +208,14 @@ const Agenda = () => {
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-base font-semibold text-foreground">Seus Agendamentos</span>
+                <div className="flex flex-col items-start">
+                  <span className="text-base font-semibold text-foreground">Seus Agendamentos</span>
+                  {appointments.length > 0 && (
+                    <span className="text-xs text-primary font-medium">
+                      {appointments.length} agendamento{appointments.length > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
@@ -279,7 +318,7 @@ const Agenda = () => {
                   <span className="text-base font-semibold text-foreground">Promoções Prime</span>
                   {promotions.length > 0 && (
                     <span className="text-xs text-amber-500 font-medium">
-                      {promotions.length} oferta{promotions.length > 1 ? "s" : ""} disponíve{promotions.length > 1 ? "is" : "l"}
+                      {promotions.length} oferta{promotions.length > 1 ? "s" : ""} para você
                     </span>
                   )}
                 </div>
@@ -288,43 +327,52 @@ const Agenda = () => {
             <AccordionContent className="px-4 pb-4">
               {promotions.length > 0 ? (
                 <div className="space-y-3">
-                  {promotions.map((promo) => (
-                    <button
-                      key={promo.id}
-                      onClick={() => {
-                        toast.success("Oferta selecionada!", {
-                          description: "Redirecionando para agendamento...",
-                        });
-                        navigate("/novo-agendamento", { state: { promotionId: promo.id } });
-                      }}
-                      className="w-full bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 rounded-xl p-4 border border-amber-500/20 transition-all hover:border-amber-500/40 hover:scale-[1.01] active:scale-[0.99] text-left"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-primary/20 flex items-center justify-center flex-shrink-0">
-                          <Gift className="w-6 h-6 text-amber-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-foreground">{promo.title}</p>
-                            <span className="text-xs font-bold text-amber-500 bg-amber-500/20 px-2 py-0.5 rounded-full">
-                              {promo.discount_label}
-                            </span>
+                  {promotions.map((promo) => {
+                    const eligibleVehicle = userVehicles.find(v => {
+                      if (!promo.vehicle_models || promo.vehicle_models.length === 0) return true;
+                      return promo.vehicle_models.some(model =>
+                        v.model.toLowerCase().includes(model.toLowerCase())
+                      );
+                    });
+
+                    return (
+                      <button
+                        key={promo.id}
+                        onClick={() => handlePromoClick(promo)}
+                        className="w-full bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 rounded-xl p-4 border border-amber-500/20 transition-all hover:border-amber-500/40 hover:scale-[1.01] active:scale-[0.99] text-left"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-primary/20 flex items-center justify-center flex-shrink-0">
+                            <Gift className="w-6 h-6 text-amber-500" />
                           </div>
-                          {promo.description && (
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {promo.description}
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-muted-foreground">
-                              Válido até {format(new Date(promo.valid_to), "dd/MM", { locale: ptBR })}
-                            </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-foreground">{promo.title}</p>
+                              <span className="text-xs font-bold text-amber-500 bg-amber-500/20 px-2 py-0.5 rounded-full">
+                                {promo.discount_label}
+                              </span>
+                            </div>
+                            {promo.description && (
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                {promo.description}
+                              </p>
+                            )}
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-muted-foreground">
+                                Válido até {format(new Date(promo.valid_to), "dd/MM", { locale: ptBR })}
+                              </span>
+                              {eligibleVehicle && (
+                                <span className="text-xs text-primary font-medium">
+                                  Para seu {eligibleVehicle.brand || ''} {eligibleVehicle.model}
+                                </span>
+                              )}
+                            </div>
                           </div>
+                          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                         </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <button 
@@ -346,85 +394,6 @@ const Agenda = () => {
                     </span>
                   </div>
                 </button>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* 4. EVENTOS */}
-          <AccordionItem value="eventos" className="glass-card rounded-xl border-none">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                  <Star className="w-5 h-5 text-purple-500" />
-                </div>
-                <div className="flex flex-col items-start">
-                  <span className="text-base font-semibold text-foreground">Eventos Prime</span>
-                  {events.length > 0 && (
-                    <span className="text-xs text-purple-500 font-medium">
-                      {events.length} evento{events.length > 1 ? "s" : ""} próximo{events.length > 1 ? "s" : ""}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              {events.length > 0 ? (
-                <div className="space-y-3">
-                  {events.map((event) => {
-                    const EventIcon = eventIcons[event.event_type] || Star;
-                    
-                    return (
-                      <button
-                        key={event.id}
-                        onClick={async () => {
-                          try {
-                            const { data: { user } } = await supabase.auth.getUser();
-                            await supabase.from("event_clicks").insert({
-                              event_id: event.id,
-                              user_id: user?.id || null,
-                            });
-                          } catch (e) {}
-                          toast.info("Evento selecionado!", {
-                            description: "Detalhes do evento em breve.",
-                          });
-                        }}
-                        className="w-full bg-background/50 rounded-xl p-4 border-l-4 border-purple-500 transition-all hover:bg-background/70 text-left"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                            <EventIcon className="w-5 h-5 text-purple-500" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground">{event.title}</p>
-                            {event.description && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {event.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                <span>{format(new Date(event.event_date), "dd MMM", { locale: ptBR })}</span>
-                              </div>
-                              {event.location && (
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  <span className="truncate max-w-[120px]">{event.location}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground text-sm">Nenhum evento programado</p>
-                  <p className="text-xs text-muted-foreground mt-1">Fique atento às novidades!</p>
-                </div>
               )}
             </AccordionContent>
           </AccordionItem>
