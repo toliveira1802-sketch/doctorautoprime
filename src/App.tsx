@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
+import Historico from "./pages/Historico";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import VerifyOTP from "./pages/VerifyOTP";
@@ -64,6 +65,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <NovoAgendamento />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/historico" 
+        element={
+          <ProtectedRoute>
+            <Historico />
           </ProtectedRoute>
         } 
       />
