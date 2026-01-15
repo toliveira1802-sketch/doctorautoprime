@@ -141,12 +141,24 @@ export default function AdminNovaOS() {
     setIsSearching(false);
   };
 
+  const MAX_PHOTOS = 5;
+
   // Photo handlers
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    const newPhotos = Array.from(files);
+    const remainingSlots = MAX_PHOTOS - photos.length;
+    if (remainingSlots <= 0) {
+      toast.error(`Limite máximo de ${MAX_PHOTOS} fotos atingido`);
+      return;
+    }
+
+    const newPhotos = Array.from(files).slice(0, remainingSlots);
+    if (files.length > remainingSlots) {
+      toast.warning(`Apenas ${remainingSlots} foto${remainingSlots !== 1 ? 's' : ''} adicionada${remainingSlots !== 1 ? 's' : ''} (limite: ${MAX_PHOTOS})`);
+    }
+
     const newPreviews = newPhotos.map(file => URL.createObjectURL(file));
     
     setPhotos(prev => [...prev, ...newPhotos]);
@@ -499,27 +511,29 @@ export default function AdminNovaOS() {
               )}
               
               {/* Upload Button */}
-              <div className="flex items-center gap-3">
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                  <div className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors">
-                    <Camera className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      {photosPreviews.length > 0 ? "Adicionar mais fotos" : "Clique para adicionar fotos"}
-                    </span>
-                  </div>
-                </label>
-                {photosPreviews.length > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {photosPreviews.length} foto{photosPreviews.length !== 1 && "s"}
-                  </span>
-                )}
+              {photos.length < MAX_PHOTOS && (
+                <div className="flex items-center gap-3">
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                    <div className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors">
+                      <Camera className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {photosPreviews.length > 0 ? "Adicionar mais fotos" : "Clique para adicionar fotos"}
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              )}
+              
+              {/* Photo count */}
+              <div className="text-sm text-muted-foreground">
+                {photosPreviews.length} de {MAX_PHOTOS} fotos
               </div>
             </div>
           </CardContent>
