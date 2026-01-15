@@ -21,13 +21,17 @@ const BiometricSetup: React.FC = () => {
     
     // Navigate after success animation
     setTimeout(() => {
-      navigate('/');
+      const redirectTo = localStorage.getItem('drprime_redirect') || '/';
+      localStorage.removeItem('drprime_redirect');
+      navigate(redirectTo);
     }, 1000);
   };
 
   const handleSkip = () => {
     skipBiometric();
-    navigate('/');
+    const redirectTo = localStorage.getItem('drprime_redirect') || '/';
+    localStorage.removeItem('drprime_redirect');
+    navigate(redirectTo);
   };
 
   return (
