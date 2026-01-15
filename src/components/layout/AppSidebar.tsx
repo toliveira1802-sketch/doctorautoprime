@@ -1,4 +1,4 @@
-import { Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut } from "lucide-react";
+import { Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, Plus } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ const clientItems = [
 
 const adminItems = [
   { title: "Dashboard", url: "/admin", icon: BarChart3 },
+  { title: "Nova OS", url: "/admin/nova-os", icon: Plus },
   { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar },
   { title: "Clientes", url: "/admin/clientes", icon: Users },
   { title: "Serviços", url: "/admin/servicos", icon: Wrench },

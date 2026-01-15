@@ -15,6 +15,7 @@ import AgendamentoSucesso from "./pages/AgendamentoSucesso";
 import Reagendamento from "./pages/Reagendamento";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
+import AdminNovaOS from "./pages/admin/AdminNovaOS";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AdminAgendamentos />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/nova-os" 
+        element={
+          <ProtectedRoute>
+            <AdminNovaOS />
           </ProtectedRoute>
         } 
       />
