@@ -218,11 +218,20 @@ const AdminPatioDetalhes = () => {
             <h1 className="text-2xl font-bold text-foreground">Pátio #{patio.id?.slice(0, 8)}</h1>
             <p className="text-sm text-muted-foreground">Criada em {patio.createdAt}</p>
           </div>
-          <div className={cn(
-            "px-4 py-2 rounded-full text-sm font-medium border",
-            statusConfig[patio.status].color
-          )}>
-            {statusConfig[patio.status].label}
+          <div className="flex items-center gap-3">
+            <Button 
+              className="gradient-primary"
+              onClick={() => navigate(`/admin/ordens-servico/new?patioId=${patio.id}`)}
+            >
+              <Wrench className="w-4 h-4 mr-2" />
+              Abrir OS
+            </Button>
+            <div className={cn(
+              "px-4 py-2 rounded-full text-sm font-medium border",
+              statusConfig[patio.status].color
+            )}>
+              {statusConfig[patio.status].label}
+            </div>
           </div>
         </div>
 
