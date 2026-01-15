@@ -39,13 +39,40 @@ const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviteRole, setInviteRole] = useState<string | null>(null);
 
-  // Capture referral code from URL on mount
+  // Capture referral code and invite code from URL on mount
   useEffect(() => {
     const ref = searchParams.get('ref');
+    const invite = searchParams.get('invite');
+    
     if (ref) {
       setReferralCode(ref.toUpperCase());
       console.log('Referral code captured:', ref);
+    }
+    
+    if (invite) {
+      setInviteCode(invite.toUpperCase());
+      // Validate invite code
+      const validateInvite = async () => {
+        const { data, error } = await supabase
+          .from('invites')
+          .select('code, role')
+          .eq('code', invite.toUpperCase())
+          .is('used_by', null)
+          .gt('expires_at', new Date().toISOString())
+          .maybeSingle();
+        
+        if (data && !error) {
+          setInviteRole(data.role);
+          toast.success(`Convite válido para ${data.role === 'admin' ? 'Administrador' : data.role === 'gestao' ? 'Gestão' : 'Usuário'}`);
+        } else {
+          toast.error('Código de convite inválido ou expirado');
+          setInviteCode(null);
+        }
+      };
+      validateInvite();
     }
   }, [searchParams]);
 
@@ -103,6 +130,21 @@ const Register: React.FC = () => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
+      // Use invite code if present
+      if (inviteCode) {
+        const { data: inviteUsed, error: inviteError } = await supabase.rpc('use_invite', {
+          invite_code: inviteCode,
+          user_uuid: user.id
+        });
+
+        if (inviteError) {
+          console.error('Error using invite:', inviteError);
+        } else if (inviteUsed) {
+          console.log('Invite used successfully, role assigned');
+          toast.success(`Você foi cadastrado como ${inviteRole === 'admin' ? 'Administrador' : inviteRole === 'gestao' ? 'Gestão' : 'Usuário'}!`);
+        }
+      }
+
       // Save referral source if present (for lead tracking)
       if (referralCode) {
         const { error: referralError } = await supabase
@@ -119,7 +161,15 @@ const Register: React.FC = () => {
     }
 
     toast.success('Conta criada com sucesso!');
-    navigate('/');
+    
+    // Redirect based on role
+    if (inviteRole === 'admin') {
+      navigate('/admin');
+    } else if (inviteRole === 'gestao') {
+      navigate('/gestao');
+    } else {
+      navigate('/');
+    }
   };
 
   const handleChange = (field: keyof FormData, value: string) => {
@@ -130,7 +180,7 @@ const Register: React.FC = () => {
     }
   };
 
-  const isFormValid = formData.name.trim().length >= 3 && 
+  const isFormValid = formData.name.trim().length >= 3 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
     formData.password.length >= 6 &&
     formData.password === formData.confirmPassword;
