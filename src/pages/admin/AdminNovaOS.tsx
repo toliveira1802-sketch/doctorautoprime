@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, User, Car, Loader2, FileText, Trash2, Wrench, Package, Calculator } from "lucide-react";
+import { Search, Plus, User, Car, Loader2, FileText, Trash2, Wrench, Package, Calculator, Percent, BadgeDollarSign, Tags, X } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +77,16 @@ export default function AdminNovaOS() {
   const [newItemDescricao, setNewItemDescricao] = useState("");
   const [newItemQuantidade, setNewItemQuantidade] = useState(1);
   const [newItemValorUnitario, setNewItemValorUnitario] = useState("");
+
+  // Discount calculator state
+  const [showDiscountDialog, setShowDiscountDialog] = useState(false);
+  const [discountType, setDiscountType] = useState<"percentage" | "fixed" | "quantity">("percentage");
+  const [discountValue, setDiscountValue] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<{
+    type: "percentage" | "fixed" | "quantity";
+    value: number;
+    amount: number;
+  } | null>(null);
 
   // Fetch clients with vehicles for search
   const { data: clients = [] } = useQuery({
@@ -273,6 +283,66 @@ export default function AdminNovaOS() {
   };
 
   const totalOrcamento = itensOrcamento.reduce((acc, item) => acc + item.valor_total, 0);
+  const totalServicos = itensOrcamento.filter(item => item.tipo === "servico").length;
+  const discountAmount = appliedDiscount?.amount || 0;
+  const totalComDesconto = Math.max(0, totalOrcamento - discountAmount);
+
+  // Discount calculator logic
+  const calculateDiscount = () => {
+    const value = parseFloat(discountValue.replace(",", ".")) || 0;
+    
+    if (value <= 0) {
+      toast.error("Informe um valor válido");
+      return;
+    }
+
+    let amount = 0;
+    
+    switch (discountType) {
+      case "percentage":
+        if (value > 100) {
+          toast.error("Porcentagem não pode ser maior que 100%");
+          return;
+        }
+        amount = (totalOrcamento * value) / 100;
+        break;
+      case "fixed":
+        if (value > totalOrcamento) {
+          toast.error("Desconto não pode ser maior que o total");
+          return;
+        }
+        amount = value;
+        break;
+      case "quantity":
+        // Desconto baseado na quantidade de serviços
+        // Regra: 2 serviços = 5%, 3 serviços = 10%, 4+ serviços = 15%
+        if (totalServicos < 2) {
+          toast.error("É necessário pelo menos 2 serviços para desconto por quantidade");
+          return;
+        }
+        let percentual = 0;
+        if (totalServicos >= 4) percentual = 15;
+        else if (totalServicos >= 3) percentual = 10;
+        else if (totalServicos >= 2) percentual = 5;
+        
+        amount = (totalOrcamento * percentual) / 100;
+        break;
+    }
+
+    setAppliedDiscount({
+      type: discountType,
+      value,
+      amount,
+    });
+    setShowDiscountDialog(false);
+    setDiscountValue("");
+    toast.success(`Desconto de R$ ${amount.toFixed(2)} aplicado!`);
+  };
+
+  const removeDiscount = () => {
+    setAppliedDiscount(null);
+    toast.success("Desconto removido");
+  };
 
   const handleSubmit = async () => {
     if (!selectedClient) {
@@ -288,7 +358,7 @@ export default function AdminNovaOS() {
     setIsSubmitting(true);
 
     try {
-      // Create OS
+      // Create OS with discount applied
       const { data: osData, error: osError } = await supabase
         .from("ordens_servico")
         .insert([{
@@ -300,7 +370,15 @@ export default function AdminNovaOS() {
           descricao_problema: notes || null,
           status: "orcamento",
           data_entrada: new Date().toISOString(),
-          valor_orcado: totalOrcamento,
+          valor_orcado: totalComDesconto,
+          observacoes: appliedDiscount 
+            ? `Desconto aplicado: ${appliedDiscount.type === "percentage" 
+                ? `${appliedDiscount.value}%` 
+                : appliedDiscount.type === "quantity"
+                ? `Por quantidade (${totalServicos} serviços)`
+                : `R$ ${appliedDiscount.value.toFixed(2)}`
+              } - Valor: R$ ${appliedDiscount.amount.toFixed(2)}`
+            : null,
         }])
         .select()
         .single();
@@ -522,23 +600,61 @@ export default function AdminNovaOS() {
                   </Table>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled
-                    className="gap-2 opacity-60"
-                    title="Em breve"
-                  >
-                    <Calculator className="w-4 h-4" />
-                    Calculadora de Desconto
-                    <span className="text-xs bg-muted px-2 py-0.5 rounded-full">Em breve</span>
-                  </Button>
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg px-6 py-3">
-                    <span className="text-sm text-muted-foreground mr-3">Total do Orçamento:</span>
-                    <span className="text-xl font-bold text-primary">
-                      R$ {totalOrcamento.toFixed(2)}
-                    </span>
+                <div className="flex flex-col gap-4">
+                  {/* Discount Section */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowDiscountDialog(true)}
+                      className="gap-2"
+                    >
+                      <Calculator className="w-4 h-4" />
+                      Calculadora de Desconto
+                    </Button>
+                    
+                    {appliedDiscount && (
+                      <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-lg text-sm">
+                        <Tags className="w-4 h-4" />
+                        <span>
+                          Desconto: {appliedDiscount.type === "percentage" 
+                            ? `${appliedDiscount.value}%` 
+                            : appliedDiscount.type === "quantity"
+                            ? `${totalServicos} serviços`
+                            : `R$ ${appliedDiscount.value.toFixed(2)}`
+                          }
+                          {" "}(-R$ {appliedDiscount.amount.toFixed(2)})
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 text-green-700 dark:text-green-400 hover:text-red-600"
+                          onClick={removeDiscount}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Totals */}
+                  <div className="flex flex-col sm:flex-row justify-end gap-3">
+                    {appliedDiscount && (
+                      <div className="bg-muted/50 border border-border rounded-lg px-4 py-2 text-right">
+                        <span className="text-sm text-muted-foreground mr-2">Subtotal:</span>
+                        <span className="text-base line-through text-muted-foreground">
+                          R$ {totalOrcamento.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="bg-primary/10 border border-primary/20 rounded-lg px-6 py-3">
+                      <span className="text-sm text-muted-foreground mr-3">
+                        {appliedDiscount ? "Total com Desconto:" : "Total do Orçamento:"}
+                      </span>
+                      <span className="text-xl font-bold text-primary">
+                        R$ {totalComDesconto.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -587,7 +703,7 @@ export default function AdminNovaOS() {
             ) : (
               <>
                 <FileText className="w-5 h-5 mr-2" />
-                Abrir OS {itensOrcamento.length > 0 && `(R$ ${totalOrcamento.toFixed(2)})`}
+                Abrir OS {itensOrcamento.length > 0 && `(R$ ${totalComDesconto.toFixed(2)})`}
               </>
             )}
           </Button>
@@ -756,6 +872,150 @@ export default function AdminNovaOS() {
             <Button onClick={handleAddItem}>
               <Plus className="w-4 h-4 mr-2" />
               Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Discount Calculator Dialog */}
+      <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="w-5 h-5" />
+              Calculadora de Desconto
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Discount Type Selection */}
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setDiscountType("percentage")}
+                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                  discountType === "percentage"
+                    ? "border-primary bg-primary/10"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <Percent className="w-6 h-6 text-primary" />
+                <span className="text-sm font-medium">Porcentagem</span>
+              </button>
+              <button
+                onClick={() => setDiscountType("fixed")}
+                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                  discountType === "fixed"
+                    ? "border-primary bg-primary/10"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <BadgeDollarSign className="w-6 h-6 text-primary" />
+                <span className="text-sm font-medium">Valor Fixo</span>
+              </button>
+              <button
+                onClick={() => setDiscountType("quantity")}
+                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                  discountType === "quantity"
+                    ? "border-primary bg-primary/10"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <Tags className="w-6 h-6 text-primary" />
+                <span className="text-sm font-medium">Quantidade</span>
+              </button>
+            </div>
+
+            {/* Discount Input */}
+            {discountType !== "quantity" ? (
+              <div className="space-y-2">
+                <Label>
+                  {discountType === "percentage" ? "Porcentagem de desconto (%)" : "Valor do desconto (R$)"}
+                </Label>
+                <Input
+                  placeholder={discountType === "percentage" ? "Ex: 10" : "Ex: 50,00"}
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                  <p className="font-medium text-sm">Desconto automático por quantidade de serviços:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li className={totalServicos >= 2 ? "text-green-600 font-medium" : ""}>
+                      • 2 serviços = 5% de desconto
+                    </li>
+                    <li className={totalServicos >= 3 ? "text-green-600 font-medium" : ""}>
+                      • 3 serviços = 10% de desconto
+                    </li>
+                    <li className={totalServicos >= 4 ? "text-green-600 font-medium" : ""}>
+                      • 4+ serviços = 15% de desconto
+                    </li>
+                  </ul>
+                </div>
+                <div className="p-3 bg-primary/10 rounded-lg text-center">
+                  <span className="text-muted-foreground text-sm">Serviços no orçamento: </span>
+                  <span className="font-bold text-primary text-lg">{totalServicos}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Preview */}
+            <div className="p-4 bg-muted/30 rounded-lg border border-border space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal:</span>
+                <span>R$ {totalOrcamento.toFixed(2)}</span>
+              </div>
+              {discountType === "quantity" && totalServicos >= 2 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Desconto ({totalServicos >= 4 ? "15%" : totalServicos >= 3 ? "10%" : "5%"}):</span>
+                  <span>
+                    -R$ {((totalOrcamento * (totalServicos >= 4 ? 15 : totalServicos >= 3 ? 10 : 5)) / 100).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              {discountType !== "quantity" && discountValue && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Desconto {discountType === "percentage" ? `(${discountValue}%)` : ""}:</span>
+                  <span>
+                    -R$ {(discountType === "percentage" 
+                      ? (totalOrcamento * (parseFloat(discountValue.replace(",", ".")) || 0)) / 100
+                      : parseFloat(discountValue.replace(",", ".")) || 0
+                    ).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between font-semibold border-t border-border pt-2">
+                <span>Total Final:</span>
+                <span className="text-primary">
+                  R$ {(
+                    discountType === "quantity" && totalServicos >= 2
+                      ? totalOrcamento - (totalOrcamento * (totalServicos >= 4 ? 15 : totalServicos >= 3 ? 10 : 5)) / 100
+                      : discountType === "percentage" && discountValue
+                      ? totalOrcamento - (totalOrcamento * (parseFloat(discountValue.replace(",", ".")) || 0)) / 100
+                      : discountType === "fixed" && discountValue
+                      ? totalOrcamento - (parseFloat(discountValue.replace(",", ".")) || 0)
+                      : totalOrcamento
+                  ).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDiscountDialog(false);
+                setDiscountValue("");
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={calculateDiscount}
+              disabled={discountType !== "quantity" && !discountValue}
+            >
+              <Tags className="w-4 h-4 mr-2" />
+              Aplicar Desconto
             </Button>
           </DialogFooter>
         </DialogContent>
