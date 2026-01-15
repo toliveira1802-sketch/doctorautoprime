@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Search, Plus, User, Car, Loader2, FileText, 
-  ClipboardCheck, Package, Wrench, ChevronDown, ChevronUp 
+  ClipboardCheck, Package, Wrench, ChevronDown, ChevronUp,
+  Camera, X, Image
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ interface ClientWithVehicle {
   plate: string;
   model?: string;
   brand?: string;
+  year?: string;
+  color?: string;
   vehicle_id: string;
 }
 
@@ -60,6 +63,11 @@ export default function AdminNovaOS() {
     suspensao: false,
   });
 
+  // Photos state
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+
   // New client dialog state
   const [showNewClientDialog, setShowNewClientDialog] = useState(false);
   const [newClientName, setNewClientName] = useState("");
@@ -80,7 +88,7 @@ export default function AdminNovaOS() {
 
       const { data: vehicles, error: vehiclesError } = await supabase
         .from("vehicles")
-        .select("id, user_id, plate, model, brand");
+        .select("id, user_id, plate, model, brand, year, color");
 
       if (vehiclesError) throw vehiclesError;
 
@@ -99,6 +107,8 @@ export default function AdminNovaOS() {
               plate: vehicle.plate,
               model: vehicle.model,
               brand: vehicle.brand || "",
+              year: vehicle.year || "",
+              color: vehicle.color || "",
               vehicle_id: vehicle.id,
             });
           }
@@ -129,6 +139,50 @@ export default function AdminNovaOS() {
     setSelectedClient(client);
     setSearchQuery("");
     setIsSearching(false);
+  };
+
+  // Photo handlers
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newPhotos = Array.from(files);
+    const newPreviews = newPhotos.map(file => URL.createObjectURL(file));
+    
+    setPhotos(prev => [...prev, ...newPhotos]);
+    setPhotosPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removePhoto = (index: number) => {
+    URL.revokeObjectURL(photosPreviews[index]);
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotosPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadPhotosToStorage = async (osId: string): Promise<string[]> => {
+    const uploadedUrls: string[] = [];
+    
+    for (const photo of photos) {
+      const fileExt = photo.name.split('.').pop();
+      const fileName = `${osId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error } = await supabase.storage
+        .from('os-photos')
+        .upload(fileName, photo);
+      
+      if (error) {
+        console.error('Error uploading photo:', error);
+        continue;
+      }
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('os-photos')
+        .getPublicUrl(fileName);
+      
+      uploadedUrls.push(publicUrl);
+    }
+    
+    return uploadedUrls;
   };
 
   const handleCreateClient = async () => {
@@ -292,23 +346,10 @@ export default function AdminNovaOS() {
           <CardContent className="space-y-4">
             {selectedClient ? (
               <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div>
-                      <p className="font-semibold text-foreground text-lg">{selectedClient.name}</p>
-                      <p className="text-sm text-muted-foreground">{selectedClient.phone}</p>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 bg-background/50 rounded-lg">
-                      <Car className="w-4 h-4 text-primary" />
-                      <div>
-                        <p className="font-medium text-foreground">{selectedClient.plate}</p>
-                        {selectedClient.model && (
-                          <p className="text-xs text-muted-foreground">
-                            {selectedClient.brand} {selectedClient.model}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="font-semibold text-foreground text-lg">{selectedClient.name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedClient.phone}</p>
                   </div>
                   <Button
                     variant="ghost"
@@ -317,6 +358,30 @@ export default function AdminNovaOS() {
                   >
                     Trocar
                   </Button>
+                </div>
+                
+                {/* Vehicle Data Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-background/50 rounded-lg">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Placa</p>
+                    <p className="font-mono font-semibold text-foreground">{selectedClient.plate}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Marca</p>
+                    <p className="font-medium text-foreground">{selectedClient.brand || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Modelo</p>
+                    <p className="font-medium text-foreground">{selectedClient.model || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Ano</p>
+                    <p className="font-medium text-foreground">{selectedClient.year || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Cor</p>
+                    <p className="font-medium text-foreground">{selectedClient.color || "-"}</p>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -399,6 +464,64 @@ export default function AdminNovaOS() {
               onChange={(e) => setNotes(e.target.value)}
               className="min-h-[100px]"
             />
+          </CardContent>
+        </Card>
+
+        {/* Fotos Section */}
+        <Card className="bg-card/50 border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Camera className="w-5 h-5" />
+              Fotos do Veículo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Photo Previews */}
+              {photosPreviews.length > 0 && (
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  {photosPreviews.map((preview, index) => (
+                    <div key={index} className="relative group aspect-square">
+                      <img
+                        src={preview}
+                        alt={`Foto ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg border border-border"
+                      />
+                      <button
+                        onClick={() => removePhoto(index)}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Upload Button */}
+              <div className="flex items-center gap-3">
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                  <div className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors">
+                    <Camera className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {photosPreviews.length > 0 ? "Adicionar mais fotos" : "Clique para adicionar fotos"}
+                    </span>
+                  </div>
+                </label>
+                {photosPreviews.length > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {photosPreviews.length} foto{photosPreviews.length !== 1 && "s"}
+                  </span>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
 
