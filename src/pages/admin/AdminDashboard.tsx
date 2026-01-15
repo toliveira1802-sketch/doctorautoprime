@@ -1,37 +1,27 @@
 import { useState, useEffect } from "react";
-import { Calendar, Users, Wrench, FileText, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar, Users, DollarSign, FileText, Loader2, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 
 interface DashboardStats {
   appointmentsToday: number;
   newClientsMonth: number;
+  monthlyRevenue: number;
+  valueTodayDelivery: number;
 }
-
-interface TodayAppointment {
-  id: string;
-  client: string;
-  vehicle: string;
-  service: string;
-  time: string;
-  status: string;
-}
-
-const statusLabels: Record<string, { label: string; color: string }> = {
-  confirmado: { label: "Confirmado", color: "bg-emerald-500/20 text-emerald-500" },
-  em_execucao: { label: "Em execução", color: "bg-primary/20 text-primary" },
-  pendente: { label: "Pendente", color: "bg-amber-500/20 text-amber-500" },
-  diagnostico: { label: "Diagnóstico", color: "bg-purple-500/20 text-purple-500" },
-};
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats>({ appointmentsToday: 0, newClientsMonth: 0 });
-  const [todayAppointments, setTodayAppointments] = useState<TodayAppointment[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({ 
+    appointmentsToday: 0, 
+    newClientsMonth: 0,
+    monthlyRevenue: 0,
+    valueTodayDelivery: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,52 +30,50 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const today = new Date().toISOString().split("T")[0];
-      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
+      const today = format(new Date(), "yyyy-MM-dd");
+      const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
+      const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
 
-      // Fetch today's appointments
-      const { data: appointmentsData, error: appointmentsError } = await supabase
-        .from("appointments")
-        .select(`
-          id,
-          appointment_time,
-          status,
-          vehicles (model, brand, plate),
-          profiles!appointments_user_id_fkey (full_name),
-          appointment_services (
-            services (name)
-          )
-        `)
-        .eq("appointment_date", today)
-        .order("appointment_time", { ascending: true });
+      const [
+        appointmentsTodayResult,
+        newClientsResult,
+        monthlyRevenueResult,
+        todayDeliveryResult,
+      ] = await Promise.all([
+        // Agendamentos de hoje
+        supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("appointment_date", today),
+        
+        // Novos clientes do mês
+        supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", monthStart),
+        
+        // Faturamento do mês
+        supabase
+          .from("faturamento")
+          .select("valor")
+          .gte("data_entrega", monthStart)
+          .lte("data_entrega", monthEnd),
+        
+        // Valor para sair hoje (OS com status pronto_retirada)
+        supabase
+          .from("ordens_servico")
+          .select("valor_final")
+          .eq("status", "pronto_retirada"),
+      ]);
 
-      if (appointmentsError) {
-        console.error("Error fetching appointments:", appointmentsError);
-      }
-
-      const formattedAppointments: TodayAppointment[] = (appointmentsData || []).map((apt: any) => ({
-        id: apt.id,
-        client: apt.profiles?.full_name || "Cliente",
-        vehicle: apt.vehicles ? `${apt.vehicles.brand || ''} ${apt.vehicles.model}`.trim() : "Veículo",
-        service: apt.appointment_services?.[0]?.services?.name || "Serviço",
-        time: apt.appointment_time?.slice(0, 5) || "Dia todo",
-        status: apt.status,
-      }));
-
-      setTodayAppointments(formattedAppointments);
-
-      // Count today's appointments
-      const appointmentsToday = appointmentsData?.length || 0;
-
-      // Count new clients this month
-      const { count: newClientsCount } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", firstDayOfMonth);
+      const monthlyRevenue = monthlyRevenueResult.data?.reduce((sum, r) => sum + Number(r.valor || 0), 0) || 0;
+      const valueTodayDelivery = todayDeliveryResult.data?.reduce((sum, r) => sum + Number(r.valor_final || 0), 0) || 0;
 
       setStats({
-        appointmentsToday,
-        newClientsMonth: newClientsCount || 0,
+        appointmentsToday: appointmentsTodayResult.count || 0,
+        newClientsMonth: newClientsResult.count || 0,
+        monthlyRevenue,
+        valueTodayDelivery,
       });
 
     } catch (error) {
@@ -108,7 +96,7 @@ const AdminDashboard = () => {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
-        {/* Quick Actions */}
+        {/* Botões principais */}
         <div className="grid grid-cols-2 gap-4">
           <Button 
             size="lg" 
@@ -129,8 +117,9 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
-        {/* Stats Grid */}
+        {/* Indicadores */}
         <div className="grid grid-cols-2 gap-4">
+          {/* Agendamentos Hoje */}
           <Card className="glass-card border-none">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
@@ -145,11 +134,12 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
+          {/* Novos Clientes */}
           <Card className="glass-card border-none">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-emerald-500" />
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-cyan-500" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground">{stats.newClientsMonth}</p>
@@ -158,50 +148,41 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Today's Appointments */}
-        <Card className="glass-card border-none">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
-              Agendamentos de Hoje
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {todayAppointments.length > 0 ? (
-              <div className="space-y-3">
-                {todayAppointments.map((apt) => (
-                  <div
-                    key={apt.id}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-background/50 hover:bg-background/70 transition-colors"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Wrench className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground">{apt.client}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {apt.vehicle} • {apt.service}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-foreground">{apt.time}</p>
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusLabels[apt.status]?.color || "bg-muted text-muted-foreground"}`}>
-                        {statusLabels[apt.status]?.label || apt.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+          {/* Faturado Mês */}
+          <Card className="glass-card border-none">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">
+                    R$ {stats.monthlyRevenue.toLocaleString("pt-BR")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Faturado (Mês)</p>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Calendar className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p>Nenhum agendamento para hoje</p>
+            </CardContent>
+          </Card>
+
+          {/* Valor para Sair Hoje */}
+          <Card className="glass-card border-none">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">
+                    R$ {stats.valueTodayDelivery.toLocaleString("pt-BR")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Valor p/ Sair Hoje</p>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AdminLayout>
   );
