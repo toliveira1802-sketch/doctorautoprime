@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      alerts: {
+        Row: {
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          appointment_id: string | null
+          created_at: string
+          due_date: string
+          id: string
+          is_automatic: boolean
+          message: string | null
+          pending_items: Json | null
+          read_at: string | null
+          seasonal_tag: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["alert_status"]
+          title: string
+          updated_at: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          appointment_id?: string | null
+          created_at?: string
+          due_date: string
+          id?: string
+          is_automatic?: boolean
+          message?: string | null
+          pending_items?: Json | null
+          read_at?: string | null
+          seasonal_tag?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["alert_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          alert_type?: Database["public"]["Enums"]["alert_type"]
+          appointment_id?: string | null
+          created_at?: string
+          due_date?: string
+          id?: string
+          is_automatic?: boolean
+          message?: string | null
+          pending_items?: Json | null
+          read_at?: string | null
+          seasonal_tag?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["alert_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_services: {
         Row: {
           appointment_id: string
@@ -555,6 +627,8 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
+      alert_status: "scheduled" | "sent" | "read" | "dismissed" | "completed"
+      alert_type: "pending_items" | "oil_change" | "seasonal" | "custom"
       app_role: "admin" | "user"
       appointment_status: "pendente" | "confirmado" | "concluido" | "cancelado"
       event_type: "workshop" | "meetup" | "carwash" | "training" | "other"
@@ -566,6 +640,7 @@ export type Database = {
         | "date_selected"
         | "flow_completed"
         | "flow_abandoned"
+      item_priority: "critical" | "half_life" | "good"
       service_type: "revisao" | "diagnostico"
     }
     CompositeTypes: {
@@ -694,6 +769,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      alert_status: ["scheduled", "sent", "read", "dismissed", "completed"],
+      alert_type: ["pending_items", "oil_change", "seasonal", "custom"],
       app_role: ["admin", "user"],
       appointment_status: ["pendente", "confirmado", "concluido", "cancelado"],
       event_type: ["workshop", "meetup", "carwash", "training", "other"],
@@ -706,6 +783,7 @@ export const Constants = {
         "flow_completed",
         "flow_abandoned",
       ],
+      item_priority: ["critical", "half_life", "good"],
       service_type: ["revisao", "diagnostico"],
     },
   },
