@@ -44,6 +44,73 @@ export type Database = {
         }
         Relationships: []
       }
+      agenda_mecanicos: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          mechanic_id: string
+          notas: string | null
+          status: string
+          tipo: string
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          mechanic_id: string
+          notas?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          data?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          mechanic_id?: string
+          notas?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_mecanicos_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_mecanicos_mechanic_id_fkey"
+            columns: ["mechanic_id"]
+            isOneToOne: false
+            referencedRelation: "mechanics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_mecanicos_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alert_clicks: {
         Row: {
           action: string
@@ -358,6 +425,58 @@ export type Database = {
         }
         Relationships: []
       }
+      faturamento: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          data_entrega: string
+          id: string
+          mechanic_id: string | null
+          valor: number
+          vehicle_id: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          data_entrega: string
+          id?: string
+          mechanic_id?: string | null
+          valor: number
+          vehicle_id: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          data_entrega?: string
+          id?: string
+          mechanic_id?: string | null
+          valor?: number
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faturamento_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faturamento_mechanic_id_fkey"
+            columns: ["mechanic_id"]
+            isOneToOne: false
+            referencedRelation: "mechanics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faturamento_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedbacks: {
         Row: {
           appointment_id: string | null
@@ -514,6 +633,125 @@ export type Database = {
         }
         Relationships: []
       }
+      metas_financeiras: {
+        Row: {
+          ano: number
+          created_at: string
+          created_by: string | null
+          dias_trabalhados: number
+          dias_uteis: number
+          id: string
+          mes: number
+          meta_faturamento: number
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          created_by?: string | null
+          dias_trabalhados?: number
+          dias_uteis?: number
+          id?: string
+          mes: number
+          meta_faturamento?: number
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          created_by?: string | null
+          dias_trabalhados?: number
+          dias_uteis?: number
+          id?: string
+          mes?: number
+          meta_faturamento?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      metas_mecanicos: {
+        Row: {
+          ano: number
+          created_at: string
+          id: string
+          mechanic_id: string
+          mes: number
+          meta_mensal: number
+          meta_semanal: number
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          id?: string
+          mechanic_id: string
+          mes: number
+          meta_mensal?: number
+          meta_semanal?: number
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          id?: string
+          mechanic_id?: string
+          mes?: number
+          meta_mensal?: number
+          meta_semanal?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_mecanicos_mechanic_id_fkey"
+            columns: ["mechanic_id"]
+            isOneToOne: false
+            referencedRelation: "mechanics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oficina_config: {
+        Row: {
+          capacidade_maxima: number
+          created_at: string
+          horario_almoco_fim: string
+          horario_almoco_inicio: string
+          horario_entrada: string
+          horario_saida_sabado: string
+          horario_saida_semana: string
+          id: string
+          logo_url: string | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          capacidade_maxima?: number
+          created_at?: string
+          horario_almoco_fim?: string
+          horario_almoco_inicio?: string
+          horario_entrada?: string
+          horario_saida_sabado?: string
+          horario_saida_semana?: string
+          id?: string
+          logo_url?: string | null
+          nome?: string
+          updated_at?: string
+        }
+        Update: {
+          capacidade_maxima?: number
+          created_at?: string
+          horario_almoco_fim?: string
+          horario_almoco_inicio?: string
+          horario_entrada?: string
+          horario_saida_sabado?: string
+          horario_saida_semana?: string
+          id?: string
+          logo_url?: string | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patio_daily_feedback: {
         Row: {
           bottlenecks: string | null
@@ -550,6 +788,42 @@ export type Database = {
           improvements?: string | null
           incidents_count?: number | null
           organization_score?: number | null
+        }
+        Relationships: []
+      }
+      patio_feedback: {
+        Row: {
+          capacidade_media: number | null
+          created_at: string
+          data: string
+          gargalos_identificados: string[] | null
+          given_by: string | null
+          id: string
+          observacoes: string | null
+          problemas: string | null
+          sugestoes: string | null
+        }
+        Insert: {
+          capacidade_media?: number | null
+          created_at?: string
+          data: string
+          gargalos_identificados?: string[] | null
+          given_by?: string | null
+          id?: string
+          observacoes?: string | null
+          problemas?: string | null
+          sugestoes?: string | null
+        }
+        Update: {
+          capacidade_media?: number | null
+          created_at?: string
+          data?: string
+          gargalos_identificados?: string[] | null
+          given_by?: string | null
+          id?: string
+          observacoes?: string | null
+          problemas?: string | null
+          sugestoes?: string | null
         }
         Relationships: []
       }
@@ -704,6 +978,47 @@ export type Database = {
           },
         ]
       }
+      recursos: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          ocupado_desde: string | null
+          status: string
+          tipo: string
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          ocupado_desde?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          ocupado_desde?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recursos_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_campaigns: {
         Row: {
           cashback_points: number
@@ -847,6 +1162,71 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_workflow_history: {
+        Row: {
+          appointment_id: string | null
+          changed_by: string | null
+          created_at: string
+          etapa_anterior_id: string | null
+          etapa_atual_id: string | null
+          id: string
+          notas: string | null
+          tempo_na_etapa_minutos: number | null
+          vehicle_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          changed_by?: string | null
+          created_at?: string
+          etapa_anterior_id?: string | null
+          etapa_atual_id?: string | null
+          id?: string
+          notas?: string | null
+          tempo_na_etapa_minutos?: number | null
+          vehicle_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          changed_by?: string | null
+          created_at?: string
+          etapa_anterior_id?: string | null
+          etapa_atual_id?: string | null
+          id?: string
+          notas?: string | null
+          tempo_na_etapa_minutos?: number | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_workflow_history_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_workflow_history_etapa_anterior_id_fkey"
+            columns: ["etapa_anterior_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_workflow_history_etapa_atual_id_fkey"
+            columns: ["etapa_atual_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_workflow_history_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           brand: string | null
@@ -904,6 +1284,36 @@ export type Database = {
           id?: string
           source?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      workflow_etapas: {
+        Row: {
+          cor: string
+          created_at: string
+          icone: string | null
+          id: string
+          is_active: boolean
+          nome: string
+          ordem: number
+        }
+        Insert: {
+          cor?: string
+          created_at?: string
+          icone?: string | null
+          id?: string
+          is_active?: boolean
+          nome: string
+          ordem: number
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          icone?: string | null
+          id?: string
+          is_active?: boolean
+          nome?: string
+          ordem?: number
         }
         Relationships: []
       }
