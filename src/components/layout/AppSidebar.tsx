@@ -78,6 +78,7 @@ const painelAdmModule: AdminMenuGroup = {
   roles: ["admin", "gestao"],
   items: [
     { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "gestao"] },
+    { title: "Ordens de Serviço", url: "/admin/ordens-servico", icon: FileText, roles: ["admin", "gestao"] },
     { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "gestao"] },
     { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "gestao"] },
     { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "gestao"] },
