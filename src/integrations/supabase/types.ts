@@ -28,6 +28,7 @@ export type Database = {
           seasonal_tag: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["alert_status"]
+          target_type: Database["public"]["Enums"]["alert_target"]
           title: string
           updated_at: string
           user_id: string
@@ -46,6 +47,7 @@ export type Database = {
           seasonal_tag?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["alert_status"]
+          target_type?: Database["public"]["Enums"]["alert_target"]
           title: string
           updated_at?: string
           user_id: string
@@ -64,6 +66,7 @@ export type Database = {
           seasonal_tag?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["alert_status"]
+          target_type?: Database["public"]["Enums"]["alert_target"]
           title?: string
           updated_at?: string
           user_id?: string
@@ -628,6 +631,7 @@ export type Database = {
     }
     Enums: {
       alert_status: "scheduled" | "sent" | "read" | "dismissed" | "completed"
+      alert_target: "client" | "admin"
       alert_type: "pending_items" | "oil_change" | "seasonal" | "custom"
       app_role: "admin" | "user"
       appointment_status: "pendente" | "confirmado" | "concluido" | "cancelado"
@@ -770,6 +774,7 @@ export const Constants = {
   public: {
     Enums: {
       alert_status: ["scheduled", "sent", "read", "dismissed", "completed"],
+      alert_target: ["client", "admin"],
       alert_type: ["pending_items", "oil_change", "seasonal", "custom"],
       app_role: ["admin", "user"],
       appointment_status: ["pendente", "confirmado", "concluido", "cancelado"],
