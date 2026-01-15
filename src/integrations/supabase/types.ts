@@ -692,6 +692,39 @@ export type Database = {
           },
         ]
       }
+      invites: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       mechanic_daily_feedback: {
         Row: {
           created_at: string
@@ -1789,6 +1822,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      use_invite: {
+        Args: { invite_code: string; user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       alert_status: "scheduled" | "sent" | "read" | "dismissed" | "completed"
