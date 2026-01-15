@@ -1292,6 +1292,51 @@ export type Database = {
         }
         Relationships: []
       }
+      service_history: {
+        Row: {
+          client_name: string | null
+          client_phone: string | null
+          created_at: string
+          created_by: string | null
+          entry_date: string | null
+          exit_date: string | null
+          id: string
+          plate: string
+          service_description: string | null
+          trello_card_id: string | null
+          trello_card_url: string | null
+          vehicle: string
+        }
+        Insert: {
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string | null
+          exit_date?: string | null
+          id?: string
+          plate: string
+          service_description?: string | null
+          trello_card_id?: string | null
+          trello_card_url?: string | null
+          vehicle: string
+        }
+        Update: {
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string | null
+          exit_date?: string | null
+          id?: string
+          plate?: string
+          service_description?: string | null
+          trello_card_id?: string | null
+          trello_card_url?: string | null
+          vehicle?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           created_at: string
