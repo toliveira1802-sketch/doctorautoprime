@@ -48,6 +48,7 @@ import GestaoOperacoes from "./pages/gestao/GestaoOperacoes";
 import GestaoFinanceiro from "./pages/gestao/GestaoFinanceiro";
 import GestaoTecnologia from "./pages/gestao/GestaoTecnologia";
 import GestaoComercial from "./pages/gestao/GestaoComercial";
+import GestaoUsuarios from "./pages/gestao/GestaoUsuarios";
 const queryClient = new QueryClient();
 
 // Protected Route component - saves intended destination before redirecting to login
@@ -385,18 +386,28 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
-      <Route 
-        path="/gestao/comercial" 
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <GestaoComercial />
-            </AdminRoute>
-          </ProtectedRoute>
-        } 
-      />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
+        <Route 
+          path="/gestao/comercial" 
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <GestaoComercial />
+              </AdminRoute>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/gestao/usuarios" 
+          element={
+            <ProtectedRoute>
+              <AdminOnlyRoute>
+                <GestaoUsuarios />
+              </AdminOnlyRoute>
+            </ProtectedRoute>
+          } 
+        />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

@@ -2,7 +2,7 @@ import {
   Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, 
   Plus, Car, Star, TrendingUp, DollarSign, FileText, ChevronDown,
   ClipboardList, Gauge, LayoutDashboard, Lightbulb, UserCog, Cog, 
-  Megaphone, ShoppingCart, Laptop
+  Megaphone, ShoppingCart, Laptop, Crown
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -56,49 +56,50 @@ type AdminMenuGroup = {
   items: AdminMenuItem[];
 };
 
-// MODULE: Gestão (dashboards customizados) - APENAS GESTÃO (nível mais alto)
+// MODULE: Gestão (dashboards customizados) - APENAS DEV e GESTÃO (níveis mais altos)
 const gestaoModule: AdminMenuGroup = {
   label: "Gestão",
   icon: LayoutDashboard,
-  roles: ["gestao"],
+  roles: ["dev", "gestao"],
   items: [
-    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["gestao"] },
-    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["gestao"] },
-    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["gestao"] },
-    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["gestao"] },
-    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["gestao"] },
-    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["gestao"] },
+    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["dev", "gestao"] },
+    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["dev", "gestao"] },
+    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["dev", "gestao"] },
+    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["dev", "gestao"] },
+    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["dev", "gestao"] },
+    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["dev", "gestao"] },
+    { title: "Usuários", url: "/gestao/usuarios", icon: Crown, roles: ["dev", "gestao"] },
   ],
 };
 
-// MODULE: Painel ADM (admin + gestao - gestão tem acesso a tudo)
+// MODULE: Painel ADM (dev + admin + gestao - dev e gestão têm acesso a tudo)
 const painelAdmModule: AdminMenuGroup = {
   label: "Painel ADM",
   icon: Gauge,
-  roles: ["admin", "gestao"],
+  roles: ["dev", "admin", "gestao"],
   items: [
-    { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["admin", "gestao"] },
-    { title: "Ordens de Serviço", url: "/admin/ordens-servico", icon: FileText, roles: ["admin", "gestao"] },
-    { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["admin", "gestao"] },
-    { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["admin", "gestao"] },
-    { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["admin", "gestao"] },
-    { title: "Cronograma", url: "/admin/agenda-mecanicos", icon: ClipboardList, roles: ["admin", "gestao"] },
-    { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["admin", "gestao"] },
-    { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["gestao"] },
-    { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["gestao"] },
-    { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["admin", "gestao"] },
+    { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["dev", "admin", "gestao"] },
+    { title: "Ordens de Serviço", url: "/admin/ordens-servico", icon: FileText, roles: ["dev", "admin", "gestao"] },
+    { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["dev", "admin", "gestao"] },
+    { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["dev", "admin", "gestao"] },
+    { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["dev", "admin", "gestao"] },
+    { title: "Cronograma", url: "/admin/agenda-mecanicos", icon: ClipboardList, roles: ["dev", "admin", "gestao"] },
+    { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["dev", "admin", "gestao"] },
+    { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["dev", "gestao"] },
+    { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["dev", "gestao"] },
+    { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["dev", "admin", "gestao"] },
   ],
 };
 
-// MODULE: Sistema (admin + gestao)
+// MODULE: Sistema (dev + admin + gestao)
 const sistemaModule: AdminMenuGroup = {
   label: "Sistema",
   icon: Settings,
-  roles: ["admin", "gestao"],
+  roles: ["dev", "admin", "gestao"],
   items: [
-    { title: "Melhorias", url: "/gestao/melhorias", icon: Lightbulb, roles: ["admin", "gestao"] },
-    { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["admin", "gestao"] },
-    { title: "Documentação", url: "/admin/documentacao", icon: FileText, roles: ["admin", "gestao"] },
+    { title: "Melhorias", url: "/gestao/melhorias", icon: Lightbulb, roles: ["dev", "admin", "gestao"] },
+    { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["dev", "admin", "gestao"] },
+    { title: "Documentação", url: "/admin/documentacao", icon: FileText, roles: ["dev", "admin", "gestao"] },
   ],
 };
 
