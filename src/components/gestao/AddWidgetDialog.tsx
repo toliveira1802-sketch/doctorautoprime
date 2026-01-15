@@ -48,7 +48,7 @@ export function AddWidgetDialog({ open, onOpenChange, dashboardId, onSuccess }: 
     cor: "#3b82f6",
     valor_fixo: "",
     config: {
-      status: "",
+      status: "all",
       periodo: "mes",
     },
   });
@@ -82,7 +82,7 @@ export function AddWidgetDialog({ open, onOpenChange, dashboardId, onSuccess }: 
         tamanho: "md",
         cor: "#3b82f6",
         valor_fixo: "",
-        config: { status: "", periodo: "mes" },
+        config: { status: "all", periodo: "mes" },
       });
       onSuccess();
     } catch (err) {
@@ -193,7 +193,7 @@ export function AddWidgetDialog({ open, onOpenChange, dashboardId, onSuccess }: 
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="pendente">Pendente</SelectItem>
                     <SelectItem value="confirmado">Confirmado</SelectItem>
                     <SelectItem value="em_andamento">Em Andamento</SelectItem>
