@@ -20,6 +20,7 @@ import NovoAgendamento from "./pages/NovoAgendamento";
 import AgendamentoSucesso from "./pages/AgendamentoSucesso";
 import Reagendamento from "./pages/Reagendamento";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminDashboardOverview from "./pages/admin/AdminDashboardOverview";
 import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
 import AdminNovaOS from "./pages/admin/AdminNovaOS";
 import AdminPatioDetalhes from "./pages/admin/AdminPatioDetalhes";
@@ -173,6 +174,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AdminRoute>
               <AdminAgendamentos />
+            </AdminRoute>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/dashboard" 
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminDashboardOverview />
             </AdminRoute>
           </ProtectedRoute>
         } 
