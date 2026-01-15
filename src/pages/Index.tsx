@@ -2,9 +2,16 @@ import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { ActionButtons } from "@/components/home/ActionButtons";
 import { MyVehiclesSection } from "@/components/home/MyVehiclesSection";
-import { Youtube, Instagram, BookOpen } from "lucide-react";
+import { Youtube, Instagram, BookOpen, Construction } from "lucide-react";
+import { toast } from "sonner";
 
 const Index = () => {
+  const handleBlogClick = () => {
+    toast.info("Blog em construção! 🚧", {
+      description: "Em breve teremos conteúdos exclusivos para você.",
+    });
+  };
+
   return (
     <div className="h-screen gradient-bg dark flex flex-col overflow-hidden">
       <Header />
@@ -44,14 +51,15 @@ const Index = () => {
             >
               <Youtube className="h-6 w-6 text-white" />
             </a>
-            <a
-              href="https://blog.doctorauto.com.br"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+            <button
+              onClick={handleBlogClick}
+              className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg hover:scale-105 transition-transform relative"
             >
               <BookOpen className="h-6 w-6 text-white" />
-            </a>
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
+                <Construction className="h-2.5 w-2.5 text-white" />
+              </span>
+            </button>
           </div>
         </section>
       </main>
