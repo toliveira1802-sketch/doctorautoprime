@@ -118,6 +118,16 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {/* Floating Back Button */}
+      <Button
+        variant="default"
+        size="icon"
+        className="fixed bottom-6 left-6 z-50 h-14 w-14 rounded-full shadow-lg gradient-primary hover:opacity-90"
+        onClick={() => navigate(-1)}
+      >
+        <ArrowLeft className="h-6 w-6 text-white" />
+      </Button>
+
       {/* Header */}
       <div className="relative">
         <div className="absolute inset-0 h-48 gradient-primary opacity-90" />
