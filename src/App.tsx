@@ -49,6 +49,7 @@ import GestaoFinanceiro from "./pages/gestao/GestaoFinanceiro";
 import GestaoTecnologia from "./pages/gestao/GestaoTecnologia";
 import GestaoComercial from "./pages/gestao/GestaoComercial";
 import GestaoUsuarios from "./pages/gestao/GestaoUsuarios";
+import Install from "./pages/Install";
 const queryClient = new QueryClient();
 
 // Protected Route component - saves intended destination before redirecting to login
@@ -81,6 +82,7 @@ const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/verify-otp" element={<VerifyOTP />} />
       <Route path="/biometric-setup" element={<BiometricSetup />} />
+      <Route path="/install" element={<Install />} />
       <Route 
         path="/" 
         element={
