@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, User, Phone, CreditCard, Cake } from "lucide-react";
+import { CalendarIcon, User, Phone, CreditCard, Cake, Camera, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -44,7 +45,10 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
   const [birthday, setBirthday] = useState<Date | undefined>();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
@@ -52,8 +56,58 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
       setPhone(profile.phone || "");
       setCpf(profile.cpf || "");
       setBirthday(profile.birthday ? new Date(profile.birthday) : undefined);
+      setAvatarUrl(profile.avatar_url);
     }
   }, [profile]);
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Por favor, selecione uma imagem");
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 2MB");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error("Usuário não autenticado");
+
+      // Create unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${authUser.id}/avatar.${fileExt}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Add cache buster to force refresh
+      const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
+      setAvatarUrl(urlWithCacheBuster);
+      toast.success("Foto atualizada!");
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast.error("Erro ao enviar foto");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, "");
@@ -86,6 +140,9 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
       const { data: { user: authUser } } = await supabase.auth.getUser();
 
       if (authUser) {
+        // Clean avatar URL (remove cache buster)
+        const cleanAvatarUrl = avatarUrl?.split('?')[0] || null;
+
         const { error } = await supabase
           .from("profiles")
           .update({
@@ -93,6 +150,7 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
             phone: phone,
             cpf: cpf,
             birthday: birthday ? format(birthday, "yyyy-MM-dd") : null,
+            avatar_url: cleanAvatarUrl,
           })
           .eq("user_id", authUser.id);
 
@@ -118,6 +176,40 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Avatar Upload */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative">
+              <Avatar className="h-24 w-24 border-4 border-muted">
+                <AvatarImage src={avatarUrl || undefined} />
+                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                  {fullName?.charAt(0)?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 shadow-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {uploadingAvatar ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4" />
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Clique no ícone para alterar a foto
+            </p>
+          </div>
+
           {/* Full Name */}
           <div className="space-y-2">
             <Label htmlFor="fullName" className="flex items-center gap-2">
