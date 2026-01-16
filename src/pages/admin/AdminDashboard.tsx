@@ -354,12 +354,23 @@ const AdminDashboard = () => {
           </Button>
           <Button 
             size="lg" 
-            variant="secondary"
             className="h-20 text-lg gap-3"
             onClick={() => navigate('/admin/agendamentos')}
           >
             <span className="text-2xl">🐦</span>
             Pedro
+          </Button>
+        </div>
+        
+        {/* Botão Thales */}
+        <div className="grid grid-cols-1 gap-4">
+          <Button 
+            size="lg" 
+            className="h-20 text-lg gap-3"
+            onClick={() => navigate('/admin/patio')}
+          >
+            <span className="text-2xl">💉🖤🤍</span>
+            Thales
           </Button>
         </div>
 
