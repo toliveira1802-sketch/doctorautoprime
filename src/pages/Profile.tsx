@@ -90,6 +90,10 @@ export default function Profile() {
     
     const today = new Date();
     const birthday = parseISO(profile.birthday);
+    
+    // Validar se a data é válida
+    if (isNaN(birthday.getTime())) return null;
+    
     const thisYearBirthday = new Date(today.getFullYear(), birthday.getMonth(), birthday.getDate());
     
     if (thisYearBirthday < today) {
