@@ -172,6 +172,14 @@ const AppRoutes = () => {
         } 
       />
       <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/servico/:vehicleId" 
         element={
           <ProtectedRoute>
