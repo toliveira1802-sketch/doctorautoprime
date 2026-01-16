@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "@/components/gestao/ExportButtons";
-import { AddDirectoryDialog } from "@/components/gestao/AddDirectoryDialog";
+import { CustomizableDashboard } from "@/components/gestao/CustomizableDashboard";
 import { exportToPDF, exportToExcel, type ReportData } from "@/utils/exportReport";
-import { Megaphone, Users, Target, TrendingUp, Loader2, Eye, Plus } from "lucide-react";
+import { Megaphone, Users, Target, TrendingUp, Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
@@ -40,7 +39,6 @@ export default function GestaoComercial() {
     try {
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
-      const startDate = startOfMonth.toISOString().split("T")[0];
 
       // Total de clientes
       const { count: totalClients } = await supabase
@@ -144,120 +142,115 @@ export default function GestaoComercial() {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Megaphone className="w-6 h-6 text-orange-500" />
-              Comercial e Marketing
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Métricas de aquisição e campanhas
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <AddDirectoryDialog>
-              <Button variant="outline" size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Diretório
-              </Button>
-            </AddDirectoryDialog>
+      <div className="p-6">
+        <CustomizableDashboard dashboardKey="comercial" title="Comercial e Marketing">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Megaphone className="w-6 h-6 text-orange-500" />
+                Comercial e Marketing
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Métricas de aquisição e campanhas
+              </p>
+            </div>
             <ExportButtons
               onExportPDF={() => exportToPDF(getReportData())}
               onExportExcel={() => exportToExcel(getReportData())}
               isLoading={isLoading}
             />
           </div>
-        </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-              {statCards.map((stat) => (
-                <Card key={stat.label}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                      {stat.label}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                {statCards.map((stat) => (
+                  <Card key={stat.label}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                        {stat.label}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold">{stat.value}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5" />
+                      Novos Clientes (Últimos 7 dias)
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">{stat.value}</p>
+                    {dailyClients.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={dailyClients}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: "hsl(var(--popover))", 
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px"
+                            }} 
+                          />
+                          <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Novos Clientes" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">
+                        Sem novos clientes nos últimos 7 dias
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
-              ))}
-            </div>
 
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    Novos Clientes (Últimos 7 dias)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {dailyClients.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={dailyClients}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--popover))", 
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px"
-                          }} 
-                        />
-                        <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Novos Clientes" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">
-                      Sem novos clientes nos últimos 7 dias
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Megaphone className="w-5 h-5" />
-                    Promoções Ativas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {promoStats.length > 0 ? (
-                    <div className="space-y-3">
-                      {promoStats.map((promo) => (
-                        <div
-                          key={promo.id}
-                          className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                        >
-                          <p className="font-medium truncate flex-1 mr-4">{promo.title}</p>
-                          <div className="flex items-center gap-2">
-                            <Eye className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-semibold">{promo.clicks}</span>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Megaphone className="w-5 h-5" />
+                      Promoções Ativas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {promoStats.length > 0 ? (
+                      <div className="space-y-3">
+                        {promoStats.map((promo) => (
+                          <div
+                            key={promo.id}
+                            className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                          >
+                            <p className="font-medium truncate flex-1 mr-4">{promo.title}</p>
+                            <div className="flex items-center gap-2">
+                              <Eye className="w-4 h-4 text-muted-foreground" />
+                              <span className="font-semibold">{promo.clicks}</span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">
-                      Nenhuma promoção ativa
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">
+                        Nenhuma promoção ativa
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </>
-        )}
+          )}
+        </CustomizableDashboard>
       </div>
     </AdminLayout>
   );

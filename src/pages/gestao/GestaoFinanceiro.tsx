@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "@/components/gestao/ExportButtons";
-import { AddDirectoryDialog } from "@/components/gestao/AddDirectoryDialog";
+import { CustomizableDashboard } from "@/components/gestao/CustomizableDashboard";
 import { exportToPDF, exportToExcel, type ReportData } from "@/utils/exportReport";
-import { DollarSign, TrendingUp, TrendingDown, Receipt, Loader2, Target, Plus } from "lucide-react";
+import { DollarSign, TrendingUp, Receipt, Loader2, Target } from "lucide-react";
 import { toast } from "sonner";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from "recharts";
-import { format, subDays, eachDayOfInterval } from "date-fns";
+import { format, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface DailyRevenue {
@@ -29,7 +28,6 @@ export default function GestaoFinanceiro() {
     goalProgress: 0,
   });
   const [dailyRevenue, setDailyRevenue] = useState<DailyRevenue[]>([]);
-  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -88,7 +86,6 @@ export default function GestaoFinanceiro() {
         });
 
         setDailyRevenue(dailyData);
-        setRecentTransactions(faturamento.slice(-10).reverse());
       }
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
@@ -135,124 +132,119 @@ export default function GestaoFinanceiro() {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <DollarSign className="w-6 h-6 text-green-500" />
-              Financeiro
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Indicadores financeiros do mês atual
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <AddDirectoryDialog>
-              <Button variant="outline" size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Diretório
-              </Button>
-            </AddDirectoryDialog>
+      <div className="p-6">
+        <CustomizableDashboard dashboardKey="financeiro" title="Financeiro">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <DollarSign className="w-6 h-6 text-green-500" />
+                Financeiro
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Indicadores financeiros do mês atual
+              </p>
+            </div>
             <ExportButtons
               onExportPDF={() => exportToPDF(getReportData())}
               onExportExcel={() => exportToExcel(getReportData())}
               isLoading={isLoading}
             />
           </div>
-        </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-              {statCards.map((stat) => (
-                <Card key={stat.label}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                      {stat.label}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                {statCards.map((stat) => (
+                  <Card key={stat.label}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                        {stat.label}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-2xl font-bold">{stat.value}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5" />
+                      Faturamento Diário
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold">{stat.value}</p>
+                    {dailyRevenue.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <LineChart data={dailyRevenue}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                          <YAxis 
+                            tick={{ fontSize: 12 }} 
+                            tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`}
+                          />
+                          <Tooltip 
+                            formatter={(value: number) => [formatCurrency(value), "Valor"]}
+                            contentStyle={{ 
+                              backgroundColor: "hsl(var(--popover))", 
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px"
+                            }} 
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="value" 
+                            stroke="#10b981" 
+                            strokeWidth={2}
+                            dot={{ fill: "#10b981" }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">
+                        Sem dados para exibir
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
-              ))}
-            </div>
 
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    Faturamento Diário
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {dailyRevenue.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <LineChart data={dailyRevenue}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis 
-                          tick={{ fontSize: 12 }} 
-                          tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="w-5 h-5" />
+                      Progresso da Meta
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col items-center justify-center py-4">
+                      <p className="text-5xl font-bold text-primary">
+                        {kpis.goalProgress}%
+                      </p>
+                      <p className="text-muted-foreground mt-2">
+                        {formatCurrency(kpis.totalRevenue)} de {formatCurrency(kpis.monthGoal)}
+                      </p>
+                      <div className="w-full mt-4 h-4 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${Math.min(kpis.goalProgress, 100)}%` }}
                         />
-                        <Tooltip 
-                          formatter={(value: number) => [formatCurrency(value), "Valor"]}
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--popover))", 
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px"
-                          }} 
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke="#10b981" 
-                          strokeWidth={2}
-                          dot={{ fill: "#10b981" }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">
-                      Sem dados para exibir
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="w-5 h-5" />
-                    Progresso da Meta
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center justify-center py-4">
-                    <p className="text-5xl font-bold text-primary">
-                      {kpis.goalProgress}%
-                    </p>
-                    <p className="text-muted-foreground mt-2">
-                      {formatCurrency(kpis.totalRevenue)} de {formatCurrency(kpis.monthGoal)}
-                    </p>
-                    <div className="w-full mt-4 h-4 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full transition-all"
-                        style={{ width: `${Math.min(kpis.goalProgress, 100)}%` }}
-                      />
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </>
-        )}
+          )}
+        </CustomizableDashboard>
       </div>
     </AdminLayout>
   );
