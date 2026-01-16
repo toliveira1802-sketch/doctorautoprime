@@ -36,6 +36,11 @@ interface ChartDataPoint {
   color?: string;
 }
 
+interface ListItem {
+  label: string;
+  value: string | number;
+}
+
 const CHART_COLORS = [
   "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
   "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#6366f1"
@@ -44,10 +49,12 @@ const CHART_COLORS = [
 export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
   const [value, setValue] = useState<string | number>("-");
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [listData, setListData] = useState<ListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [trend, setTrend] = useState<"up" | "down" | "neutral">("neutral");
 
   const isChartWidget = ["grafico_linha", "grafico_barra", "grafico_pizza"].includes(widget.tipo);
+  const isListWidget = ["lista", "tabela"].includes(widget.tipo);
 
   useEffect(() => {
     fetchData();
@@ -68,6 +75,8 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
 
       if (isChartWidget) {
         await fetchChartData(tabela, config);
+      } else if (isListWidget) {
+        await fetchListData(tabela, config);
       } else {
         await fetchSimpleData(tabela, config);
       }
@@ -79,14 +88,88 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
       console.error("Erro ao buscar dados do widget:", err);
       setValue("-");
       setChartData([]);
+      setListData([]);
     } finally {
       setIsLoading(false);
     }
   }
 
+  async function fetchListData(tabela: string, config: Record<string, any>) {
+    const limite = config.limite || 10;
+    
+    if (tabela === "appointments") {
+      const { data } = await supabase
+        .from("appointments")
+        .select("id, appointment_date, status, final_price")
+        .order("appointment_date", { ascending: false })
+        .limit(limite);
+      
+      if (data) {
+        setListData(data.map(item => ({
+          label: formatDate(item.appointment_date),
+          value: formatCurrency(Number(item.final_price))
+        })));
+      }
+    } else if (tabela === "ordens_servico") {
+      const { data } = await supabase
+        .from("ordens_servico")
+        .select("numero_os, vehicle, status, valor_final")
+        .order("created_at", { ascending: false })
+        .limit(limite);
+      
+      if (data) {
+        setListData(data.map(item => ({
+          label: `${item.numero_os} - ${item.vehicle}`,
+          value: formatCurrency(Number(item.valor_final || 0))
+        })));
+      }
+    } else if (tabela === "mechanics") {
+      const { data } = await supabase
+        .from("mechanics")
+        .select("name, specialty")
+        .eq("is_active", true)
+        .limit(limite);
+      
+      if (data) {
+        setListData(data.map(item => ({
+          label: item.name,
+          value: item.specialty || "Geral"
+        })));
+      }
+    } else if (tabela === "services") {
+      const { data } = await supabase
+        .from("services")
+        .select("name, price")
+        .eq("is_active", true)
+        .order("display_order")
+        .limit(limite);
+      
+      if (data) {
+        setListData(data.map(item => ({
+          label: item.name,
+          value: formatCurrency(Number(item.price))
+        })));
+      }
+    } else if (tabela === "feedbacks") {
+      const { data } = await supabase
+        .from("feedbacks")
+        .select("rating, comment, created_at")
+        .order("created_at", { ascending: false })
+        .limit(limite);
+      
+      if (data) {
+        setListData(data.map(item => ({
+          label: item.comment?.substring(0, 50) || "Sem comentário",
+          value: `⭐ ${item.rating || 0}`
+        })));
+      }
+    } else {
+      setListData([]);
+    }
+  }
+
   async function fetchChartData(tabela: string, config: Record<string, any>) {
     if (tabela === "appointments") {
-      // Dados de agendamentos por status
       const { data } = await supabase
         .from("appointments")
         .select("status, appointment_date")
@@ -94,7 +177,6 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
 
       if (data) {
         if (widget.tipo === "grafico_pizza") {
-          // Agrupar por status
           const statusCount: Record<string, number> = {};
           data.forEach((item) => {
             statusCount[item.status] = (statusCount[item.status] || 0) + 1;
@@ -107,7 +189,6 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
           }));
           setChartData(chartPoints);
         } else {
-          // Agrupar por data para linha/barra
           const dateCount: Record<string, number> = {};
           data.forEach((item) => {
             const date = item.appointment_date;
@@ -130,7 +211,6 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
         .order("data_entrega", { ascending: true });
 
       if (data) {
-        // Agrupar por data
         const dateSum: Record<string, number> = {};
         data.forEach((item) => {
           const date = item.data_entrega;
@@ -143,14 +223,48 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
         }));
         setChartData(chartPoints);
       }
+    } else if (tabela === "ordens_servico") {
+      const { data } = await supabase
+        .from("ordens_servico")
+        .select("status, created_at, valor_final")
+        .gte("created_at", getDateRange(config.periodo));
+
+      if (data) {
+        if (widget.tipo === "grafico_pizza") {
+          const statusCount: Record<string, number> = {};
+          data.forEach((item) => {
+            statusCount[item.status] = (statusCount[item.status] || 0) + 1;
+          });
+          
+          const chartPoints: ChartDataPoint[] = Object.entries(statusCount).map(([status, count], index) => ({
+            name: status,
+            value: count,
+            color: CHART_COLORS[index % CHART_COLORS.length],
+          }));
+          setChartData(chartPoints);
+        } else {
+          const dateSum: Record<string, number> = {};
+          data.forEach((item) => {
+            const date = item.created_at.split("T")[0];
+            dateSum[date] = (dateSum[date] || 0) + Number(item.valor_final || 0);
+          });
+
+          const chartPoints: ChartDataPoint[] = Object.entries(dateSum).slice(-7).map(([date, sum]) => ({
+            name: formatDate(date),
+            value: sum,
+          }));
+          setChartData(chartPoints);
+        }
+      }
     } else {
-      // Sem dados disponíveis para esta fonte
       setChartData([]);
     }
   }
 
   async function fetchSimpleData(tabela: string, config: Record<string, any>) {
-    if (tabela === "manual") {
+    const operacao = config.operacao || "count";
+    
+    if (tabela === "manual" || tabela === "formula") {
       const { data } = await supabase
         .from("gestao_dados_manuais")
         .select("valor")
@@ -175,7 +289,7 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
       }
 
       const { count } = await query;
-      setValue(count || 0);
+      setValue(formatValue(count || 0, config));
     } else if (tabela === "faturamento") {
       let query = supabase.from("faturamento").select("valor");
       
@@ -194,16 +308,88 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
         .select("*", { count: "exact", head: true })
         .eq("is_active", true);
       
-      setValue(count || 0);
+      setValue(formatValue(count || 0, config));
     } else if (tabela === "profiles") {
       const { count } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true });
       
-      setValue(count || 0);
+      setValue(formatValue(count || 0, config));
+    } else if (tabela === "ordens_servico") {
+      let query = supabase.from("ordens_servico").select("*", { count: "exact", head: true });
+      
+      if (config.status && config.status !== "all") {
+        query = query.eq("status", config.status);
+      }
+
+      const { count } = await query;
+      setValue(formatValue(count || 0, config));
+    } else if (tabela === "mechanics") {
+      const { count } = await supabase
+        .from("mechanics")
+        .select("*", { count: "exact", head: true })
+        .eq("is_active", true);
+      
+      setValue(formatValue(count || 0, config));
+    } else if (tabela === "services") {
+      const { count } = await supabase
+        .from("services")
+        .select("*", { count: "exact", head: true })
+        .eq("is_active", true);
+      
+      setValue(formatValue(count || 0, config));
+    } else if (tabela === "feedbacks") {
+      if (operacao === "avg") {
+        const { data } = await supabase
+          .from("feedbacks")
+          .select("rating");
+        
+        const ratings = data?.filter(f => f.rating).map(f => f.rating!) || [];
+        const avg = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+        setValue(avg.toFixed(1));
+      } else {
+        const { count } = await supabase
+          .from("feedbacks")
+          .select("*", { count: "exact", head: true });
+        
+        setValue(formatValue(count || 0, config));
+      }
+    } else if (tabela === "alerts") {
+      const { count } = await supabase
+        .from("alerts")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "scheduled");
+      
+      setValue(formatValue(count || 0, config));
+    } else if (tabela === "recovery_leads") {
+      const { count } = await supabase
+        .from("recovery_leads")
+        .select("*", { count: "exact", head: true })
+        .eq("recovery_status", "pending");
+      
+      setValue(formatValue(count || 0, config));
+    } else if (tabela === "metas_financeiras") {
+      const now = new Date();
+      const { data } = await supabase
+        .from("metas_financeiras")
+        .select("meta_faturamento")
+        .eq("mes", now.getMonth() + 1)
+        .eq("ano", now.getFullYear())
+        .single();
+      
+      setValue(data ? formatCurrency(Number(data.meta_faturamento)) : "-");
     } else {
       setValue("-");
     }
+  }
+
+  function formatValue(value: number, config: Record<string, any>): string {
+    const prefixo = config.prefixo || "";
+    const sufixo = config.sufixo || "";
+    const casas = config.casas_decimais || 0;
+    
+    const formatted = casas > 0 ? value.toFixed(casas) : String(value);
+    return `${prefixo}${formatted}${sufixo}`;
   }
 
   function getDateRange(periodo: string): string {
@@ -211,10 +397,36 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
     switch (periodo) {
       case "hoje":
         return date.toISOString().split("T")[0];
+      case "ontem":
+        date.setDate(date.getDate() - 1);
+        return date.toISOString().split("T")[0];
       case "semana":
         date.setDate(date.getDate() - 7);
         return date.toISOString().split("T")[0];
+      case "semana_passada":
+        date.setDate(date.getDate() - 14);
+        return date.toISOString().split("T")[0];
       case "mes":
+        date.setDate(1);
+        return date.toISOString().split("T")[0];
+      case "mes_passado":
+        date.setMonth(date.getMonth() - 1);
+        date.setDate(1);
+        return date.toISOString().split("T")[0];
+      case "trimestre":
+        date.setMonth(date.getMonth() - 3);
+        return date.toISOString().split("T")[0];
+      case "ultimos_7":
+        date.setDate(date.getDate() - 7);
+        return date.toISOString().split("T")[0];
+      case "ultimos_30":
+        date.setDate(date.getDate() - 30);
+        return date.toISOString().split("T")[0];
+      case "ultimos_90":
+        date.setDate(date.getDate() - 90);
+        return date.toISOString().split("T")[0];
+      case "ano":
+        date.setMonth(0);
         date.setDate(1);
         return date.toISOString().split("T")[0];
       default:
@@ -378,6 +590,130 @@ export function WidgetCard({ widget, refreshKey, onDelete }: WidgetCardProps) {
                 />
               </PieChart>
             </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Gauge/Velocímetro
+  if (widget.tipo === "gauge") {
+    const numValue = typeof value === "number" ? value : parseFloat(String(value)) || 0;
+    const meta = widget.query_config?.meta ? parseFloat(widget.query_config.meta) : 100;
+    const percentage = Math.min(100, Math.max(0, (numValue / meta) * 100));
+    const rotation = (percentage / 100) * 180 - 90;
+
+    return (
+      <Card className="relative group" style={{ backgroundColor: bgColor }}>
+        <WidgetHeader />
+        <CardContent className="flex flex-col items-center">
+          {isLoading ? (
+            <div className="h-32 w-32 bg-muted animate-pulse rounded-full" />
+          ) : (
+            <>
+              <div className="relative w-32 h-16 overflow-hidden">
+                <div 
+                  className="absolute w-32 h-32 rounded-full border-8"
+                  style={{ 
+                    borderColor: `${textColor}30`,
+                    clipPath: "polygon(0 0, 100% 0, 100% 50%, 0 50%)"
+                  }}
+                />
+                <div 
+                  className="absolute w-32 h-32 rounded-full border-8"
+                  style={{ 
+                    borderColor: textColor,
+                    clipPath: `polygon(0 0, 100% 0, 100% 50%, 0 50%)`,
+                    transform: `rotate(${rotation - 90}deg)`,
+                    transformOrigin: "center",
+                    opacity: percentage / 100
+                  }}
+                />
+                <div 
+                  className="absolute bottom-0 left-1/2 w-1 h-12 -translate-x-1/2 origin-bottom"
+                  style={{ 
+                    backgroundColor: textColor,
+                    transform: `rotate(${rotation}deg)`
+                  }}
+                />
+              </div>
+              <span className="text-2xl font-bold mt-2" style={{ color: textColor }}>
+                {percentage.toFixed(0)}%
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {numValue} / {meta}
+              </span>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Lista
+  if (widget.tipo === "lista") {
+    return (
+      <Card className="relative group" style={{ backgroundColor: bgColor }}>
+        <WidgetHeader />
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-6 bg-muted animate-pulse rounded" />
+              ))}
+            </div>
+          ) : (
+            <ul className="space-y-2 max-h-48 overflow-y-auto">
+              {listData.length > 0 ? listData.map((item, idx) => (
+                <li key={idx} className="flex justify-between items-center text-sm py-1 border-b border-border/50 last:border-0">
+                  <span className="truncate flex-1">{item.label}</span>
+                  <span className="font-medium ml-2" style={{ color: textColor }}>{item.value}</span>
+                </li>
+              )) : (
+                <li className="text-sm text-muted-foreground">Nenhum dado encontrado</li>
+              )}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Tabela
+  if (widget.tipo === "tabela") {
+    return (
+      <Card className="relative group" style={{ backgroundColor: bgColor }}>
+        <WidgetHeader />
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-8 bg-muted animate-pulse rounded" />
+              ))}
+            </div>
+          ) : (
+            <div className="overflow-x-auto max-h-48">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 font-medium text-muted-foreground">Item</th>
+                    <th className="text-right py-2 font-medium text-muted-foreground">Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {listData.length > 0 ? listData.map((item, idx) => (
+                    <tr key={idx} className="border-b border-border/50 last:border-0">
+                      <td className="py-2 truncate max-w-[150px]">{item.label}</td>
+                      <td className="py-2 text-right font-medium" style={{ color: textColor }}>{item.value}</td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={2} className="py-2 text-muted-foreground text-center">Nenhum dado</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>
