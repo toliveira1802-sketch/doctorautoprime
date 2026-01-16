@@ -163,7 +163,10 @@ export default function Profile() {
                       {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <button className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 shadow-md hover:bg-primary/90 transition-colors">
+                  <button 
+                    onClick={() => setEditDialogOpen(true)}
+                    className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 shadow-md hover:bg-primary/90 transition-colors"
+                  >
                     <Camera className="h-4 w-4" />
                   </button>
                 </div>
