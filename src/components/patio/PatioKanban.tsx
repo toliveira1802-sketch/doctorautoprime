@@ -20,58 +20,66 @@ import { RefreshCw, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-// Column configuration with visual styles
+// Column configuration with visual styles and SLA
 const columnConfig: Record<
   PatioStatus,
-  { label: string; icon: string; color: string; bgColor: string }
+  { label: string; icon: string; color: string; bgColor: string; sla: string }
 > = {
   diagnostico: {
     label: "Diagnóstico",
     icon: "🧠",
     color: "text-purple-600",
     bgColor: "bg-purple-500/10 border-purple-500/20",
+    sla: "48h",
   },
   orcamento: {
     label: "Orçamento",
     icon: "📝",
     color: "text-blue-600",
     bgColor: "bg-blue-500/10 border-blue-500/20",
+    sla: "8h",
   },
   aguardando_aprovacao: {
     label: "Aguardando Aprovação",
     icon: "🤔",
     color: "text-amber-600",
     bgColor: "bg-amber-500/10 border-amber-500/20",
+    sla: "12h",
   },
   aguardando_pecas: {
     label: "Aguardando Peças",
     icon: "😤",
     color: "text-orange-600",
     bgColor: "bg-orange-500/10 border-orange-500/20",
+    sla: "5h",
   },
   pronto_iniciar: {
     label: "Pronto para Iniciar",
     icon: "🫵",
     color: "text-cyan-600",
     bgColor: "bg-cyan-500/10 border-cyan-500/20",
+    sla: "4h",
   },
   em_execucao: {
     label: "Em Execução",
     icon: "🛠️",
     color: "text-indigo-600",
     bgColor: "bg-indigo-500/10 border-indigo-500/20",
+    sla: "Combinado",
   },
   pronto_retirada: {
     label: "Pronto / Retirada",
     icon: "💰",
     color: "text-success",
     bgColor: "bg-success/10 border-success/20",
+    sla: "8h",
   },
   concluido: {
     label: "Entregue",
     icon: "🙏🏻",
     color: "text-emerald-600",
     bgColor: "bg-emerald-500/10 border-emerald-500/20",
+    sla: "",
   },
 };
 
