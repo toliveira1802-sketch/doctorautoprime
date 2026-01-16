@@ -13,6 +13,7 @@ interface DroppableColumnProps {
     icon: string;
     color: string;
     bgColor: string;
+    sla: string;
   };
   onCardClick?: (item: PatioItem) => void;
 }
@@ -49,9 +50,16 @@ export function DroppableColumn({
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">{config.icon}</span>
-          <h3 className={cn("font-semibold text-sm", config.color)}>
-            {config.label}
-          </h3>
+          <div>
+            <h3 className={cn("font-semibold text-sm", config.color)}>
+              {config.label}
+            </h3>
+            {config.sla && (
+              <p className="text-[10px] text-muted-foreground">
+                SLA: {config.sla}
+              </p>
+            )}
+          </div>
         </div>
         <span
           className={cn(
