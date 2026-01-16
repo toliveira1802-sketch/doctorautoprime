@@ -12,6 +12,8 @@ type StatusType =
   | "cancelado"
   | "concluido"
   | "diagnostico"
+  | "orcamento"
+  | "aguardando_aprovacao"
   | "aguardando_pecas"
   | "pronto_iniciar"
   | "em_execucao"
@@ -81,6 +83,16 @@ const statusConfig: Record<StatusType, { label: string; colors: string; icon: st
     colors: "bg-purple-500/20 text-purple-600 border-purple-500/30",
     icon: "🧠",
   },
+  orcamento: {
+    label: "📝 Orçamento",
+    colors: "bg-blue-500/20 text-blue-600 border-blue-500/30",
+    icon: "📝",
+  },
+  aguardando_aprovacao: {
+    label: "🤔 Aguardando Aprovação",
+    colors: "bg-amber-500/20 text-amber-600 border-amber-500/30",
+    icon: "🤔",
+  },
   aguardando_pecas: {
     label: "😤 Aguardando Peças",
     colors: "bg-orange-500/20 text-orange-600 border-orange-500/30",
@@ -88,12 +100,12 @@ const statusConfig: Record<StatusType, { label: string; colors: string; icon: st
   },
   pronto_iniciar: {
     label: "🫵 Pronto para Iniciar",
-    colors: "bg-blue-500/20 text-blue-600 border-blue-500/30",
+    colors: "bg-cyan-500/20 text-cyan-600 border-cyan-500/30",
     icon: "🫵",
   },
   em_execucao: {
     label: "🛠️🔩 Em Execução",
-    colors: "bg-amber-500/20 text-amber-600 border-amber-500/30",
+    colors: "bg-indigo-500/20 text-indigo-600 border-indigo-500/30",
     icon: "🛠️",
   },
   pronto_retirada: {

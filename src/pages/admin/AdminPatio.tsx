@@ -1,15 +1,39 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { Car } from "lucide-react";
+import { PatioKanban } from "@/components/patio/PatioKanban";
+import { useTrelloCards } from "@/hooks/useTrelloCards";
+import { Car, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function AdminPatio() {
+  const { refresh, isLoading, items } = useTrelloCards();
+
   return (
     <AdminLayout>
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Car className="w-6 h-6 text-primary" />
-          Pátio
-        </h1>
-        <p className="text-muted-foreground">Em desenvolvimento</p>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Car className="w-6 h-6 text-primary" />
+              Pátio
+            </h1>
+            <p className="text-muted-foreground">
+              {items.length} veículo{items.length !== 1 ? "s" : ""} no pátio
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refresh}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            Atualizar
+          </Button>
+        </div>
+
+        {/* Kanban Board */}
+        <PatioKanban />
       </div>
     </AdminLayout>
   );
