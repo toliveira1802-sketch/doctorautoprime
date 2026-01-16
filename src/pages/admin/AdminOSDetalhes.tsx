@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { 
   ArrowLeft, Save, Plus, Trash2, Phone, Car, User, 
@@ -6,7 +6,7 @@ import {
   XCircle, AlertTriangle, Clock, Loader2, Edit2,
   ClipboardCheck, Camera, ChevronDown, ChevronUp, Gauge, ShieldCheck, Activity, Image,
   TrendingUp, Sparkles, Calculator, Gift, Video, Zap, Link, Send, Download,
-  MessageSquare, Crown, Award, Medal, Star, Scan
+  MessageSquare, Crown, Award, Medal, Star, Scan, RefreshCw, Lightbulb
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -187,6 +187,17 @@ export default function AdminOSDetalhes() {
   const [checklistPreCompra, setChecklistPreCompra] = useState<Record<string, boolean>>({});
   const [checklistGeral, setChecklistGeral] = useState<Record<string, boolean>>({});
 
+  // AI Suggestions state
+  interface AISuggestion {
+    descricao: string;
+    justificativa: string;
+    prioridade: 'verde' | 'amarelo' | 'vermelho';
+    valorEstimado: number;
+  }
+  const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
+  const [aiDicaVenda, setAiDicaVenda] = useState("");
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   // Fetch OS data
   const { data: os, isLoading, error } = useQuery({
     queryKey: ["ordem-servico", osId],
@@ -402,6 +413,43 @@ export default function AdminOSDetalhes() {
       if (os.scanner_avarias) setScannerAvarias(os.scanner_avarias);
     }
   }, [os]);
+
+  // Fetch AI suggestions
+  const fetchAISuggestions = useCallback(async () => {
+    if (!os) return;
+    
+    setIsLoadingAI(true);
+    setAiError(null);
+    
+    try {
+      const response = await supabase.functions.invoke('ai-budget-suggestions', {
+        body: {
+          diagnostico: os.diagnostico,
+          problema: os.descricao_problema,
+          veiculo: `${os.vehicle} - ${os.plate}`,
+          itensAtuais: itens
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao gerar sugestões');
+      }
+
+      const data = response.data;
+      if (data.error) {
+        setAiError(data.error);
+        return;
+      }
+
+      setAiSuggestions(data.sugestoes || []);
+      setAiDicaVenda(data.dicaVenda || '');
+    } catch (err) {
+      console.error('Error fetching AI suggestions:', err);
+      setAiError(err instanceof Error ? err.message : 'Erro ao gerar sugestões');
+    } finally {
+      setIsLoadingAI(false);
+    }
+  }, [os, itens]);
 
   const formatCurrency = (value: number | null) => {
     if (value === null || value === undefined) return "R$ 0,00";
@@ -1412,12 +1460,28 @@ export default function AdminOSDetalhes() {
               </CardContent>
             </Card>
 
-            {/* AI Sales Assistant - Compact */}
+            {/* AI Sales Assistant - Smart Suggestions */}
             <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30">
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Sparkles className="w-4 h-4 text-purple-500" />
-                  Assistente IA
+                <CardTitle className="flex items-center justify-between text-base">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    Sugestões IA
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 px-2 text-xs gap-1"
+                    onClick={fetchAISuggestions}
+                    disabled={isLoadingAI}
+                  >
+                    {isLoadingAI ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3" />
+                    )}
+                    {isLoadingAI ? 'Analisando...' : 'Gerar'}
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -1441,25 +1505,82 @@ export default function AdminOSDetalhes() {
                   return null;
                 })()}
 
-                {/* Quick suggestions */}
-                <div className="space-y-1">
-                  {[
-                    { desc: "Higienização A/C", custo: 80, venda: 189 },
-                    { desc: "Limpeza de Bicos", custo: 120, venda: 280 },
-                    { desc: "Cristalização Faróis", custo: 60, venda: 150 },
-                  ].map((sug) => (
-                    <div key={sug.desc} className="flex items-center justify-between text-xs p-1.5 bg-background/50 rounded">
-                      <span className="truncate">{sug.desc}</span>
-                      <Button size="sm" variant="ghost" className="h-5 px-2 text-xs" onClick={() => {
-                        const margem = ((sug.venda - sug.custo) / sug.custo) * 100;
-                        setNewMaoDeObra({ descricao: sug.desc, quantidade: 1, valor_unitario: sug.venda, prioridade: "amarelo", data_retorno_estimada: "" });
-                        setShowAddMaoDeObraDialog(true);
-                      }}>
-                        +R${sug.venda}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                {/* AI Error */}
+                {aiError && (
+                  <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
+                    <p className="text-xs text-red-600">{aiError}</p>
+                  </div>
+                )}
+
+                {/* AI Sales Tip */}
+                {aiDicaVenda && (
+                  <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20">
+                    <p className="text-xs flex items-start gap-1.5">
+                      <Lightbulb className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-amber-700">{aiDicaVenda}</span>
+                    </p>
+                  </div>
+                )}
+
+                {/* AI Suggestions */}
+                {aiSuggestions.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {aiSuggestions.map((sug, idx) => {
+                      const priorityColors: Record<string, string> = {
+                        vermelho: 'border-l-red-500',
+                        amarelo: 'border-l-yellow-500',
+                        verde: 'border-l-green-500'
+                      };
+                      return (
+                        <div 
+                          key={idx} 
+                          className={cn(
+                            "p-2 bg-background/50 rounded border-l-2",
+                            priorityColors[sug.prioridade] || 'border-l-muted'
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{sug.descricao}</p>
+                              <p className="text-[10px] text-muted-foreground line-clamp-2">{sug.justificativa}</p>
+                            </div>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-6 px-2 text-xs flex-shrink-0 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                              onClick={() => {
+                                setNewMaoDeObra({ 
+                                  descricao: sug.descricao, 
+                                  quantidade: 1, 
+                                  valor_unitario: sug.valorEstimado, 
+                                  prioridade: sug.prioridade, 
+                                  data_retorno_estimada: "" 
+                                });
+                                setShowAddMaoDeObraDialog(true);
+                              }}
+                            >
+                              +{formatCurrency(sug.valorEstimado)}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : !isLoadingAI && !aiError ? (
+                  <div className="text-center py-4">
+                    <Sparkles className="w-6 h-6 text-muted-foreground mx-auto mb-2 opacity-50" />
+                    <p className="text-xs text-muted-foreground">
+                      Clique em "Gerar" para receber sugestões<br />baseadas no diagnóstico
+                    </p>
+                  </div>
+                ) : null}
+
+                {isLoadingAI && (
+                  <div className="text-center py-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-purple-500 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">Analisando diagnóstico...</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
