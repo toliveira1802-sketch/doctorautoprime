@@ -6,10 +6,11 @@ import { cn } from "@/lib/utils";
 
 interface DraggableCardProps {
   item: PatioItem;
+  sla?: string;
   onClick?: () => void;
 }
 
-export function DraggableCard({ item, onClick }: DraggableCardProps) {
+export function DraggableCard({ item, sla, onClick }: DraggableCardProps) {
   const {
     attributes,
     listeners,
@@ -41,7 +42,7 @@ export function DraggableCard({ item, onClick }: DraggableCardProps) {
         isDragging && "opacity-50 z-50"
       )}
     >
-      <PatioKanbanCard item={item} onClick={onClick} />
+      <PatioKanbanCard item={item} sla={sla} onClick={onClick} />
     </div>
   );
 }

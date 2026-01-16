@@ -88,6 +88,7 @@ export function DroppableColumn({
                 <DraggableCard
                   key={item.id}
                   item={item}
+                  sla={config.sla}
                   onClick={() => onCardClick?.(item)}
                 />
               ))
