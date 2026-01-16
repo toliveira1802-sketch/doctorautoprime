@@ -133,8 +133,7 @@ const Register: React.FC = () => {
       // Use invite code if present
       if (inviteCode) {
         const { data: inviteUsed, error: inviteError } = await supabase.rpc('use_invite', {
-          invite_code: inviteCode,
-          user_uuid: user.id
+          invite_code: inviteCode
         });
 
         if (inviteError) {
