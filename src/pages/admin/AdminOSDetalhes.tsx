@@ -219,6 +219,7 @@ export default function AdminOSDetalhes() {
   const [checklistAnalysis, setChecklistAnalysis] = useState<ChecklistAnalysis | null>(null);
   const [isLoadingChecklistAI, setIsLoadingChecklistAI] = useState(false);
   const [checklistAIError, setChecklistAIError] = useState<string | null>(null);
+  const [autoAnalysisPending, setAutoAnalysisPending] = useState(false);
   // Fetch OS data
   const { data: os, isLoading, error } = useQuery({
     queryKey: ["ordem-servico", osId],
@@ -270,17 +271,24 @@ export default function AdminOSDetalhes() {
 
   // Update OS mutation
   const updateOSMutation = useMutation({
-    mutationFn: async (updates: Partial<OrdemServico>) => {
+    mutationFn: async (updates: Partial<OrdemServico> & { _isChecklistUpdate?: boolean }) => {
+      const { _isChecklistUpdate, ...cleanUpdates } = updates;
       const { error } = await supabase
         .from("ordens_servico")
-        .update(updates)
+        .update(cleanUpdates)
         .eq("id", osId);
       if (error) throw error;
+      return { isChecklistUpdate: _isChecklistUpdate };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["ordem-servico", osId] });
-      toast.success("OS atualizada com sucesso!");
-      setIsEditing(false);
+      if (!result?.isChecklistUpdate) {
+        toast.success("OS atualizada com sucesso!");
+        setIsEditing(false);
+      } else {
+        // Trigger auto-analysis for checklist updates
+        triggerAutoAnalysis();
+      }
     },
     onError: (error) => {
       console.error("Error updating OS:", error);
@@ -473,7 +481,7 @@ export default function AdminOSDetalhes() {
   }, [os, itens]);
 
   // Fetch AI Checklist Analysis
-  const fetchChecklistAnalysis = useCallback(async () => {
+  const fetchChecklistAnalysis = useCallback(async (showNotifications = false) => {
     if (!os) return;
     
     setIsLoadingChecklistAI(true);
@@ -495,20 +503,101 @@ export default function AdminOSDetalhes() {
         throw new Error(response.error.message || 'Erro ao analisar checklist');
       }
 
-      const data = response.data;
-      if (data.error) {
-        setChecklistAIError(data.error);
+      const data = response.data as ChecklistAnalysis;
+      if ((data as any).error) {
+        setChecklistAIError((data as any).error);
         return;
       }
 
       setChecklistAnalysis(data);
+
+      // Show notifications for critical issues when auto-analyzing
+      if (showNotifications && data) {
+        // Security alerts - highest priority
+        if (data.alertasSeguranca && data.alertasSeguranca.length > 0) {
+          toast.error(
+            `⚠️ ALERTA DE SEGURANÇA: ${data.alertasSeguranca[0]}`,
+            { 
+              duration: 10000,
+              description: data.alertasSeguranca.length > 1 
+                ? `+${data.alertasSeguranca.length - 1} outros alertas detectados` 
+                : undefined 
+            }
+          );
+        }
+
+        // Critical/high risk problems
+        const criticalProblems = data.problemasIdentificados?.filter(
+          p => p.risco === 'critico' || p.risco === 'alto'
+        ) || [];
+
+        if (criticalProblems.length > 0) {
+          const firstCritical = criticalProblems[0];
+          toast.warning(
+            `🔴 Problema ${firstCritical.risco === 'critico' ? 'CRÍTICO' : 'ALTO'}: ${firstCritical.item}`,
+            {
+              duration: 8000,
+              description: firstCritical.servicoSugerido
+            }
+          );
+
+          if (criticalProblems.length > 1) {
+            toast.info(
+              `📋 ${criticalProblems.length} problemas críticos/altos identificados`,
+              { 
+                duration: 5000,
+                description: "Verifique a análise completa no checklist"
+              }
+            );
+          }
+        }
+
+        // Overall risk level notification
+        if (data.nivelRisco === 'critico') {
+          toast.error(`🚨 Nível de Risco: CRÍTICO - Atenção imediata necessária!`, { duration: 10000 });
+        } else if (data.nivelRisco === 'alto') {
+          toast.warning(`⚠️ Nível de Risco: ALTO - Verificar problemas identificados`, { duration: 6000 });
+        } else if (data.nivelRisco === 'baixo' && criticalProblems.length === 0) {
+          toast.success(`✅ Análise concluída: Nível de risco baixo`, { duration: 3000 });
+        }
+      }
     } catch (err) {
       console.error('Error fetching checklist analysis:', err);
       setChecklistAIError(err instanceof Error ? err.message : 'Erro ao analisar checklist');
+      if (showNotifications) {
+        toast.error('Erro ao analisar checklist automaticamente');
+      }
     } finally {
       setIsLoadingChecklistAI(false);
+      setAutoAnalysisPending(false);
     }
   }, [os, checklistEntrada, checklistDyno, checklistPreCompra]);
+
+  // Auto-analyze checklist when items are checked
+  const triggerAutoAnalysis = useCallback(() => {
+    // Only trigger if we have minimum required items checked
+    const hasRequiredItems = checklistEntrada.nivelOleo || checklistEntrada.nivelAgua || 
+                             checklistEntrada.freios || checklistEntrada.kmAtual;
+    const totalChecked = Object.values(checklistEntrada).filter(Boolean).length +
+                         Object.values(checklistDyno).filter(Boolean).length +
+                         Object.values(checklistPreCompra).filter(Boolean).length;
+    
+    // Trigger analysis when at least 3 items are checked or any required item is checked
+    if ((hasRequiredItems || totalChecked >= 3) && !isLoadingChecklistAI) {
+      setAutoAnalysisPending(true);
+    }
+  }, [checklistEntrada, checklistDyno, checklistPreCompra, isLoadingChecklistAI]);
+
+  // Debounced auto-analysis effect
+  useEffect(() => {
+    if (!autoAnalysisPending || !os) return;
+    
+    const timer = setTimeout(() => {
+      fetchChecklistAnalysis(true);
+    }, 2000); // Wait 2 seconds after last change before analyzing
+
+    return () => clearTimeout(timer);
+  }, [autoAnalysisPending, fetchChecklistAnalysis, os]);
 
   const formatCurrency = (value: number | null) => {
     if (value === null || value === undefined) return "R$ 0,00";
@@ -822,7 +911,7 @@ export default function AdminOSDetalhes() {
                                   onCheckedChange={(checked) => {
                                     const updated = { ...checklistEntrada, [item.key]: checked === true };
                                     setChecklistEntrada(updated);
-                                    updateOSMutation.mutate({ checklist_entrada: updated });
+                                    updateOSMutation.mutate({ checklist_entrada: updated, _isChecklistUpdate: true });
                                   }}
                                 />
                                 <label htmlFor={`entrada-obr-${item.key}`} className="text-sm font-medium leading-none cursor-pointer">
@@ -853,7 +942,7 @@ export default function AdminOSDetalhes() {
                                   onCheckedChange={(checked) => {
                                     const updated = { ...checklistEntrada, [item.key]: checked === true };
                                     setChecklistEntrada(updated);
-                                    updateOSMutation.mutate({ checklist_entrada: updated });
+                                    updateOSMutation.mutate({ checklist_entrada: updated, _isChecklistUpdate: true });
                                   }}
                                 />
                                 <label htmlFor={`entrada-${item.key}`} className="text-sm leading-none cursor-pointer">
@@ -907,7 +996,7 @@ export default function AdminOSDetalhes() {
                                 onCheckedChange={(checked) => {
                                   const updated = { ...checklistDyno, [item.key]: checked === true };
                                   setChecklistDyno(updated);
-                                  updateOSMutation.mutate({ checklist_dinamometro: updated });
+                                  updateOSMutation.mutate({ checklist_dinamometro: updated, _isChecklistUpdate: true });
                                 }}
                               />
                               <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
@@ -940,7 +1029,7 @@ export default function AdminOSDetalhes() {
                                 onCheckedChange={(checked) => {
                                   const updated = { ...checklistPreCompra, [item.key]: checked === true };
                                   setChecklistPreCompra(updated);
-                                  updateOSMutation.mutate({ checklist_precompra: updated });
+                                  updateOSMutation.mutate({ checklist_precompra: updated, _isChecklistUpdate: true });
                                 }}
                               />
                               <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
@@ -1006,15 +1095,29 @@ export default function AdminOSDetalhes() {
 
                     {/* AI Checklist Analysis Section */}
                     <div className="pt-4 border-t border-border space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-sm flex items-center gap-2 text-purple-600">
-                          <Sparkles className="w-4 h-4" />
-                          Análise Inteligente do Checklist
-                        </h4>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold text-sm flex items-center gap-2 text-purple-600">
+                            <Sparkles className="w-4 h-4" />
+                            Análise Inteligente do Checklist
+                          </h4>
+                          {autoAnalysisPending && !isLoadingChecklistAI && (
+                            <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-500/30 animate-pulse">
+                              <Clock className="w-3 h-3" />
+                              Análise automática em 2s...
+                            </Badge>
+                          )}
+                          {isLoadingChecklistAI && (
+                            <Badge variant="outline" className="text-xs gap-1 text-purple-600 border-purple-500/30">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Analisando...
+                            </Badge>
+                          )}
+                        </div>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={fetchChecklistAnalysis}
+                          onClick={() => fetchChecklistAnalysis(false)}
                           disabled={isLoadingChecklistAI}
                           className="gap-2"
                         >
