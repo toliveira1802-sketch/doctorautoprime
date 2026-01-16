@@ -349,7 +349,7 @@ const AdminDashboard = () => {
             className="h-20 text-lg gap-3"
             onClick={() => navigate('/admin/ordens-servico')}
           >
-            <FileText className="w-6 h-6" />
+            <span className="text-2xl">🐦</span>
             João
           </Button>
           <Button 
@@ -358,7 +358,7 @@ const AdminDashboard = () => {
             className="h-20 text-lg gap-3"
             onClick={() => navigate('/admin/agendamentos')}
           >
-            <Calendar className="w-6 h-6" />
+            <span className="text-2xl">🐦</span>
             Pedro
           </Button>
         </div>
