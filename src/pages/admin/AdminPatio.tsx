@@ -76,6 +76,11 @@ const AdminPatio = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [draggedItem, setDraggedItem] = useState<PatioItem | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<PatioStatus | null>(null);
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+
+  const toggleCard = (id: string) => {
+    setExpandedCardId(expandedCardId === id ? null : id);
+  };
 
   // Excluir veículos entregues da contagem principal
   const activeItems = items.filter((item) => item.status !== "concluido");
@@ -258,63 +263,87 @@ const AdminPatio = () => {
 
                   {/* Column Content */}
                   <div className="flex-1 p-2 space-y-2 min-h-[200px] bg-background/30">
-                    {columnItems.map((item) => (
-                      <Card
-                        key={item.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, item)}
-                        onDragEnd={handleDragEnd}
-                        className={cn(
-                          "cursor-grab active:cursor-grabbing transition-all duration-200 border-none",
-                          "bg-card/80 backdrop-blur-sm hover:bg-card hover:shadow-lg",
-                          draggedItem?.id === item.id && "opacity-50 scale-95"
-                        )}
-                      >
-                        <CardContent className="p-3 space-y-2">
-                          {/* Drag Handle & Vehicle */}
-                          <div className="flex items-start gap-2">
-                            <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-foreground text-sm truncate">
-                                {item.plate}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {item.vehicle}
+                    {columnItems.map((item) => {
+                      const isExpanded = expandedCardId === item.id;
+                      return (
+                        <Card
+                          key={item.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, item)}
+                          onDragEnd={handleDragEnd}
+                          onClick={() => toggleCard(item.id)}
+                          className={cn(
+                            "cursor-pointer transition-all duration-200 border-none",
+                            "bg-card/80 backdrop-blur-sm hover:bg-card hover:shadow-lg",
+                            draggedItem?.id === item.id && "opacity-50 scale-95",
+                            isExpanded && "ring-2 ring-primary"
+                          )}
+                        >
+                          <CardContent className="p-3 space-y-2">
+                            {/* Drag Handle & Vehicle */}
+                            <div className="flex items-start gap-2">
+                              <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5 cursor-grab active:cursor-grabbing" />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-foreground text-sm truncate">
+                                  {item.plate}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {item.vehicle}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Client & Service */}
+                            <div className="text-xs">
+                              <p className="text-foreground truncate font-medium">{item.client}</p>
+                              <p className={cn(
+                                "text-muted-foreground",
+                                isExpanded ? "whitespace-pre-wrap" : "truncate line-clamp-2"
+                              )}>
+                                {item.service}
                               </p>
                             </div>
-                          </div>
 
-                          {/* Client & Service */}
-                          <div className="text-xs">
-                            <p className="text-foreground truncate font-medium">{item.client}</p>
-                            <p className="text-muted-foreground truncate line-clamp-2">
-                              {item.service}
-                            </p>
-                          </div>
+                            {/* Expanded Details */}
+                            {isExpanded && (
+                              <div className="pt-2 border-t border-border/50 space-y-2 text-xs">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Entrada:</span>
+                                  <span className="text-foreground">{item.entryDate || "Não informado"}</span>
+                                </div>
+                              </div>
+                            )}
 
-                          {/* Actions */}
-                          <div className="flex gap-1 pt-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 px-2 flex-1 text-xs"
-                              onClick={() => handleViewDetails(item.id)}
-                            >
-                              <Eye className="w-3 h-3 mr-1" />
-                              Ver
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 px-2"
-                              onClick={() => window.open(item.trelloUrl, "_blank")}
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                            {/* Actions */}
+                            <div className="flex gap-1 pt-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 flex-1 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewDetails(item.id);
+                                }}
+                              >
+                                <Eye className="w-3 h-3 mr-1" />
+                                Ver
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(item.trelloUrl, "_blank");
+                                }}
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
 
                     {columnItems.length === 0 && (
                       <div className="flex items-center justify-center h-24 text-muted-foreground text-xs">
