@@ -350,7 +350,7 @@ const AdminDashboard = () => {
             onClick={() => navigate('/admin/ordens-servico')}
           >
             <FileText className="w-6 h-6" />
-            Ordens de Serviço
+            João
           </Button>
           <Button 
             size="lg" 
@@ -359,7 +359,7 @@ const AdminDashboard = () => {
             onClick={() => navigate('/admin/agendamentos')}
           >
             <Calendar className="w-6 h-6" />
-            Agendamentos
+            Pedro
           </Button>
         </div>
 
