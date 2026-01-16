@@ -691,6 +691,19 @@ export default function AdminOSDetalhes() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                const baseUrl = window.location.origin;
+                const clientLink = `${baseUrl}/orcamento/${osId}`;
+                navigator.clipboard.writeText(clientLink);
+                toast.success("Link copiado para a área de transferência!");
+              }}
+              title="Copiar link do orçamento para o cliente"
+            >
+              <Link className="w-4 h-4 mr-2" />
+              Link Cliente
+            </Button>
             {isEditing ? (
               <>
                 <Button variant="outline" onClick={() => setIsEditing(false)}>
