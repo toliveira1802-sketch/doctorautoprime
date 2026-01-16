@@ -1,11 +1,15 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { PatioKanban } from "@/components/patio/PatioKanban";
+import { PatioStats } from "@/components/patio/PatioStats";
 import { useTrelloCards } from "@/hooks/useTrelloCards";
 import { Car, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function AdminPatio() {
   const { refresh, isLoading, items } = useTrelloCards();
+
+  // Count only active vehicles (excluding delivered)
+  const activeCount = items.filter((item) => item.status !== "concluido").length;
 
   return (
     <AdminLayout>
@@ -18,7 +22,7 @@ export default function AdminPatio() {
               Pátio
             </h1>
             <p className="text-muted-foreground">
-              {items.length} veículo{items.length !== 1 ? "s" : ""} no pátio
+              {activeCount} veículo{activeCount !== 1 ? "s" : ""} ativos no pátio
             </p>
           </div>
           <Button
@@ -31,6 +35,9 @@ export default function AdminPatio() {
             Atualizar
           </Button>
         </div>
+
+        {/* Stats */}
+        <PatioStats items={items} />
 
         {/* Kanban Board */}
         <PatioKanban />
