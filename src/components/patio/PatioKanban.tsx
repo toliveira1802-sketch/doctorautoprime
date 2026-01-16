@@ -12,12 +12,12 @@ import {
 import { PatioItem, PatioStatus, useTrelloCards } from "@/hooks/useTrelloCards";
 import { DroppableColumn } from "./DroppableColumn";
 import { PatioKanbanCard } from "./PatioKanbanCard";
+import { PatioCardDetail } from "./PatioCardDetail";
 import { PatioFilters } from "./PatioFilters";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Column configuration with visual styles
@@ -89,11 +89,14 @@ const columnOrder: PatioStatus[] = [
 
 export function PatioKanban() {
   const { items, isLoading, error, refresh } = useTrelloCards();
-  const navigate = useNavigate();
   
   // Local state for optimistic updates
   const [localItems, setLocalItems] = useState<PatioItem[]>([]);
   const [activeItem, setActiveItem] = useState<PatioItem | null>(null);
+  
+  // Detail modal state
+  const [selectedItem, setSelectedItem] = useState<PatioItem | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -158,7 +161,8 @@ export function PatioKanban() {
   }, [filteredItems]);
 
   const handleCardClick = (item: PatioItem) => {
-    navigate(`/admin/patio/${item.trelloCardId}`);
+    setSelectedItem(item);
+    setDetailOpen(true);
   };
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -317,6 +321,13 @@ export function PatioKanban() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Card Detail Modal */}
+      <PatioCardDetail
+        item={selectedItem}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </div>
   );
 }
