@@ -370,7 +370,7 @@ const AdminDashboard = () => {
             className="h-20 text-lg gap-3"
             onClick={() => navigate('/admin/patio')}
           >
-            <Syringe className="w-6 h-6" />
+            <Syringe className="w-6 h-6 text-primary-foreground" />
             <img src={corinthiansLogo} alt="Corinthians" className="w-8 h-8" />
             Thales
           </Button>
