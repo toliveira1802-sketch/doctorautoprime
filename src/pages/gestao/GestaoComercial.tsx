@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "@/components/gestao/ExportButtons";
 import { CustomizableDashboard } from "@/components/gestao/CustomizableDashboard";
 import { exportToPDF, exportToExcel, type ReportData } from "@/utils/exportReport";
-import { Megaphone, Users, Target, TrendingUp, Loader2, Eye } from "lucide-react";
+import { Megaphone, Users, Target, TrendingUp, Loader2, Eye, Pencil, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
@@ -19,14 +21,31 @@ interface PromoStats {
   clicks: number;
 }
 
+interface EditableKpis {
+  totalClients: number;
+  newClients: number;
+  promoClicks: number;
+  activePromos: number;
+  conversionRate: number;
+  averageTicket: number;
+  monthlyRevenue: number;
+  leadCount: number;
+}
+
 export default function GestaoComercial() {
   const [isLoading, setIsLoading] = useState(true);
-  const [kpis, setKpis] = useState({
-    newClients: 0,
+  const [isEditing, setIsEditing] = useState(false);
+  const [kpis, setKpis] = useState<EditableKpis>({
     totalClients: 0,
+    newClients: 0,
     promoClicks: 0,
     activePromos: 0,
+    conversionRate: 0,
+    averageTicket: 0,
+    monthlyRevenue: 0,
+    leadCount: 0,
   });
+  const [editedKpis, setEditedKpis] = useState<EditableKpis>(kpis);
   const [promoStats, setPromoStats] = useState<PromoStats[]>([]);
   const [dailyClients, setDailyClients] = useState<{ date: string; count: number }[]>([]);
 
@@ -39,6 +58,17 @@ export default function GestaoComercial() {
     try {
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
+
+      // Buscar dados manuais salvos
+      const { data: manualData } = await supabase
+        .from("gestao_dados_manuais")
+        .select("chave, valor")
+        .eq("data_referencia", format(new Date(), "yyyy-MM-01"));
+
+      const manualMap: Record<string, string> = {};
+      manualData?.forEach(d => {
+        manualMap[d.chave] = d.valor;
+      });
 
       // Total de clientes
       const { count: totalClients } = await supabase
@@ -95,13 +125,19 @@ export default function GestaoComercial() {
         count,
       }));
 
-      setKpis({
-        newClients: newClients || 0,
-        totalClients: totalClients || 0,
-        promoClicks: promoClicks?.length || 0,
-        activePromos: promotions?.length || 0,
-      });
+      const newKpis: EditableKpis = {
+        totalClients: Number(manualMap["totalClients"]) || totalClients || 0,
+        newClients: Number(manualMap["newClients"]) || newClients || 0,
+        promoClicks: Number(manualMap["promoClicks"]) || promoClicks?.length || 0,
+        activePromos: Number(manualMap["activePromos"]) || promotions?.length || 0,
+        conversionRate: Number(manualMap["conversionRate"]) || 0,
+        averageTicket: Number(manualMap["averageTicket"]) || 0,
+        monthlyRevenue: Number(manualMap["monthlyRevenue"]) || 0,
+        leadCount: Number(manualMap["leadCount"]) || 0,
+      };
 
+      setKpis(newKpis);
+      setEditedKpis(newKpis);
       setPromoStats(promoWithClicks);
       setDailyClients(dailyData);
     } catch (err) {
@@ -109,6 +145,38 @@ export default function GestaoComercial() {
       toast.error("Erro ao carregar dados");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function saveKpis() {
+    try {
+      const dataReferencia = format(new Date(), "yyyy-MM-01");
+      
+      const updates = Object.entries(editedKpis).map(([chave, valor]) => ({
+        chave,
+        valor: String(valor),
+        data_referencia: dataReferencia,
+      }));
+
+      // Deletar valores anteriores do mês
+      await supabase
+        .from("gestao_dados_manuais")
+        .delete()
+        .eq("data_referencia", dataReferencia);
+
+      // Inserir novos valores
+      const { error } = await supabase
+        .from("gestao_dados_manuais")
+        .insert(updates);
+
+      if (error) throw error;
+
+      setKpis(editedKpis);
+      setIsEditing(false);
+      toast.success("Métricas salvas com sucesso!");
+    } catch (err) {
+      console.error("Erro ao salvar:", err);
+      toast.error("Erro ao salvar métricas");
     }
   }
 
@@ -121,7 +189,10 @@ export default function GestaoComercial() {
         { label: "Novos Clientes (Mês)", value: kpis.newClients },
         { label: "Cliques em Promoções", value: kpis.promoClicks },
         { label: "Promoções Ativas", value: kpis.activePromos },
-        { label: "Taxa de Conversão", value: kpis.newClients > 0 ? `${Math.round((kpis.newClients / Math.max(kpis.promoClicks, 1)) * 100)}%` : "0%" },
+        { label: "Taxa de Conversão", value: `${kpis.conversionRate}%` },
+        { label: "Ticket Médio", value: `R$ ${kpis.averageTicket.toLocaleString("pt-BR")}` },
+        { label: "Faturamento Mensal", value: `R$ ${kpis.monthlyRevenue.toLocaleString("pt-BR")}` },
+        { label: "Leads do Mês", value: kpis.leadCount },
       ],
       tables: [
         {
@@ -134,10 +205,14 @@ export default function GestaoComercial() {
   }
 
   const statCards = [
-    { label: "Total de Clientes", value: kpis.totalClients, icon: Users, color: "text-blue-500" },
-    { label: "Novos Clientes (Mês)", value: kpis.newClients, icon: TrendingUp, color: "text-green-500" },
-    { label: "Cliques em Promoções", value: kpis.promoClicks, icon: Eye, color: "text-purple-500" },
-    { label: "Promoções Ativas", value: kpis.activePromos, icon: Target, color: "text-orange-500" },
+    { key: "totalClients", label: "Total de Clientes", icon: Users, color: "text-blue-500", prefix: "" },
+    { key: "newClients", label: "Novos Clientes (Mês)", icon: TrendingUp, color: "text-green-500", prefix: "" },
+    { key: "promoClicks", label: "Cliques em Promoções", icon: Eye, color: "text-purple-500", prefix: "" },
+    { key: "activePromos", label: "Promoções Ativas", icon: Target, color: "text-orange-500", prefix: "" },
+    { key: "conversionRate", label: "Taxa de Conversão (%)", icon: TrendingUp, color: "text-cyan-500", prefix: "", suffix: "%" },
+    { key: "averageTicket", label: "Ticket Médio", icon: Target, color: "text-amber-500", prefix: "R$ " },
+    { key: "monthlyRevenue", label: "Faturamento Mensal", icon: TrendingUp, color: "text-emerald-500", prefix: "R$ " },
+    { key: "leadCount", label: "Leads do Mês", icon: Users, color: "text-pink-500", prefix: "" },
   ];
 
   return (
@@ -155,11 +230,35 @@ export default function GestaoComercial() {
                 Métricas de aquisição e campanhas
               </p>
             </div>
-            <ExportButtons
-              onExportPDF={() => exportToPDF(getReportData())}
-              onExportExcel={() => exportToExcel(getReportData())}
-              isLoading={isLoading}
-            />
+            <div className="flex gap-2">
+              {isEditing ? (
+                <>
+                  <Button variant="outline" onClick={() => {
+                    setEditedKpis(kpis);
+                    setIsEditing(false);
+                  }}>
+                    <X className="w-4 h-4 mr-2" />
+                    Cancelar
+                  </Button>
+                  <Button onClick={saveKpis}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Salvar
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => setIsEditing(true)}>
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Editar Métricas
+                  </Button>
+                  <ExportButtons
+                    onExportPDF={() => exportToPDF(getReportData())}
+                    onExportExcel={() => exportToExcel(getReportData())}
+                    isLoading={isLoading}
+                  />
+                </>
+              )}
+            </div>
           </div>
 
           {isLoading ? (
@@ -170,7 +269,7 @@ export default function GestaoComercial() {
             <div className="space-y-6">
               <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                 {statCards.map((stat) => (
-                  <Card key={stat.label}>
+                  <Card key={stat.key}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                         <stat.icon className={`w-4 h-4 ${stat.color}`} />
@@ -178,7 +277,21 @@ export default function GestaoComercial() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl font-bold">{stat.value}</p>
+                      {isEditing ? (
+                        <Input
+                          type="number"
+                          value={editedKpis[stat.key as keyof EditableKpis]}
+                          onChange={(e) => setEditedKpis(prev => ({
+                            ...prev,
+                            [stat.key]: Number(e.target.value) || 0
+                          }))}
+                          className="text-2xl font-bold h-12"
+                        />
+                      ) : (
+                        <p className="text-3xl font-bold">
+                          {stat.prefix}{kpis[stat.key as keyof EditableKpis].toLocaleString("pt-BR")}{stat.suffix || ""}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
