@@ -198,6 +198,27 @@ export default function AdminOSDetalhes() {
   const [aiDicaVenda, setAiDicaVenda] = useState("");
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+
+  // AI Checklist Analysis state
+  interface ChecklistProblem {
+    item: string;
+    descricao: string;
+    risco: 'baixo' | 'medio' | 'alto' | 'critico';
+    urgencia: 'imediata' | 'proxima_revisao' | 'monitorar';
+    servicoSugerido: string;
+    valorEstimado: number;
+  }
+  interface ChecklistAnalysis {
+    resumo: string;
+    nivelRisco: 'baixo' | 'medio' | 'alto' | 'critico';
+    problemasIdentificados: ChecklistProblem[];
+    alertasSeguranca: string[];
+    recomendacoesGerais: string[];
+    proximosServicos: string[];
+  }
+  const [checklistAnalysis, setChecklistAnalysis] = useState<ChecklistAnalysis | null>(null);
+  const [isLoadingChecklistAI, setIsLoadingChecklistAI] = useState(false);
+  const [checklistAIError, setChecklistAIError] = useState<string | null>(null);
   // Fetch OS data
   const { data: os, isLoading, error } = useQuery({
     queryKey: ["ordem-servico", osId],
@@ -450,6 +471,44 @@ export default function AdminOSDetalhes() {
       setIsLoadingAI(false);
     }
   }, [os, itens]);
+
+  // Fetch AI Checklist Analysis
+  const fetchChecklistAnalysis = useCallback(async () => {
+    if (!os) return;
+    
+    setIsLoadingChecklistAI(true);
+    setChecklistAIError(null);
+    
+    try {
+      const response = await supabase.functions.invoke('ai-checklist-analysis', {
+        body: {
+          veiculo: `${os.vehicle} - ${os.plate}`,
+          kmAtual: os.km_atual || '',
+          checklistEntrada,
+          checklistDinamometro: checklistDyno,
+          checklistPreCompra,
+          descricaoProblema: os.descricao_problema
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao analisar checklist');
+      }
+
+      const data = response.data;
+      if (data.error) {
+        setChecklistAIError(data.error);
+        return;
+      }
+
+      setChecklistAnalysis(data);
+    } catch (err) {
+      console.error('Error fetching checklist analysis:', err);
+      setChecklistAIError(err instanceof Error ? err.message : 'Erro ao analisar checklist');
+    } finally {
+      setIsLoadingChecklistAI(false);
+    }
+  }, [os, checklistEntrada, checklistDyno, checklistPreCompra]);
 
   const formatCurrency = (value: number | null) => {
     if (value === null || value === undefined) return "R$ 0,00";
@@ -944,6 +1003,191 @@ export default function AdminOSDetalhes() {
                         </div>
                       </TabsContent>
                     </Tabs>
+
+                    {/* AI Checklist Analysis Section */}
+                    <div className="pt-4 border-t border-border space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-sm flex items-center gap-2 text-purple-600">
+                          <Sparkles className="w-4 h-4" />
+                          Análise Inteligente do Checklist
+                        </h4>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={fetchChecklistAnalysis}
+                          disabled={isLoadingChecklistAI}
+                          className="gap-2"
+                        >
+                          {isLoadingChecklistAI ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="w-4 h-4" />
+                          )}
+                          {isLoadingChecklistAI ? "Analisando..." : "Analisar com IA"}
+                        </Button>
+                      </div>
+
+                      {checklistAIError && (
+                        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                          <p className="text-sm text-destructive">{checklistAIError}</p>
+                        </div>
+                      )}
+
+                      {checklistAnalysis && (
+                        <div className="space-y-4">
+                          {/* Summary and Risk Level */}
+                          <div className={cn(
+                            "p-4 rounded-lg border",
+                            checklistAnalysis.nivelRisco === 'critico' && "bg-red-500/10 border-red-500/30",
+                            checklistAnalysis.nivelRisco === 'alto' && "bg-orange-500/10 border-orange-500/30",
+                            checklistAnalysis.nivelRisco === 'medio' && "bg-yellow-500/10 border-yellow-500/30",
+                            checklistAnalysis.nivelRisco === 'baixo' && "bg-green-500/10 border-green-500/30"
+                          )}>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold text-sm">Resumo da Análise</span>
+                              <Badge className={cn(
+                                checklistAnalysis.nivelRisco === 'critico' && "bg-red-500",
+                                checklistAnalysis.nivelRisco === 'alto' && "bg-orange-500",
+                                checklistAnalysis.nivelRisco === 'medio' && "bg-yellow-500",
+                                checklistAnalysis.nivelRisco === 'baixo' && "bg-green-500"
+                              )}>
+                                Risco {checklistAnalysis.nivelRisco.charAt(0).toUpperCase() + checklistAnalysis.nivelRisco.slice(1)}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{checklistAnalysis.resumo}</p>
+                          </div>
+
+                          {/* Security Alerts */}
+                          {checklistAnalysis.alertasSeguranca.length > 0 && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                              <h5 className="font-semibold text-sm text-red-600 flex items-center gap-2 mb-2">
+                                <AlertTriangle className="w-4 h-4" />
+                                Alertas de Segurança
+                              </h5>
+                              <ul className="space-y-1">
+                                {checklistAnalysis.alertasSeguranca.map((alerta, idx) => (
+                                  <li key={idx} className="text-sm text-red-700 flex items-start gap-2">
+                                    <span className="mt-1.5 w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />
+                                    {alerta}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Identified Problems */}
+                          {checklistAnalysis.problemasIdentificados.length > 0 && (
+                            <div className="space-y-3">
+                              <h5 className="font-semibold text-sm flex items-center gap-2">
+                                <Activity className="w-4 h-4 text-orange-500" />
+                                Problemas Identificados ({checklistAnalysis.problemasIdentificados.length})
+                              </h5>
+                              <div className="grid gap-2">
+                                {checklistAnalysis.problemasIdentificados.map((problema, idx) => (
+                                  <div 
+                                    key={idx} 
+                                    className={cn(
+                                      "p-3 rounded-lg border flex flex-col md:flex-row md:items-center justify-between gap-2",
+                                      problema.risco === 'critico' && "border-red-500/30 bg-red-500/5",
+                                      problema.risco === 'alto' && "border-orange-500/30 bg-orange-500/5",
+                                      problema.risco === 'medio' && "border-yellow-500/30 bg-yellow-500/5",
+                                      problema.risco === 'baixo' && "border-green-500/30 bg-green-500/5"
+                                    )}
+                                  >
+                                    <div className="flex-1 space-y-1">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-medium text-sm">{problema.item}</span>
+                                        <Badge variant="outline" className={cn(
+                                          "text-xs",
+                                          problema.urgencia === 'imediata' && "border-red-500 text-red-600",
+                                          problema.urgencia === 'proxima_revisao' && "border-yellow-500 text-yellow-600",
+                                          problema.urgencia === 'monitorar' && "border-blue-500 text-blue-600"
+                                        )}>
+                                          {problema.urgencia === 'imediata' ? 'Imediata' : 
+                                           problema.urgencia === 'proxima_revisao' ? 'Próxima Revisão' : 'Monitorar'}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground">{problema.descricao}</p>
+                                      <p className="text-xs text-primary font-medium">{problema.servicoSugerido}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {problema.valorEstimado > 0 && (
+                                        <span className="text-sm font-semibold text-green-600">
+                                          {formatCurrency(problema.valorEstimado)}
+                                        </span>
+                                      )}
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          setNewItem({
+                                            descricao: problema.servicoSugerido,
+                                            tipo: "servico",
+                                            quantidade: 1,
+                                            valor_custo: 0,
+                                            margem: 40,
+                                            valor_unitario: problema.valorEstimado,
+                                            prioridade: problema.risco === 'critico' || problema.risco === 'alto' ? 'vermelho' : 
+                                                        problema.risco === 'medio' ? 'amarelo' : 'verde',
+                                            data_retorno_estimada: ""
+                                          });
+                                          setShowAddItemDialog(true);
+                                        }}
+                                      >
+                                        <Plus className="w-3 h-3 mr-1" />
+                                        Adicionar
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* General Recommendations */}
+                          {checklistAnalysis.recomendacoesGerais.length > 0 && (
+                            <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                              <h5 className="font-semibold text-sm text-blue-600 flex items-center gap-2 mb-2">
+                                <Lightbulb className="w-4 h-4" />
+                                Recomendações Gerais
+                              </h5>
+                              <ul className="space-y-1">
+                                {checklistAnalysis.recomendacoesGerais.map((rec, idx) => (
+                                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                    <span className="mt-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+                                    {rec}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Upcoming Services */}
+                          {checklistAnalysis.proximosServicos.length > 0 && (
+                            <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
+                              <h5 className="font-semibold text-sm text-purple-600 flex items-center gap-2 mb-2">
+                                <Calendar className="w-4 h-4" />
+                                Próximos Serviços Recomendados
+                              </h5>
+                              <ul className="space-y-1">
+                                {checklistAnalysis.proximosServicos.map((serv, idx) => (
+                                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                    <span className="mt-1.5 w-1.5 h-1.5 bg-purple-500 rounded-full flex-shrink-0" />
+                                    {serv}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {!checklistAnalysis && !isLoadingChecklistAI && !checklistAIError && (
+                        <p className="text-xs text-muted-foreground text-center py-4">
+                          Clique em "Analisar com IA" para identificar problemas automaticamente baseado no checklist
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
