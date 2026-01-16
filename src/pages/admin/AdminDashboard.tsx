@@ -347,25 +347,42 @@ const AdminDashboard = () => {
           <Button 
             size="lg" 
             className="h-20 text-lg gap-3"
-            onClick={() => navigate('/admin/agendamentos')}
+            onClick={() => navigate('/admin/ordens-servico')}
           >
-            <Calendar className="w-6 h-6" />
-            Ver Agendamentos
+            <FileText className="w-6 h-6" />
+            Ordens de Serviço
           </Button>
           <Button 
             size="lg" 
             variant="secondary"
             className="h-20 text-lg gap-3"
-            onClick={() => navigate('/admin/nova-os')}
+            onClick={() => navigate('/admin/agendamentos')}
           >
-            <FileText className="w-6 h-6" />
-            Nova OS
+            <Calendar className="w-6 h-6" />
+            Agendamentos
           </Button>
         </div>
 
         {/* Indicadores */}
         <div className="grid grid-cols-2 gap-4">
-          {/* Agendamentos Hoje */}
+          {/* Esquerda: Faturado Mês */}
+          <Card className="glass-card border-none">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">
+                    R$ {stats.monthlyRevenue.toLocaleString("pt-BR")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Faturado (Mês)</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Direita: Agendamentos Hoje */}
           <Card 
             className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={handleAppointmentsClick}
@@ -383,7 +400,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Novos Clientes */}
+          {/* Esquerda: Novos Clientes */}
           <Card 
             className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={handleNewClientsClick}
@@ -401,24 +418,25 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Faturado Mês */}
-          <Card className="glass-card border-none">
+          {/* Direita: Retorno do Mês */}
+          <Card 
+            className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
+            onClick={handleReturnsClick}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-emerald-500" />
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <RotateCcw className="w-6 h-6 text-purple-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">
-                    R$ {stats.monthlyRevenue.toLocaleString("pt-BR")}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Faturado (Mês)</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.returnsMonth}</p>
+                  <p className="text-sm text-muted-foreground">Retorno do Mês</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Valor para Sair Hoje */}
+          {/* Esquerda: Valor para Sair */}
           <Card 
             className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={handleReadyToDeliverClick}
@@ -438,25 +456,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Retorno do Mês */}
-          <Card 
-            className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
-            onClick={handleReturnsClick}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                  <RotateCcw className="w-6 h-6 text-purple-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stats.returnsMonth}</p>
-                  <p className="text-sm text-muted-foreground">Retorno do Mês</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Agendamentos Cancelados */}
+          {/* Direita: Agendamentos Cancelados */}
           <Card 
             className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={handleCancelledClick}
