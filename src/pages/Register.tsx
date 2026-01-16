@@ -267,7 +267,31 @@ const Register: React.FC = () => {
             )}
           </div>
 
-          {/* Email Field */}
+          {/* Phone Field */}
+          <div className="space-y-2">
+            <Label htmlFor="phone" className="text-foreground font-medium text-sm">
+              Telefone
+            </Label>
+            <div className={cn(
+              'glass-card flex items-center gap-3 px-4 transition-all duration-300',
+              errors.phone && 'ring-2 ring-destructive/50'
+            )}>
+              <Phone className="w-5 h-5 text-muted-foreground" />
+              <Input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                placeholder="(11) 99999-9999"
+                maxLength={15}
+                className="border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 py-5"
+              />
+            </div>
+            {errors.phone && (
+              <p className="text-destructive text-sm animate-fade-in">{errors.phone}</p>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="email" className="text-foreground font-medium text-sm">
               Email
