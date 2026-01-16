@@ -48,6 +48,7 @@ const statusConfig: Record<AppointmentStatus, { label: string; color: string }> 
 
 // Fetch appointments with related data
 async function fetchAppointments(): Promise<AppointmentWithDetails[]> {
+  // Buscar appointments com vehicles e services
   const { data: appointments, error } = await supabase
     .from("appointments")
     .select(`
@@ -61,7 +62,6 @@ async function fetchAppointments(): Promise<AppointmentWithDetails[]> {
       user_id,
       vehicle_id,
       vehicles (id, model, brand, plate),
-      profiles!appointments_user_id_fkey (full_name, phone),
       appointment_services (
         services (name)
       )
@@ -70,23 +70,41 @@ async function fetchAppointments(): Promise<AppointmentWithDetails[]> {
     .order("appointment_date", { ascending: true });
 
   if (error) throw error;
+  if (!appointments || appointments.length === 0) return [];
 
-  return (appointments || []).map((apt: any) => ({
-    id: apt.id,
-    client: apt.profiles?.full_name || "Cliente",
-    phone: apt.profiles?.phone || "",
-    vehicle: apt.vehicles ? `${apt.vehicles.brand || ""} ${apt.vehicles.model}`.trim() : "Veículo",
-    plate: apt.vehicles?.plate || "",
-    vehicleId: apt.vehicle_id || "",
-    services: apt.appointment_services?.map((as: any) => as.services?.name).filter(Boolean) || [],
-    date: new Date(apt.appointment_date),
-    time: apt.appointment_time,
-    isFullDay: apt.is_full_day,
-    status: apt.status,
-    payInAdvance: apt.pay_in_advance,
-    finalPrice: apt.final_price,
-    userId: apt.user_id,
-  }));
+  // Buscar user_ids únicos para buscar profiles separadamente
+  const userIds = [...new Set(appointments.map((apt: any) => apt.user_id).filter(Boolean))];
+  
+  // Buscar profiles por user_id
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("user_id, full_name, phone")
+    .in("user_id", userIds);
+
+  // Criar mapa de profiles
+  const profilesMap = new Map(
+    (profiles || []).map((p: any) => [p.user_id, p])
+  );
+
+  return appointments.map((apt: any) => {
+    const profile = profilesMap.get(apt.user_id);
+    return {
+      id: apt.id,
+      client: profile?.full_name || "Cliente",
+      phone: profile?.phone || "",
+      vehicle: apt.vehicles ? `${apt.vehicles.brand || ""} ${apt.vehicles.model}`.trim() : "Veículo",
+      plate: apt.vehicles?.plate || "",
+      vehicleId: apt.vehicle_id || "",
+      services: apt.appointment_services?.map((as: any) => as.services?.name).filter(Boolean) || [],
+      date: new Date(apt.appointment_date),
+      time: apt.appointment_time,
+      isFullDay: apt.is_full_day,
+      status: apt.status,
+      payInAdvance: apt.pay_in_advance,
+      finalPrice: apt.final_price,
+      userId: apt.user_id,
+    };
+  });
 }
 
 const AdminAgendamentos = () => {
