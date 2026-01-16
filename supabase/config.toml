@@ -1,1 +1,7 @@
 project_id = "cgopqgbwkkhkfoufghjp"
+
+[functions.ai-budget-suggestions]
+verify_jwt = false
+
+[functions.ai-checklist-analysis]
+verify_jwt = false
