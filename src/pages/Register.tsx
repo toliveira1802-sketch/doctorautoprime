@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, User, Mail, Lock, ArrowRight, Eye, EyeOff, Phone } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 
 interface FormData {
   name: string;
+  phone: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -19,10 +20,18 @@ interface FormData {
 
 interface FormErrors {
   name?: string;
+  phone?: string;
   email?: string;
   password?: string;
   confirmPassword?: string;
 }
+
+const formatPhone = (value: string) => {
+  const numbers = value.replace(/\D/g, "");
+  if (numbers.length <= 2) return `(${numbers}`;
+  if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+  return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+};
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +39,7 @@ const Register: React.FC = () => {
   const { signUp } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     name: '',
+    phone: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -85,6 +95,13 @@ const Register: React.FC = () => {
       newErrors.name = 'Nome deve ter pelo menos 3 caracteres';
     }
 
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (!phoneDigits) {
+      newErrors.phone = 'Telefone é obrigatório';
+    } else if (phoneDigits.length < 10) {
+      newErrors.phone = 'Telefone deve ter pelo menos 10 dígitos';
+    }
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email é obrigatório';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -111,7 +128,7 @@ const Register: React.FC = () => {
     setIsSubmitting(true);
     
     // 1. Sign up the user
-    const { error: signUpError } = await signUp(formData.email, formData.password, formData.name);
+    const { error: signUpError } = await signUp(formData.email, formData.password, formData.name, formData.phone);
     
     if (signUpError) {
       if (signUpError.message.includes('already registered')) {
@@ -174,14 +191,20 @@ const Register: React.FC = () => {
   };
 
   const handleChange = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    let formattedValue = value;
+    if (field === 'phone') {
+      formattedValue = formatPhone(value);
+    }
+    setFormData((prev) => ({ ...prev, [field]: formattedValue }));
     
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
+  const phoneDigits = formData.phone.replace(/\D/g, '');
   const isFormValid = formData.name.trim().length >= 3 &&
+    phoneDigits.length >= 10 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
     formData.password.length >= 6 &&
     formData.password === formData.confirmPassword;
