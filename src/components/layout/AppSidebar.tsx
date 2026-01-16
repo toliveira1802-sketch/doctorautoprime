@@ -154,7 +154,7 @@ export function AppSidebar({ variant = "client" }: AppSidebarProps) {
             <div className="flex flex-col">
               <span className="font-bold text-foreground text-sm">Doctor Auto Prime</span>
               <span className="text-xs text-muted-foreground">
-                {variant === "admin" ? "Gestão" : "Cliente"}
+                {variant === "admin" ? "Admin" : "Cliente"}
               </span>
             </div>
           )}
