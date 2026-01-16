@@ -697,12 +697,25 @@ export default function AdminOSDetalhes() {
                 const baseUrl = window.location.origin;
                 const clientLink = `${baseUrl}/orcamento/${osId}`;
                 navigator.clipboard.writeText(clientLink);
-                toast.success("Link copiado para a área de transferência!");
+                toast.success("Link Cliente copiado!");
               }}
               title="Copiar link do orçamento para o cliente"
             >
               <Link className="w-4 h-4 mr-2" />
               Link Cliente
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                const baseUrl = window.location.origin;
+                const adminLink = `${baseUrl}/admin/os/${osId}`;
+                navigator.clipboard.writeText(adminLink);
+                toast.success("Link Admin copiado!");
+              }}
+              title="Copiar link da OS para administradores"
+            >
+              <Link className="w-4 h-4 mr-2" />
+              Link Admin
             </Button>
             {isEditing ? (
               <>
