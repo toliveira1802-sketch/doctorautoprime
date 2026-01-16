@@ -1872,10 +1872,9 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_dev: { Args: { _user_id: string }; Returns: boolean }
-      use_invite: {
-        Args: { invite_code: string; user_uuid: string }
-        Returns: boolean
-      }
+      use_invite:
+        | { Args: { invite_code: string }; Returns: boolean }
+        | { Args: { invite_code: string; user_uuid: string }; Returns: boolean }
     }
     Enums: {
       alert_status: "scheduled" | "sent" | "read" | "dismissed" | "completed"
