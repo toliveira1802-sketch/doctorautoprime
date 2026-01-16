@@ -132,9 +132,11 @@ const Register: React.FC = () => {
     if (user) {
       // Use invite code if present
       if (inviteCode) {
+        // Type assertion needed as the function signature was updated to only accept invite_code
+        // (auth.uid() is now used internally instead of user_uuid parameter)
         const { data: inviteUsed, error: inviteError } = await supabase.rpc('use_invite', {
           invite_code: inviteCode
-        });
+        } as any);
 
         if (inviteError) {
           console.error('Error using invite:', inviteError);
