@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, Users, DollarSign, FileText, Loader2, TrendingUp, RotateCcw, XCircle } from "lucide-react";
+import { Calendar, Users, DollarSign, FileText, Loader2, TrendingUp, RotateCcw, XCircle, Syringe } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import corinthiansLogo from "@/assets/corinthians-logo.png";
 
 interface DashboardStats {
   appointmentsToday: number;
@@ -369,7 +370,8 @@ const AdminDashboard = () => {
             className="h-20 text-lg gap-3"
             onClick={() => navigate('/admin/patio')}
           >
-            <span className="text-2xl">💉🖤🤍</span>
+            <Syringe className="w-6 h-6" />
+            <img src={corinthiansLogo} alt="Corinthians" className="w-8 h-8" />
             Thales
           </Button>
         </div>
