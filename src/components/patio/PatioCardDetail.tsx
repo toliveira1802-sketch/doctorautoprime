@@ -176,8 +176,8 @@ export function PatioCardDetail({ item, open, onOpenChange }: PatioCardDetailPro
             </p>
           </div>
 
-          {/* Actions */}
-          {item.trelloUrl && (
+        {/* Actions */}
+          {item.osId && (
             <>
               <Separator />
               <div className="flex justify-end">
@@ -186,13 +186,9 @@ export function PatioCardDetail({ item, open, onOpenChange }: PatioCardDetailPro
                   size="sm"
                   asChild
                 >
-                  <a
-                    href={item.trelloUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Abrir no Trello
+                  <a href={`/admin/ordens-servico/${item.osId}`}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Abrir Ordem de Serviço
                   </a>
                 </Button>
               </div>

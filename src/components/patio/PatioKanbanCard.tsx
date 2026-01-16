@@ -1,4 +1,4 @@
-import { Car, ExternalLink, Calendar, AlertTriangle, Clock, FileWarning } from "lucide-react";
+import { Car, FileText, Calendar, AlertTriangle, Clock, FileWarning } from "lucide-react";
 import { PatioItem, PatioStatus } from "@/hooks/useTrelloCards";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -207,15 +207,14 @@ export function PatioKanbanCard({ item, sla, onClick }: PatioKanbanCardProps) {
               <span className="ml-1">({sla})</span>
             )}
           </div>
-          {item.trelloUrl && (
+          {item.osId && (
             <a
-              href={item.trelloUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={`/admin/ordens-servico/${item.osId}`}
               onClick={(e) => e.stopPropagation()}
               className="text-muted-foreground hover:text-primary transition-colors"
+              title="Abrir Ordem de Serviço"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <FileText className="w-3.5 h-3.5" />
             </a>
           )}
         </div>

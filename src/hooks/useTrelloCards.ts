@@ -21,6 +21,7 @@ export interface PatioItem {
   status: PatioStatus;
   entryDate: string;
   trelloUrl: string;
+  osId?: string;
 }
 
 interface TrelloCard {
@@ -139,13 +140,37 @@ export function useTrelloCards() {
         }
       });
 
+      // Extrair placas de todos os cards para buscar OS correspondentes
+      const plates: string[] = [];
+      trelloCards.forEach((card) => {
+        const { plate } = parseCardName(card.name);
+        if (plate) plates.push(plate.toUpperCase());
+      });
+
+      // Buscar ordens de serviço correspondentes às placas
+      let osMap: Record<string, string> = {};
+      if (plates.length > 0) {
+        const { data: ordensServico } = await supabase
+          .from("ordens_servico")
+          .select("id, plate")
+          .in("plate", plates)
+          .not("status", "eq", "concluido");
+
+        if (ordensServico) {
+          ordensServico.forEach((os) => {
+            osMap[os.plate.toUpperCase()] = os.id;
+          });
+        }
+      }
+
       // Converter cards do Trello para PatioItems
       const patioItems: PatioItem[] = trelloCards
-        .map((card) => {
+        .map((card): PatioItem | null => {
           const status = listIdToStatus[card.idList];
           if (!status) return null;
 
           const { plate, vehicle, client } = parseCardName(card.name);
+          const upperPlate = plate.toUpperCase();
 
           return {
             id: card.id,
@@ -157,6 +182,7 @@ export function useTrelloCards() {
             status,
             entryDate: formatDate(card.dateLastActivity),
             trelloUrl: card.url,
+            osId: osMap[upperPlate],
           };
         })
         .filter((item): item is PatioItem => item !== null);
