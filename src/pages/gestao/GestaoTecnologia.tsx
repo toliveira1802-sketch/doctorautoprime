@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "@/components/gestao/ExportButtons";
-import { AddDirectoryDialog } from "@/components/gestao/AddDirectoryDialog";
+import { CustomizableDashboard } from "@/components/gestao/CustomizableDashboard";
 import { exportToPDF, exportToExcel, type ReportData } from "@/utils/exportReport";
-import { Laptop, Users, Database, Activity, Loader2, Clock, Plus } from "lucide-react";
+import { Laptop, Users, Database, Activity, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend 
@@ -124,128 +123,123 @@ export default function GestaoTecnologia() {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Laptop className="w-6 h-6 text-purple-500" />
-              Tecnologia
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Métricas de uso e performance do sistema
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <AddDirectoryDialog>
-              <Button variant="outline" size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Diretório
-              </Button>
-            </AddDirectoryDialog>
+      <div className="p-6">
+        <CustomizableDashboard dashboardKey="tecnologia" title="Tecnologia">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Laptop className="w-6 h-6 text-purple-500" />
+                Tecnologia
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Métricas de uso e performance do sistema
+              </p>
+            </div>
             <ExportButtons
               onExportPDF={() => exportToPDF(getReportData())}
               onExportExcel={() => exportToExcel(getReportData())}
               isLoading={isLoading}
             />
           </div>
-        </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-              {statCards.map((stat) => (
-                <Card key={stat.label}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                      {stat.label}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                {statCards.map((stat) => (
+                  <Card key={stat.label}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                        {stat.label}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold">{stat.value}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="w-5 h-5" />
+                      Eventos do Funil de Agendamento (30 dias)
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">{stat.value}</p>
+                    {funnelData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                          <Pie
+                            data={funnelData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={50}
+                            outerRadius={80}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            {funnelData.map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: "hsl(var(--popover))", 
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px"
+                            }} 
+                          />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">
+                        Sem dados do funil
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
-              ))}
-            </div>
 
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5" />
-                    Eventos do Funil de Agendamento (30 dias)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {funnelData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={funnelData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={80}
-                          paddingAngle={2}
-                          dataKey="value"
-                        >
-                          {funnelData.map((_, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--popover))", 
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px"
-                          }} 
-                        />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">
-                      Sem dados do funil
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Database className="w-5 h-5" />
-                    Estatísticas do Banco
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
-                      <span className="text-sm text-muted-foreground">Perfis de Usuário</span>
-                      <span className="font-semibold">{kpis.totalUsers}</span>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Database className="w-5 h-5" />
+                      Estatísticas do Banco
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+                        <span className="text-sm text-muted-foreground">Perfis de Usuário</span>
+                        <span className="font-semibold">{kpis.totalUsers}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+                        <span className="text-sm text-muted-foreground">Veículos</span>
+                        <span className="font-semibold">{kpis.totalVehicles}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+                        <span className="text-sm text-muted-foreground">Agendamentos</span>
+                        <span className="font-semibold">{kpis.totalAppointments}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+                        <span className="text-sm text-muted-foreground">Eventos do Funil</span>
+                        <span className="font-semibold">{funnelData.reduce((a, b) => a + b.value, 0)}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
-                      <span className="text-sm text-muted-foreground">Veículos</span>
-                      <span className="font-semibold">{kpis.totalVehicles}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
-                      <span className="text-sm text-muted-foreground">Agendamentos</span>
-                      <span className="font-semibold">{kpis.totalAppointments}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
-                      <span className="text-sm text-muted-foreground">Eventos do Funil</span>
-                      <span className="font-semibold">{funnelData.reduce((a, b) => a + b.value, 0)}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </>
-        )}
+          )}
+        </CustomizableDashboard>
       </div>
     </AdminLayout>
   );

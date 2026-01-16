@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "@/components/gestao/ExportButtons";
-import { AddDirectoryDialog } from "@/components/gestao/AddDirectoryDialog";
+import { CustomizableDashboard } from "@/components/gestao/CustomizableDashboard";
 import { exportToPDF, exportToExcel, type ReportData } from "@/utils/exportReport";
-import { Cog, Car, Clock, CheckCircle, AlertTriangle, Loader2, BarChart3, Plus } from "lucide-react";
+import { Cog, Car, Clock, CheckCircle, AlertTriangle, Loader2, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
@@ -35,7 +34,6 @@ export default function GestaoOperacoes() {
     cancelled: 0,
   });
   const [statusData, setStatusData] = useState<StatusCount[]>([]);
-  const [recentAppointments, setRecentAppointments] = useState<any[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -93,8 +91,6 @@ export default function GestaoOperacoes() {
             count,
           }))
         );
-
-        setRecentAppointments(appointments.slice(0, 10));
       }
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
@@ -135,108 +131,103 @@ export default function GestaoOperacoes() {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Cog className="w-6 h-6 text-slate-500" />
-              Operações
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Indicadores operacionais do mês atual
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <AddDirectoryDialog>
-              <Button variant="outline" size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Diretório
-              </Button>
-            </AddDirectoryDialog>
+      <div className="p-6">
+        <CustomizableDashboard dashboardKey="operacoes" title="Operações">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Cog className="w-6 h-6 text-slate-500" />
+                Operações
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Indicadores operacionais do mês atual
+              </p>
+            </div>
             <ExportButtons
               onExportPDF={() => exportToPDF(getReportData())}
               onExportExcel={() => exportToExcel(getReportData())}
               isLoading={isLoading}
             />
           </div>
-        </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-              {kpiCards.map((stat) => (
-                <Card key={stat.label}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                      {stat.label}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                {kpiCards.map((stat) => (
+                  <Card key={stat.label}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                        {stat.label}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold">{stat.value}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5" />
+                      Agendamentos por Status
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">{stat.value}</p>
+                    {statusData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={statusData}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis dataKey="status" tick={{ fontSize: 11 }} />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: "hsl(var(--popover))", 
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px"
+                            }} 
+                          />
+                          <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">
+                        Sem dados para exibir
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
-              ))}
-            </div>
 
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5" />
-                    Agendamentos por Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {statusData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={statusData}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="status" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--popover))", 
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px"
-                          }} 
-                        />
-                        <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">
-                      Sem dados para exibir
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5" />
-                    Taxa de Conclusão
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <p className="text-5xl font-bold text-primary">
-                      {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
-                    </p>
-                    <p className="text-muted-foreground mt-2">
-                      {stats.completed} de {stats.total} serviços concluídos
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      Taxa de Conclusão
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <p className="text-5xl font-bold text-primary">
+                        {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
+                      </p>
+                      <p className="text-muted-foreground mt-2">
+                        {stats.completed} de {stats.total} serviços concluídos
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </>
-        )}
+          )}
+        </CustomizableDashboard>
       </div>
     </AdminLayout>
   );
