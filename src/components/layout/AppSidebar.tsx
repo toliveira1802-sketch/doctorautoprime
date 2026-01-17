@@ -56,19 +56,19 @@ type AdminMenuGroup = {
   items: AdminMenuItem[];
 };
 
-// MODULE: Gestão (dashboards customizados) - APENAS DEV e GESTÃO (níveis mais altos)
+// MODULE: Gestão (dashboards customizados) - DEV, GESTÃO e ADMIN
 const gestaoModule: AdminMenuGroup = {
   label: "Gestão",
   icon: LayoutDashboard,
-  roles: ["dev", "gestao"],
+  roles: ["dev", "gestao", "admin"],
   items: [
-    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["dev", "gestao"] },
-    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["dev", "gestao"] },
-    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["dev", "gestao"] },
-    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["dev", "gestao"] },
-    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["dev", "gestao"] },
-    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["dev", "gestao"] },
-    { title: "Usuários", url: "/gestao/usuarios", icon: Crown, roles: ["dev", "gestao"] },
+    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["dev", "gestao", "admin"] },
+    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["dev", "gestao", "admin"] },
+    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["dev", "gestao", "admin"] },
+    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["dev", "gestao", "admin"] },
+    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["dev", "gestao", "admin"] },
+    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["dev", "gestao", "admin"] },
+    { title: "Usuários", url: "/gestao/usuarios", icon: Crown, roles: ["dev", "gestao", "admin"] },
   ],
 };
 
