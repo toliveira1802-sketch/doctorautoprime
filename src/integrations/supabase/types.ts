@@ -1875,6 +1875,13 @@ export type Database = {
       use_invite:
         | { Args: { invite_code: string }; Returns: boolean }
         | { Args: { invite_code: string; user_uuid: string }; Returns: boolean }
+      validate_invite_code: {
+        Args: { check_code: string }
+        Returns: {
+          invite_role: Database["public"]["Enums"]["app_role"]
+          is_valid: boolean
+        }[]
+      }
     }
     Enums: {
       alert_status: "scheduled" | "sent" | "read" | "dismissed" | "completed"
