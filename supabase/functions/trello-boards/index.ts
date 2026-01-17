@@ -29,12 +29,21 @@ serve(async (req) => {
     );
 
     const token = authHeader.replace('Bearer ', '');
-    const { data, error: authError } = await supabaseClient.auth.getClaims(token);
+    const { data: userData, error: authError } = await supabaseClient.auth.getUser(token);
     
-    if (authError || !data?.claims) {
+    if (authError || !userData?.user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized - Invalid session' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check admin access
+    const { data: hasAccess } = await supabaseClient.rpc('has_admin_access');
+    if (!hasAccess) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
