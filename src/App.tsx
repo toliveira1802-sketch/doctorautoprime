@@ -49,6 +49,7 @@ import GestaoFinanceiro from "./pages/gestao/GestaoFinanceiro";
 import GestaoTecnologia from "./pages/gestao/GestaoTecnologia";
 import GestaoComercial from "./pages/gestao/GestaoComercial";
 import GestaoUsuarios from "./pages/gestao/GestaoUsuarios";
+import Configuracoes from "./pages/Configuracoes";
 import Install from "./pages/Install";
 const queryClient = new QueryClient();
 
@@ -180,12 +181,20 @@ const AppRoutes = () => {
         } 
       />
       <Route 
+        path="/configuracoes" 
+        element={
+          <ProtectedRoute>
+            <Configuracoes />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/servico/:vehicleId" 
         element={
           <ProtectedRoute>
             <ServicoDetalhes />
           </ProtectedRoute>
-        } 
+        }
       />
       <Route 
         path="/orcamento/:osId" 
