@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Plus, Clock, Wrench, Gift, Sparkles, ChevronRight, Loader2, CalendarClock, XCircle } from "lucide-react";
+import { Calendar, Plus, Clock, Wrench, Gift, Sparkles, ChevronRight, Loader2, CalendarClock, XCircle, PartyPopper, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -54,6 +54,25 @@ interface UserVehicle {
   brand: string | null;
 }
 
+interface PrimeEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  event_type: "workshop" | "meetup" | "carwash" | "training" | "other";
+  event_date: string;
+  event_time: string | null;
+  location: string | null;
+  max_participants: number | null;
+}
+
+const eventTypeConfig: Record<string, { label: string; color: string; icon: string }> = {
+  workshop: { label: "Workshop", color: "bg-blue-500/20 text-blue-500", icon: "🔧" },
+  meetup: { label: "Encontro", color: "bg-purple-500/20 text-purple-500", icon: "🤝" },
+  carwash: { label: "Car Wash", color: "bg-cyan-500/20 text-cyan-500", icon: "🚿" },
+  training: { label: "Treinamento", color: "bg-amber-500/20 text-amber-500", icon: "📚" },
+  other: { label: "Evento", color: "bg-muted text-muted-foreground", icon: "🎉" },
+};
+
 const statusColors = {
   confirmado: "bg-emerald-500/20 text-emerald-500",
   pendente: "bg-amber-500/20 text-amber-500",
@@ -70,6 +89,7 @@ const Agenda = () => {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [events, setEvents] = useState<PrimeEvent[]>([]);
   const [userVehicles, setUserVehicles] = useState<UserVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -151,6 +171,17 @@ const Agenda = () => {
 
       setPromotions(matchedPromos);
 
+      // Fetch upcoming events
+      const { data: eventsData } = await supabase
+        .from("events")
+        .select("id, title, description, event_type, event_date, event_time, location, max_participants")
+        .eq("is_active", true)
+        .gte("event_date", new Date().toISOString().split("T")[0])
+        .order("event_date", { ascending: true })
+        .limit(5);
+
+      setEvents((eventsData || []) as PrimeEvent[]);
+
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -184,6 +215,22 @@ const Agenda = () => {
           validTo: new Date(promo.valid_to)
         } 
       } 
+    });
+  };
+
+  const handleEventClick = async (event: PrimeEvent) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("event_clicks").insert({
+          event_id: event.id,
+          user_id: user.id,
+        });
+      }
+    } catch (e) {}
+    
+    toast.success("Interesse registrado!", {
+      description: `Você será avisado sobre "${event.title}"`,
     });
   };
 
@@ -493,6 +540,91 @@ const Agenda = () => {
                     </span>
                   </div>
                 </button>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* 4. EVENTOS */}
+          <AccordionItem value="eventos" className="glass-card rounded-xl border-none">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <PartyPopper className="w-5 h-5 text-purple-500" />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-base font-semibold text-foreground">Eventos Prime</span>
+                  {events.length > 0 && (
+                    <span className="text-xs text-purple-500 font-medium">
+                      {events.length} evento{events.length > 1 ? "s" : ""} próximo{events.length > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              {events.length > 0 ? (
+                <div className="space-y-3">
+                  {events.map((event) => {
+                    const config = eventTypeConfig[event.event_type] || eventTypeConfig.other;
+                    
+                    return (
+                      <button
+                        key={event.id}
+                        onClick={() => handleEventClick(event)}
+                        className="w-full bg-gradient-to-r from-purple-500/10 via-primary/5 to-purple-500/10 rounded-xl p-4 border border-purple-500/20 transition-all hover:border-purple-500/40 hover:scale-[1.01] active:scale-[0.99] text-left"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-primary/20 flex items-center justify-center flex-shrink-0 text-2xl">
+                            {config.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", config.color)}>
+                                {config.label}
+                              </span>
+                            </div>
+                            <p className="font-semibold text-foreground mt-1 line-clamp-1">{event.title}</p>
+                            {event.description && (
+                              <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{event.description}</p>
+                            )}
+                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5" />
+                                <span>{format(new Date(event.event_date), "dd/MM", { locale: ptBR })}</span>
+                                {event.event_time && (
+                                  <span className="text-purple-400 ml-1">
+                                    {event.event_time.slice(0, 5)}
+                                  </span>
+                                )}
+                              </div>
+                              {event.location && (
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3.5 h-3.5" />
+                                  <span className="truncate max-w-[120px]">{event.location}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-purple-500/50 flex-shrink-0" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500/20 to-primary/20 flex items-center justify-center">
+                      <PartyPopper className="w-8 h-8 text-purple-500/60" />
+                    </div>
+                    <div>
+                      <p className="text-foreground font-medium">Em breve...</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Estamos preparando eventos exclusivos! 🎉
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
             </AccordionContent>
           </AccordionItem>
