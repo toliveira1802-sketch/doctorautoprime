@@ -157,6 +157,7 @@ export function MyVehiclesSection() {
   };
 
   const vehicleSummary = vehicles.map((v) => `${v.brand || ''} ${v.model}`.trim()).join(", ");
+  const hasActiveService = vehicles.some(v => v.activeOS);
 
   if (loading) {
     return (
@@ -176,6 +177,13 @@ export function MyVehiclesSection() {
             <div className="flex items-center gap-4">
               <div className="relative w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
                 <Car className="w-6 h-6 text-primary" strokeWidth={1.5} />
+                {/* Animated dot when there's active service and menu is closed */}
+                {hasActiveService && !isOpen && (
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                  </span>
+                )}
               </div>
               <div className="text-left">
                 <p className="font-semibold text-foreground">MEUS VEÍCULOS</p>
