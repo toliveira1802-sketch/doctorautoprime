@@ -57,8 +57,8 @@ export function useUserRole() {
     isDev: role === "dev",
     isAdmin: role === "admin",
     isGestao: role === "gestao",
-    // Dev has access to everything, gestao is management level
-    hasGestaoAccess: role === "dev" || role === "gestao",
+    // Dev, gestao, and admin all have access to Gestão module
+    hasGestaoAccess: role === "dev" || role === "gestao" || role === "admin",
     // Admin access includes dev, gestao, and admin
     hasAdminAccess: role === "dev" || role === "admin" || role === "gestao",
     // Can manage roles: only dev and gestao
