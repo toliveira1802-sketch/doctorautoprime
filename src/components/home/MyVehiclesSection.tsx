@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { Car, ChevronDown, ChevronRight, Loader2, Plus, Trash2, Calendar } from "lucide-react";
+import { Car, ChevronDown, ChevronRight, Loader2, Plus, Trash2, Calendar, Wrench, CalendarPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
@@ -31,12 +32,33 @@ interface Vehicle {
   brand: string | null;
 }
 
+interface ActiveOS {
+  id: string;
+  status: string;
+  descricao_problema: string | null;
+}
+
 interface VehicleWithAppointment extends Vehicle {
   nextAppointment?: {
     date: string;
     service: string;
   } | null;
+  activeOS?: ActiveOS | null;
 }
+
+const statusLabels: Record<string, string> = {
+  diagnostico: "Em diagnóstico",
+  orcamento: "Orçamento",
+  aguardando_aprovacao: "Aguardando aprovação",
+  aguardando_pecas: "Aguardando peças",
+  em_execucao: "Em execução",
+  pronto_retirada: "Pronto para retirada",
+  em_teste: "Em teste",
+};
+
+const getStatusLabel = (status: string): string => {
+  return statusLabels[status] || status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+};
 
 export function MyVehiclesSection() {
   const navigate = useNavigate();
@@ -79,14 +101,31 @@ export function MyVehiclesSection() {
         .gte("appointment_date", new Date().toISOString().split("T")[0])
         .order("appointment_date", { ascending: true });
 
-      // Map appointments to vehicles
+      // Get all vehicle plates for OS lookup
+      const vehiclePlates = (vehiclesData || []).map(v => v.plate);
+
+      // Fetch active OS by plate (status not entregue/cancelado)
+      const { data: osData } = await supabase
+        .from("ordens_servico")
+        .select("id, plate, status, descricao_problema")
+        .in("plate", vehiclePlates)
+        .not("status", "in", "(entregue,cancelado)");
+
+      // Map appointments and OS to vehicles
       const vehiclesWithAppointments: VehicleWithAppointment[] = (vehiclesData || []).map(vehicle => {
         const appointment = appointmentsData?.find(apt => apt.vehicle_id === vehicle.id);
+        const activeOS = osData?.find(os => os.plate.toUpperCase() === vehicle.plate.toUpperCase());
+        
         return {
           ...vehicle,
           nextAppointment: appointment ? {
             date: appointment.appointment_date,
             service: appointment.appointment_services?.[0]?.services?.name || "Serviço"
+          } : null,
+          activeOS: activeOS ? {
+            id: activeOS.id,
+            status: activeOS.status,
+            descricao_problema: activeOS.descricao_problema
           } : null
         };
       });
@@ -164,7 +203,8 @@ export function MyVehiclesSection() {
                 className={cn(
                   "flex flex-col p-4 rounded-xl cursor-pointer transition-all ml-4",
                   "bg-muted/20 hover:bg-muted/40 border border-border/50",
-                  vehicle.nextAppointment && "border-primary/30 bg-primary/5"
+                  vehicle.activeOS && "border-amber-500/30 bg-amber-500/5",
+                  vehicle.nextAppointment && !vehicle.activeOS && "border-primary/30 bg-primary/5"
                 )}
                 onClick={() => navigate(`/veiculo/${vehicle.id}`)}
               >
@@ -172,12 +212,17 @@ export function MyVehiclesSection() {
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-10 h-10 rounded-lg flex items-center justify-center",
+                      vehicle.activeOS ? "bg-amber-500/20" : 
                       vehicle.nextAppointment ? "bg-primary/20" : "bg-muted/50"
                     )}>
-                      <Car className={cn(
-                        "w-5 h-5",
-                        vehicle.nextAppointment ? "text-primary" : "text-muted-foreground"
-                      )} />
+                      {vehicle.activeOS ? (
+                        <Wrench className="w-5 h-5 text-amber-500" />
+                      ) : (
+                        <Car className={cn(
+                          "w-5 h-5",
+                          vehicle.nextAppointment ? "text-primary" : "text-muted-foreground"
+                        )} />
+                      )}
                     </div>
                     <div>
                       <p className="font-medium text-foreground text-sm">
@@ -219,13 +264,51 @@ export function MyVehiclesSection() {
                   </div>
                 </div>
 
-                {/* Appointment badge */}
-                {vehicle.nextAppointment && (
+                {/* Active OS badge */}
+                {vehicle.activeOS && (
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-amber-500/20">
+                    <div className="flex items-center gap-2">
+                      <Wrench className="w-3.5 h-3.5 text-amber-500" />
+                      <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
+                        {getStatusLabel(vehicle.activeOS.status)}
+                      </Badge>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/admin/os/${vehicle.activeOS!.id}`);
+                      }}
+                      className="text-xs text-amber-600 hover:underline font-medium"
+                    >
+                      Ver OS
+                    </button>
+                  </div>
+                )}
+
+                {/* Appointment badge - only show if no active OS */}
+                {vehicle.nextAppointment && !vehicle.activeOS && (
                   <div className="flex items-center gap-2 mt-2 pt-2 border-t border-primary/20">
                     <Calendar className="w-3.5 h-3.5 text-primary" />
                     <span className="text-xs text-primary font-medium">
                       Agendado: {format(new Date(vehicle.nextAppointment.date), "dd/MM", { locale: ptBR })} - {vehicle.nextAppointment.service}
                     </span>
+                  </div>
+                )}
+
+                {/* No service - show schedule button */}
+                {!vehicle.activeOS && !vehicle.nextAppointment && (
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                    <span className="text-xs text-muted-foreground">Sem serviço ativo</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/novo-agendamento?vehicleId=${vehicle.id}`);
+                      }}
+                      className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                    >
+                      <CalendarPlus className="w-3.5 h-3.5" />
+                      Agendar
+                    </button>
                   </div>
                 )}
               </div>
