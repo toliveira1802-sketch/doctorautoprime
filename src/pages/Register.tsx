@@ -64,19 +64,15 @@ const Register: React.FC = () => {
     
     if (invite) {
       setInviteCode(invite.toUpperCase());
-      // Validate invite code
+      // Validate invite code using secure RPC function
       const validateInvite = async () => {
         const { data, error } = await supabase
-          .from('invites')
-          .select('code, role')
-          .eq('code', invite.toUpperCase())
-          .is('used_by', null)
-          .gt('expires_at', new Date().toISOString())
-          .maybeSingle();
+          .rpc('validate_invite_code', { check_code: invite.toUpperCase() });
         
-        if (data && !error) {
-          setInviteRole(data.role);
-          toast.success(`Convite válido para ${data.role === 'admin' ? 'Administrador' : data.role === 'gestao' ? 'Gestão' : 'Usuário'}`);
+        if (data && data.length > 0 && data[0].is_valid && !error) {
+          const inviteRoleValue = data[0].invite_role;
+          setInviteRole(inviteRoleValue);
+          toast.success(`Convite válido para ${inviteRoleValue === 'admin' ? 'Administrador' : inviteRoleValue === 'gestao' ? 'Gestão' : 'Usuário'}`);
         } else {
           toast.error('Código de convite inválido ou expirado');
           setInviteCode(null);
