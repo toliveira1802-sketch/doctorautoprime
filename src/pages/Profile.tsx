@@ -226,19 +226,9 @@ export default function Profile() {
         {/* Menu Options */}
         <div className="space-y-2">
           <MenuOption 
-            icon={Calendar} 
-            label="Meus Agendamentos" 
-            onClick={() => navigate("/agenda")}
-          />
-          <MenuOption 
-            icon={Gift} 
-            label="Ofertas Exclusivas" 
-            onClick={() => navigate("/agenda")}
-          />
-          <MenuOption 
             icon={Settings} 
             label="Configurações" 
-            onClick={() => toast.info("Em breve!")}
+            onClick={() => navigate("/configuracoes")}
           />
           <MenuOption 
             icon={LogOut} 
