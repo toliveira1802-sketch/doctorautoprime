@@ -127,7 +127,7 @@ export default function Profile() {
         variant="default"
         size="icon"
         className="fixed bottom-6 left-6 z-50 h-14 w-14 rounded-full shadow-lg gradient-primary hover:opacity-90"
-        onClick={() => navigate(-1)}
+        onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/")}
       >
         <ArrowLeft className="h-6 w-6 text-white" />
       </Button>
@@ -141,7 +141,7 @@ export default function Profile() {
               variant="ghost" 
               size="icon" 
               className="text-white hover:bg-white/20"
-              onClick={() => navigate(-1)}
+              onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/")}
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
