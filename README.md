@@ -1,73 +1,111 @@
-# Welcome to your Lovable project
+# Doctor Auto Prime 🚗
 
-## Project info
+CRM completo para oficinas mecânicas, desenvolvido para gerenciar todo o ciclo de atendimento ao cliente.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Stack Tecnológico
 
-## How can I edit this code?
+- **Frontend:** React 18 + TypeScript + Vite
+- **Estilização:** Tailwind CSS + shadcn/ui
+- **Backend:** Lovable Cloud (Supabase)
+- **Autenticação:** Email/Telefone + OTP
+- **Database:** PostgreSQL
+- **State Management:** React Query (TanStack)
 
-There are several ways of editing your application.
+## 📋 Pré-requisitos
 
-**Use Lovable**
+- Node.js 18+ 
+- npm ou bun
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🛠️ Instalação Local
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
+# 1. Clone o repositório
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# 2. Acesse o diretório
+cd doctor-auto-prime
 
-# Step 3: Install the necessary dependencies.
-npm i
+# 3. Instale as dependências
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 4. Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+O app estará disponível em `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Estrutura do Projeto
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/
+│   ├── auth/          # Autenticação (login, registro, OTP)
+│   ├── gestao/        # Dashboards de gestão
+│   ├── home/          # Componentes da home
+│   ├── layout/        # Header, Sidebar, Navigation
+│   ├── patio/         # Gestão do pátio (Kanban)
+│   ├── profile/       # Perfil do usuário
+│   ├── service/       # Timeline de serviços
+│   ├── ui/            # shadcn/ui components
+│   └── vehicle/       # Gestão de veículos
+├── contexts/          # AuthContext
+├── hooks/             # Custom hooks
+├── pages/             # Páginas da aplicação
+│   ├── admin/         # Painel administrativo
+│   └── gestao/        # Dashboards de gestão
+├── integrations/      # Supabase client e types
+└── utils/             # Utilitários
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 👥 Roles de Usuário
 
-## What technologies are used for this project?
+| Role | Descrição | Acesso |
+|------|-----------|--------|
+| `admin` | Administrador | Acesso completo |
+| `gestao` | Gestão | Dashboards e relatórios |
+| `user` | Cliente | Área do cliente |
+| `dev` | Desenvolvedor | Recursos de desenvolvimento |
 
-This project is built with:
+## 🔧 Scripts Disponíveis
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+npm run dev      # Servidor de desenvolvimento
+npm run build    # Build de produção
+npm run preview  # Preview do build
+npm run lint     # Verificação de lint
+npm run test     # Executa testes
+```
 
-## How can I deploy this project?
+## 🌐 URLs do Projeto
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- **Preview:** https://id-preview--ad0c6e08-a053-4a31-ba05-c0434697e9f4.lovable.app
+- **Produção:** https://doctorautoprime.lovable.app
 
-## Can I connect a custom domain to my Lovable project?
+## 📱 PWA
 
-Yes, you can!
+O app suporta instalação como PWA em dispositivos móveis. Acesse `/install` para instruções.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🔐 Variáveis de Ambiente
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+O projeto utiliza Lovable Cloud, que configura automaticamente as variáveis necessárias:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `VITE_SUPABASE_PROJECT_ID`
+
+## 📖 Documentação Adicional
+
+Para documentação detalhada do projeto, consulte:
+- [docs/PROJETO.md](docs/PROJETO.md) - Documentação completa do sistema
+
+## 🤝 Contribuindo
+
+1. Faça fork do projeto
+2. Crie uma branch (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto é proprietário da Doctor Auto Prime.
