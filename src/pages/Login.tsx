@@ -47,9 +47,16 @@ const Login: React.FC = () => {
     }
 
     toast.success('Login realizado com sucesso!');
-    const redirectTo = localStorage.getItem('drprime_redirect') || '/';
-    localStorage.removeItem('drprime_redirect');
-    navigate(redirectTo);
+    
+    // MASTER REDIRECT: If master email, go to admin dashboard
+    const MASTER_EMAILS = ["toliveira1802@gmail.com", "sophia.duarte1@hotmail.com"];
+    if (MASTER_EMAILS.includes(email.toLowerCase())) {
+      navigate('/admin');
+    } else {
+      const redirectTo = localStorage.getItem('drprime_redirect') || '/';
+      localStorage.removeItem('drprime_redirect');
+      navigate(redirectTo);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

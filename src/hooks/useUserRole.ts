@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = "dev" | "admin" | "gestao" | "user";
 
+const MASTER_EMAILS = ["toliveira1802@gmail.com", "sophia.duarte1@hotmail.com"];
+
 export function useUserRole() {
   const [role, setRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,6 +18,14 @@ export function useUserRole() {
           // DEVELOPMENT MODE: Default to admin when auth is disabled
           console.log("No user found - using development mode with admin role");
           setRole("admin");
+          setIsLoading(false);
+          return;
+        }
+
+        // MASTER BYPASS: Check if user email is in master list
+        if (user.email && MASTER_EMAILS.includes(user.email.toLowerCase())) {
+          console.log("Master user detected via email bypass:", user.email);
+          setRole("dev");
           setIsLoading(false);
           return;
         }
