@@ -8,7 +8,7 @@ import {
   TrendingUp, Sparkles, Calculator, Gift, Video, Zap, Link, Send, Download,
   MessageSquare, Crown, Award, Medal, Star, Scan, RefreshCw, Lightbulb
 } from "lucide-react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,7 +44,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -669,7 +669,6 @@ export default function AdminOSDetalhes() {
     .reduce((acc, item) => acc + (item.valor_total || 0), 0);
 
   return (
-    <AdminLayout>
       <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -2446,6 +2445,6 @@ export default function AdminOSDetalhes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </div>
   );
 }

@@ -39,7 +39,7 @@ Todos os diagramas estão disponíveis em alta resolução na pasta `docs/mapas/
 ---
 
 #### 3. Schema do Banco de Dados
-![Schema do Banco de Dados](./docs/mapas/03_database_schema.png)
+![Schema do Banco de Dados](./docs/mapas/03_database_schema.pn g)
 **Diagrama ERD completo**: Todas as tabelas organizadas por área funcional (Usuários, Multi-Tenancy, Operacional, IA, Financeiro, Integrações) com relacionamentos e chaves estrangeiras.
 
 ---

@@ -1,584 +1,289 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { AdminRoute } from "./components/auth/AdminRoute";
-import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
-import Index from "./pages/Index";
-import Profile from "./pages/Profile";
-import Historico from "./pages/Historico";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import VerifyOTP from "./pages/VerifyOTP";
-import BiometricSetup from "./pages/BiometricSetup";
-import Agenda from "./pages/Agenda";
-import Avisos from "./pages/Avisos";
-import Performance from "./pages/Performance";
-import NovoAgendamento from "./pages/NovoAgendamento";
-import AgendamentoSucesso from "./pages/AgendamentoSucesso";
-import Reagendamento from "./pages/Reagendamento";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminDashboardOverview from "./pages/admin/AdminDashboardOverview";
-import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { Header } from '@/components/layout/Header'
+import { BottomNavigation } from '@/components/layout/BottomNavigation'
+import { AppSidebar } from '@/components/layout/AppSidebar'
+import { Loader2 } from 'lucide-react'
 
-import AdminOrdensServico from "./pages/admin/AdminOrdensServico";
-import AdminNovaOS from "./pages/admin/AdminNovaOS";
-import AdminOSDetalhes from "./pages/admin/AdminOSDetalhes";
-import AdminPatioDetalhes from "./pages/admin/AdminPatioDetalhes";
-import AdminPatio from "./pages/admin/AdminPatio";
-import AdminMechanicFeedback from "./pages/admin/AdminMechanicFeedback";
-import AdminMechanicAnalytics from "./pages/admin/AdminMechanicAnalytics";
-import AdminClientes from "./pages/admin/AdminClientes";
-import AdminServicos from "./pages/admin/AdminServicos";
-import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
-import AdminFinanceiro from "./pages/admin/AdminFinanceiro";
-import AdminDocumentacao from "./pages/admin/AdminDocumentacao";
-import AdminAgendaMecanicos from "./pages/admin/AdminAgendaMecanicos";
-import AdminOperacional from "./pages/admin/AdminOperacional";
-import AdminPainelTV from "./pages/admin/AdminPainelTV";
-import AdminProdutividade from "./pages/admin/AdminProdutividade";
-import ServicoDetalhes from "./pages/ServicoDetalhes";
-import OrcamentoCliente from "./pages/OrcamentoCliente";
-import VehicleDetails from "./pages/VehicleDetails";
-import NotFound from "./pages/NotFound";
-import Blog from "./pages/Blog";
-import GestaoDashboards from "./pages/gestao/GestaoDashboards";
-import GestaoDashboardView from "./pages/gestao/GestaoDashboardView";
-import GestaoMelhorias from "./pages/gestao/GestaoMelhorias";
-import GestaoRH from "./pages/gestao/GestaoRH";
-import GestaoOperacoes from "./pages/gestao/GestaoOperacoes";
-import GestaoFinanceiro from "./pages/gestao/GestaoFinanceiro";
-import GestaoTecnologia from "./pages/gestao/GestaoTecnologia";
-import GestaoComercial from "./pages/gestao/GestaoComercial";
-import BIOverview from "./pages/gestao/bi/BIOverview";
-import BIConversao from "./pages/gestao/bi/BIConversao";
-import BIMargens from "./pages/gestao/bi/BIMargens";
-import IAConfiguracoes from "./pages/gestao/ia/IAConfiguracoes";
-import GestaoUsuarios from "./pages/gestao/GestaoUsuarios";
-import Configuracoes from "./pages/Configuracoes";
-import Install from "./pages/Install";
-import KommoCallback from "./pages/kommo/KommoCallback";
-import KommoIntegracao from "./pages/gestao/integracoes/KommoIntegracao";
-import MigracaoTrello from "./pages/gestao/MigracaoTrello";
-const queryClient = new QueryClient();
+// Client Pages
+import Login from '@/pages/Login'
+import Register from '@/pages/Register'
+import Home from '@/pages/Home'
+import Agenda from '@/pages/Agenda'
+import Profile from '@/pages/Profile'
+import NovoAgendamento from '@/pages/NovoAgendamento'
+import AgendamentoSucesso from '@/pages/AgendamentoSucesso'
+import Avisos from '@/pages/Avisos'
 
-// Protected Route component - AUTHENTICATION ENABLED
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const location = useLocation();
+// Admin Pages
+import AdminDashboard from '@/pages/admin/Dashboard'
+import Patio from '@/pages/admin/Patio'
+import Clientes from '@/pages/admin/Clientes'
+import OrdensServico from '@/pages/admin/OrdensServico'
+import NovaOS from '@/pages/admin/NovaOS'
+import Servicos from '@/pages/admin/Servicos'
+import AdminOSDetalhes from '@/pages/admin/AdminOSDetalhes'
 
-  if (isLoading) {
+// Protected Route wrapper
+function ProtectedRoute({ children, requiredRoles }: { children: React.ReactNode; requiredRoles?: string[] }) {
+    const { isAuthenticated, isLoading, role } = useAuth()
+
+    if (isLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />
+    }
+
+    if (requiredRoles && role && !requiredRoles.includes(role)) {
+        return <Navigate to="/" replace />
+    }
+
+    return <>{children}</>
+}
+
+// Client Layout
+function ClientLayout({ children }: { children: React.ReactNode }) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando...</p>
+        <div className="min-h-screen bg-background">
+            <Header showMenu={false} />
+            <main className="container max-w-2xl mx-auto p-4">
+                {children}
+            </main>
+            <BottomNavigation />
         </div>
-      </div>
-    );
-  }
+    )
+}
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
+// Admin Layout
+function AdminLayout({ children }: { children: React.ReactNode }) {
+    const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  return <>{children}</>;
-};
+    return (
+        <div className="min-h-screen bg-background">
+            <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+            <div className="flex">
+                <AppSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+                <main className={`flex-1 p-6 transition-all duration-300 ${sidebarOpen ? 'lg:ml-0' : ''}`}>
+                    {children}
+                </main>
+            </div>
+        </div>
+    )
+}
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/verify-otp" element={<VerifyOTP />} />
-      <Route path="/biometric-setup" element={<BiometricSetup />} />
-      <Route path="/install" element={<Install />} />
-      <Route
-        path="/"
-        element={<Navigate to="/login" replace />}
-      />
-      <Route
-        path="/agenda"
-        element={
-          <ProtectedRoute>
-            <Agenda />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/avisos"
-        element={
-          <ProtectedRoute>
-            <Avisos />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/performance"
-        element={
-          <ProtectedRoute>
-            <Performance />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/blog"
-        element={
-          <ProtectedRoute>
-            <Blog />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/novo-agendamento"
-        element={
-          <ProtectedRoute>
-            <NovoAgendamento />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/historico"
-        element={
-          <ProtectedRoute>
-            <Historico />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/agendamento-sucesso"
-        element={
-          <ProtectedRoute>
-            <AgendamentoSucesso />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/reagendamento"
-        element={
-          <ProtectedRoute>
-            <Reagendamento />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/veiculo/:vehicleId"
-        element={
-          <ProtectedRoute>
-            <VehicleDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/perfil"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/configuracoes"
-        element={
-          <ProtectedRoute>
-            <Configuracoes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/servico/:vehicleId"
-        element={
-          <ProtectedRoute>
-            <ServicoDetalhes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/orcamento/:osId"
-        element={<OrcamentoCliente />}
-      />
-      {/* Admin Routes - Protected by role */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/agendamentos"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminAgendamentos />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/dashboard"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminDashboardOverview />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/nova-os"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminNovaOS />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/ordens-servico"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminOrdensServico />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/ordens-servico/:osId"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminOSDetalhes />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/patio"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminPatio />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/patio/:patioId"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminPatioDetalhes />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/feedback-mecanicos"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminMechanicFeedback />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/analytics-mecanicos"
-        element={
-          <ProtectedRoute>
-            <AdminOnlyRoute>
-              <AdminMechanicAnalytics />
-            </AdminOnlyRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/financeiro"
-        element={
-          <ProtectedRoute>
-            <AdminOnlyRoute>
-              <AdminFinanceiro />
-            </AdminOnlyRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/clientes"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminClientes />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/servicos"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminServicos />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/configuracoes"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminConfiguracoes />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/documentacao"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminDocumentacao />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/agenda-mecanicos"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminAgendaMecanicos />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/operacional"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminOperacional />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/painel-tv"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminPainelTV />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/produtividade"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <AdminProdutividade />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      {/* Gestão Routes */}
-      <Route
-        path="/gestao"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <GestaoDashboards />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/dashboard/:dashboardId"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <GestaoDashboardView />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/melhorias"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <GestaoMelhorias />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/rh"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <GestaoRH />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/operacoes"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <GestaoOperacoes />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/financeiro"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <GestaoFinanceiro />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/tecnologia"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <GestaoTecnologia />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/comercial"
-        element={
-          <ProtectedRoute>
-            <AdminRoute>
-              <GestaoComercial />
-            </AdminRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/usuarios"
-        element={
-          <ProtectedRoute>
-            <AdminOnlyRoute>
-              <GestaoUsuarios />
-            </AdminOnlyRoute>
-          </ProtectedRoute>
-        }
-      />
+// Root redirect component - redirects based on user role
+function RootRedirect() {
+    const { role } = useAuth()
+    
+    // Redirect based on role
+    if (role === 'gestao' || role === 'dev') {
+        return <Navigate to="/gestao" replace />
+    } else if (role === 'admin') {
+        return <Navigate to="/admin" replace />
+    }
+    
+    // Default to client view
+    return <ClientLayout><Home /></ClientLayout>
+}
 
-      {/* Rotas de BI */}
-      <Route
-        path="/gestao/bi"
-        element={
-          <ProtectedRoute>
-            <AdminOnlyRoute>
-              <BIOverview />
-            </AdminOnlyRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/bi/conversao"
-        element={
-          <ProtectedRoute>
-            <AdminOnlyRoute>
-              <BIConversao />
-            </AdminOnlyRoute>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gestao/bi/margens"
-        element={
-          <ProtectedRoute>
-            <AdminOnlyRoute>
-              <BIMargens />
-            </AdminOnlyRoute>
-          </ProtectedRoute>
-        }
-      />
+export default function App() {
+    const { isAuthenticated, isLoading } = useAuth()
 
-      {/* Rotas de IA */}
-      <Route
-        path="/gestao/ia/configuracoes"
-        element={
-          <ProtectedRoute>
-            <AdminOnlyRoute>
-              <IAConfiguracoes />
-            </AdminOnlyRoute>
-          </ProtectedRoute>
-        }
-      />
+    if (isLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )
+    }
 
-      {/* Rotas de Integrações */}
-      <Route
-        path="/gestao/integracoes/kommo"
-        element={
-          <ProtectedRoute>
-            <AdminOnlyRoute>
-              <KommoIntegracao />
-            </AdminOnlyRoute>
-          </ProtectedRoute>
-        }
-      />
+    return (
+        <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} />
+            <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/" replace />} />
 
-      {/* Rota pública de callback OAuth Kommo */}
-      <Route path="/kommo/callback" element={<KommoCallback />} />
+            {/* Root - redirects based on role */}
+            <Route path="/" element={
+                <ProtectedRoute>
+                    <RootRedirect />
+                </ProtectedRoute>
+            } />
 
-      {/* Rota de Migração Trello */}
-      <Route
-        path="/gestao/migracao-trello"
-        element={
-          <ProtectedRoute>
-            <AdminOnlyRoute>
-              <MigracaoTrello />
-            </AdminOnlyRoute>
-          </ProtectedRoute>
-        }
-      />
+            {/* Client Routes */}
+            <Route path="/agenda" element={
+                <ProtectedRoute>
+                    <ClientLayout><Agenda /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+                <ProtectedRoute>
+                    <ClientLayout><Profile /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/avisos" element={
+                <ProtectedRoute>
+                    <ClientLayout><Avisos /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/novo-agendamento" element={
+                <ProtectedRoute>
+                    <ClientLayout><NovoAgendamento /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/agendamento-sucesso" element={
+                <ProtectedRoute>
+                    <ClientLayout><AgendamentoSucesso /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/historico" element={
+                <ProtectedRoute>
+                    <ClientLayout>
+                        <div className="text-center py-12 text-muted-foreground">
+                            <p>Histórico - Em desenvolvimento</p>
+                        </div>
+                    </ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/veiculo/:id" element={
+                <ProtectedRoute>
+                    <ClientLayout>
+                        <div className="text-center py-12 text-muted-foreground">
+                            <p>Detalhes do Veículo - Em desenvolvimento</p>
+                        </div>
+                    </ClientLayout>
+                </ProtectedRoute>
+            } />
 
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
+            {/* Admin Routes */}
+            <Route path="/admin" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout><AdminDashboard /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/agendamentos" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout><Agenda isAdmin /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/patio" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout><Patio /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/clientes" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout><Clientes /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/ordens-servico" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout><OrdensServico /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/nova-os" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout><NovaOS /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/os/:osId" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout><AdminOSDetalhes /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/servicos" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout><Servicos /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/financeiro" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout>
+                        <div className="text-center py-12 text-muted-foreground">
+                            <p>Financeiro - Em desenvolvimento</p>
+                        </div>
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/configuracoes" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayout>
+                        <div className="text-center py-12 text-muted-foreground">
+                            <p>Configurações - Em desenvolvimento</p>
+                        </div>
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+            {/* Gestão Routes */}
+            <Route path="/gestao" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout><AdminDashboard /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/agendamentos" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout><Agenda isAdmin /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/patio" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout><Patio /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/clientes" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout><Clientes /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/ordens-servico" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout><OrdensServico /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/nova-os" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout><NovaOS /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/os/:osId" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout><AdminOSDetalhes /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/servicos" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout><Servicos /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/financeiro" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout>
+                        <div className="text-center py-12 text-muted-foreground">
+                            <p>Financeiro - Em desenvolvimento</p>
+                        </div>
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/configuracoes" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayout>
+                        <div className="text-center py-12 text-muted-foreground">
+                            <p>Configurações - Em desenvolvimento</p>
+                        </div>
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
 
-export default App;
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    )
+}

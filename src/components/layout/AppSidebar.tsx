@@ -1,262 +1,258 @@
+import { NavLink } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
+import { useCompany } from '@/contexts/CompanyContext'
+import { cn } from '@/lib/utils'
 import {
-  Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut,
-  Plus, Car, Star, TrendingUp, DollarSign, FileText, ChevronDown,
-  ClipboardList, Gauge, LayoutDashboard, Lightbulb, UserCog, Cog,
-  Megaphone, ShoppingCart, Laptop, Crown
-} from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { NavLink } from "@/components/NavLink";
-import { cn } from "@/lib/utils";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserRole, type UserRole } from "@/hooks/useUserRole";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+    LayoutDashboard,
+    ClipboardList,
+    Car,
+    Calendar,
+    Users,
+    Wrench,
+    DollarSign,
+    BarChart3,
+    MessageSquare,
+    Settings,
+    ChevronLeft,
+    ChevronRight,
+    Building2,
+    Check,
+    type LucideIcon,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 
-// ============================================
-// CLIENT AREA MODULE
-// ============================================
-const clientItems = [
-  { title: "Home", url: "/", icon: Home },
-  { title: "Agenda", url: "/agenda", icon: Calendar },
-  { title: "Histórico", url: "/historico", icon: FileSearch },
-  { title: "Serviços", url: "/servicos", icon: Wrench },
-];
+// --- INTERFACES & TIPOS ---
 
-// ============================================
-// ADMIN MODULES - Organized for future separation
-// ============================================
-
-type AdminMenuItem = {
-  title: string;
-  url: string;
-  icon: React.ComponentType<{ className?: string }>;
-  roles: UserRole[];
-};
-
-type AdminMenuGroup = {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  roles: UserRole[];
-  items: AdminMenuItem[];
-};
-
-// MODULE: Gestão (dashboards customizados) - APENAS DEV e GESTÃO
-const gestaoModule: AdminMenuGroup = {
-  label: "Gestão",
-  icon: LayoutDashboard,
-  roles: ["dev", "gestao"],
-  items: [
-    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["dev", "gestao"] },
-    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["dev", "gestao"] },
-    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["dev", "gestao"] },
-    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["dev", "gestao"] },
-    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["dev", "gestao"] },
-    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["dev", "gestao"] },
-    { title: "Usuários", url: "/gestao/usuarios", icon: Crown, roles: ["dev", "gestao"] },
-  ],
-};
-
-// MODULE: POMBAL (dev + admin + gestao - dev e gestão têm acesso a tudo)
-const painelAdmModule: AdminMenuGroup = {
-  label: "POMBAL",
-  icon: Gauge,
-  roles: ["dev", "admin", "gestao"],
-  items: [
-    { title: "Home", url: "/admin", icon: Home, roles: ["dev", "admin", "gestao"] },
-    { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["dev", "admin", "gestao"] },
-    { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["dev", "admin", "gestao"] },
-    { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["dev", "admin", "gestao"] },
-    { title: "Ordens de Serviço", url: "/admin/ordens-servico", icon: FileText, roles: ["dev", "admin", "gestao"] },
-    { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["dev", "admin", "gestao"] },
-    { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["dev", "admin", "gestao"] },
-  ],
-};
-
-// MODULE: Sistema (dev + admin + gestao)
-const sistemaModule: AdminMenuGroup = {
-  label: "Sistema",
-  icon: Settings,
-  roles: ["dev", "admin", "gestao"],
-  items: [
-    { title: "Melhorias", url: "/gestao/melhorias", icon: Lightbulb, roles: ["dev", "admin", "gestao"] },
-  ],
-};
-
-// All admin modules - Gestão primeiro, depois Painel ADM, depois Sistema
-const adminModules: AdminMenuGroup[] = [
-  gestaoModule,
-  painelAdmModule,
-  sistemaModule,
-];
-
-interface AppSidebarProps {
-  variant?: "client" | "admin";
+interface MenuItem {
+    to: string
+    icon: LucideIcon
+    label: string
+    end?: boolean
+    gestaoOnly?: boolean
 }
 
-export function AppSidebar({ variant = "client" }: AppSidebarProps) {
-  const { state } = useSidebar();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { signOut } = useAuth();
-  const { role } = useUserRole();
-  const collapsed = state === "collapsed";
+interface MenuSection {
+    title: string
+    items: MenuItem[]
+}
 
-  // Filter modules based on user role
-  const filteredModules = adminModules
-    .filter(module => role && module.roles.includes(role))
-    .map(module => ({
-      ...module,
-      items: module.items.filter(item => role && item.roles.includes(role))
-    }))
-    .filter(module => module.items.length > 0);
+interface AppSidebarProps {
+    isOpen: boolean
+    onToggle: () => void
+}
 
-  const isActive = (path: string) => location.pathname === path;
+// --- DADOS DO MENU ---
+const menuSections: MenuSection[] = [
+    {
+        title: 'Operacional',
+        items: [
+            { to: '/gestao', icon: LayoutDashboard, label: 'Dashboard', end: true },
+            { to: '/gestao/ordens-servico', icon: ClipboardList, label: 'Ordens de Serviço' },
+            { to: '/gestao/patio', icon: Car, label: 'Pátio' },
+            { to: '/gestao/agendamentos', icon: Calendar, label: 'Agendamentos' },
+        ],
+    },
+    {
+        title: 'Cadastros',
+        items: [
+            { to: '/gestao/clientes', icon: Users, label: 'Clientes' },
+            { to: '/gestao/servicos', icon: Wrench, label: 'Serviços' },
+        ],
+    },
+    {
+        title: 'Financeiro',
+        items: [
+            { to: '/gestao/financeiro', icon: DollarSign, label: 'Financeiro', gestaoOnly: true },
+        ],
+    },
+    {
+        title: 'Equipe',
+        items: [
+            { to: '/gestao/analytics-mecanicos', icon: BarChart3, label: 'Analytics', gestaoOnly: true },
+            { to: '/gestao/feedback-mecanicos', icon: MessageSquare, label: 'Feedback', gestaoOnly: true },
+        ],
+    },
+    {
+        title: 'Sistema',
+        items: [
+            { to: '/gestao/configuracoes', icon: Settings, label: 'Configurações' },
+        ],
+    },
+]
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/login");
-  };
+export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
+    const { role } = useAuth()
+    const { companies, selectedCompany, selectCompany, selectAllCompanies, isAllCompaniesView } = useCompany()
+    const [showCompanyMenu, setShowCompanyMenu] = useState(false)
+    
+    // Verifica se é gestão ou dev (permissões elevadas)
+    const isGestao = role === 'gestao' || role === 'dev'
 
-  return (
-    <Sidebar collapsible="icon" className="border-r border-border/50">
-      <SidebarHeader className="p-4">
-        <div className={cn(
-          "flex items-center gap-3 transition-all",
-          collapsed && "justify-center"
-        )}>
-          <img
-            src="/logo.png"
-            alt="Doctor Auto Prime"
-            className="w-8 h-8 rounded-lg object-contain"
-          />
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="font-bold text-foreground text-sm">Doctor Auto Prime</span>
-              <span className="text-xs text-muted-foreground">
-                {variant === "admin" ? "Admin" : "Cliente"}
-              </span>
-            </div>
-          )}
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent>
-        {variant === "admin" ? (
-          // ADMIN: Modular grouped layout by role
-          <>
-            {filteredModules.map((module) => (
-              <Collapsible key={module.label} defaultOpen className="group/collapsible">
-                <SidebarGroup>
-                  <CollapsibleTrigger asChild>
-                    <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground flex items-center justify-between pr-2">
-                      <div className="flex items-center gap-2">
-                        <module.icon className="h-3.5 w-3.5" />
-                        {!collapsed && <span>{module.label}</span>}
-                      </div>
-                      {!collapsed && (
-                        <ChevronDown className="h-3.5 w-3.5 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                      )}
-                    </SidebarGroupLabel>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarGroupContent>
-                      <SidebarMenu>
-                        {module.items.map((item) => (
-                          <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton
-                              asChild
-                              isActive={isActive(item.url)}
-                              tooltip={collapsed ? item.title : undefined}
-                            >
-                              <NavLink
-                                to={item.url}
-                                end={item.url === "/admin"}
-                                className={cn(
-                                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
-                                  "hover:bg-muted/50"
-                                )}
-                                activeClassName="bg-primary/10 text-primary font-medium"
-                              >
-                                <item.icon className="h-5 w-5 shrink-0" />
-                                {!collapsed && <span>{item.title}</span>}
-                              </NavLink>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </CollapsibleContent>
-                </SidebarGroup>
-              </Collapsible>
-            ))}
-          </>
-        ) : (
-          // CLIENT: Simple flat layout
-          <SidebarGroup>
-            {!collapsed && (
-              <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider">
-                Menu
-              </SidebarGroupLabel>
+    return (
+        <>
+            {/* Overlay para Mobile (fundo escuro quando aberto) */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+                    onClick={onToggle}
+                    aria-hidden="true"
+                />
             )}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {clientItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.url)}
-                      tooltip={collapsed ? item.title : undefined}
-                    >
-                      <NavLink
-                        to={item.url}
-                        end={item.url === "/"}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
-                          "hover:bg-muted/50"
-                        )}
-                        activeClassName="bg-primary/10 text-primary font-medium"
-                      >
-                        <item.icon className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-      </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <button
-          onClick={handleLogout}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all w-full",
-            "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
-            collapsed && "justify-center"
-          )}
-        >
-          <LogOut className="h-5 w-5 shrink-0" />
-          {!collapsed && <span className="text-sm">Sair</span>}
-        </button>
-      </SidebarFooter>
-    </Sidebar>
-  );
+            <aside
+                className={cn(
+                    'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] border-r bg-background transition-all duration-300',
+                    isOpen ? 'w-64' : 'w-0 lg:w-16',
+                    'lg:relative lg:top-0 lg:h-full'
+                )}
+            >
+                <div className="flex h-full flex-col overflow-hidden">
+                    {/* Company Switcher (apenas para Gestão/Dev) */}
+                    {isGestao && (
+                        <div className="border-b p-2">
+                            <div className="relative">
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "w-full justify-start gap-2 text-left",
+                                        !isOpen && "lg:justify-center lg:px-2"
+                                    )}
+                                    onClick={() => setShowCompanyMenu(!showCompanyMenu)}
+                                    title={!isOpen ? (isAllCompaniesView ? "Todas as Empresas" : selectedCompany?.name) : undefined}
+                                >
+                                    <Building2 className="h-4 w-4 shrink-0" />
+                                    {isOpen && (
+                                        <span className="truncate text-sm">
+                                            {isAllCompaniesView ? 'Todas as Empresas' : selectedCompany?.name || 'Selecione'}
+                                        </span>
+                                    )}
+                                </Button>
+
+                                {/* Dropdown Menu */}
+                                {showCompanyMenu && isOpen && (
+                                    <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border bg-popover shadow-lg animate-in fade-in duration-200">
+                                        <div className="p-1">
+                                            {/* Opção "Todas as Empresas" */}
+                                            <button
+                                                className={cn(
+                                                    "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent",
+                                                    isAllCompaniesView && "bg-accent"
+                                                )}
+                                                onClick={() => {
+                                                    selectAllCompanies()
+                                                    setShowCompanyMenu(false)
+                                                }}
+                                            >
+                                                {isAllCompaniesView && <Check className="h-4 w-4" />}
+                                                {!isAllCompaniesView && <div className="h-4 w-4" />}
+                                                <span className="flex-1">Todas as Empresas</span>
+                                            </button>
+                                            
+                                            <div className="my-1 h-px bg-border" />
+                                            
+                                            {/* Lista de Empresas */}
+                                            {companies.map((company) => (
+                                                <button
+                                                    key={company.id}
+                                                    className={cn(
+                                                        "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent",
+                                                        selectedCompany?.id === company.id && !isAllCompaniesView && "bg-accent"
+                                                    )}
+                                                    onClick={() => {
+                                                        selectCompany(company.id)
+                                                        setShowCompanyMenu(false)
+                                                    }}
+                                                >
+                                                    {selectedCompany?.id === company.id && !isAllCompaniesView && (
+                                                        <Check className="h-4 w-4" />
+                                                    )}
+                                                    {(selectedCompany?.id !== company.id || isAllCompaniesView) && (
+                                                        <div className="h-4 w-4" />
+                                                    )}
+                                                    <span className="flex-1">{company.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Área de Navegação (Scrollável) */}
+                    <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-accent">
+                        {menuSections.map((section) => {
+                            // Filtra itens baseado na permissão
+                            const visibleItems = section.items.filter(
+                                (item) => !((item as any).gestaoOnly ?? false) || isGestao
+                            )
+
+                            if (visibleItems.length === 0) return null
+
+                            return (
+                                <div key={section.title} className="mb-4">
+                                    {/* Título da Seção (apenas se aberto) */}
+                                    {isOpen && (
+                                        <h3 className="mb-2 px-4 text-xs font-semibold uppercase text-muted-foreground animate-in fade-in duration-300">
+                                            {section.title}
+                                        </h3>
+                                    )}
+                                    
+                                    <nav className="space-y-1 px-2">
+                                        {visibleItems.map((item) => (
+                                            <NavLink
+                                                key={item.to}
+                                                to={item.to}
+                                                end={(item as any).end ?? false}
+                                                className={({ isActive }) =>
+                                                    cn(
+                                                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                                                        isActive
+                                                            ? 'bg-primary text-primary-foreground'
+                                                            : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                                                        !isOpen && 'lg:justify-center lg:px-2'
+                                                    )
+                                                }
+                                                title={!isOpen ? item.label : undefined}
+                                            >
+                                                <item.icon className="h-5 w-5 shrink-0" />
+                                                
+                                                {/* Texto do item com transição suave */}
+                                                <span
+                                                    className={cn(
+                                                        "transition-opacity duration-200",
+                                                        isOpen ? "opacity-100" : "opacity-0 w-0 hidden lg:block lg:w-0"
+                                                    )}
+                                                >
+                                                    {item.label}
+                                                </span>
+                                            </NavLink>
+                                        ))}
+                                    </nav>
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    {/* Botão de Toggle (Rodapé da Sidebar) */}
+                    <div className="hidden border-t p-2 lg:block">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onToggle}
+                            className="w-full hover:bg-accent"
+                            aria-label={isOpen ? "Recolher menu" : "Expandir menu"}
+                        >
+                            {isOpen ? (
+                                <ChevronLeft className="h-4 w-4" />
+                            ) : (
+                                <ChevronRight className="h-4 w-4" />
+                            )}
+                        </Button>
+                    </div>
+                </div>
+            </aside>
+        </>
+    )
 }
