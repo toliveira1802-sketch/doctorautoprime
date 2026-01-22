@@ -60,8 +60,8 @@ interface CancelledAppointment {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats>({ 
-    appointmentsToday: 0, 
+  const [stats, setStats] = useState<DashboardStats>({
+    appointmentsToday: 0,
     newClientsMonth: 0,
     monthlyRevenue: 0,
     valueTodayDelivery: 0,
@@ -69,14 +69,14 @@ const AdminDashboard = () => {
     cancelledMonth: 0,
   });
   const [loading, setLoading] = useState(true);
-  
+
   // Modal states
   const [showAppointments, setShowAppointments] = useState(false);
   const [showNewClients, setShowNewClients] = useState(false);
   const [showReadyToDeliver, setShowReadyToDeliver] = useState(false);
   const [showReturns, setShowReturns] = useState(false);
   const [showCancelled, setShowCancelled] = useState(false);
-  
+
   // Data for modals
   const [todayAppointments, setTodayAppointments] = useState<TodayAppointment[]>([]);
   const [newClients, setNewClients] = useState<NewClient[]>([]);
@@ -107,18 +107,18 @@ const AdminDashboard = () => {
           .from("appointments")
           .select("id", { count: "exact", head: true })
           .eq("appointment_date", today),
-        
+
         supabase
           .from("profiles")
           .select("id", { count: "exact", head: true })
           .gte("created_at", monthStart),
-        
+
         supabase
           .from("faturamento")
           .select("valor")
           .gte("data_entrega", monthStart)
           .lte("data_entrega", monthEnd),
-        
+
         supabase
           .from("ordens_servico")
           .select("valor_final")
@@ -240,7 +240,7 @@ const AdminDashboard = () => {
     try {
       const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
       const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
-      
+
       const { data } = await supabase
         .from("ordens_servico")
         .select("id, plate, vehicle, client_name, data_entrada")
@@ -267,7 +267,7 @@ const AdminDashboard = () => {
     try {
       const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
       const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
-      
+
       const { data } = await supabase
         .from("appointments")
         .select(`
@@ -343,37 +343,86 @@ const AdminDashboard = () => {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
-        {/* Botões principais */}
-        <div className="grid grid-cols-2 gap-4">
-          <Button 
-            size="lg" 
-            className="h-20 text-lg gap-3"
+        {/* Botão único de Pendências */}
+        <div className="grid grid-cols-1 gap-4">
+          <Card
+            className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={() => navigate('/admin/ordens-servico')}
           >
-            <span className="text-2xl">🐦</span>
-            João
-          </Button>
-          <Button 
-            size="lg" 
-            className="h-20 text-lg gap-3"
-            onClick={() => navigate('/admin/agendamentos')}
-          >
-            <span className="text-2xl">🐦</span>
-            Pedro
-          </Button>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-3xl">📋</span>
+                <span className="text-xl font-semibold text-foreground">Pendências do dia</span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        
-        {/* Botão Thales */}
-        <div className="grid grid-cols-1 gap-4">
-          <Button 
-            size="lg" 
-            className="h-20 text-lg gap-3"
-            onClick={() => navigate('/admin/patio')}
+
+        {/* Cards de Navegação Rápida */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Operacional */}
+          <Card
+            className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform bg-gradient-to-br from-blue-500/10 to-blue-600/5"
+            onClick={() => navigate('/admin/operacional')}
           >
-            <Syringe className="w-6 h-6 text-primary-foreground" />
-            <img src={corinthiansLogo} alt="Corinthians" className="w-8 h-8" />
-            Thales
-          </Button>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-16 h-16 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                  <span className="text-3xl">⚙️</span>
+                </div>
+                <span className="text-lg font-semibold text-foreground">Operacional</span>
+                <span className="text-xs text-muted-foreground">OSs, Pátio, Agendamentos</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Financeiro */}
+          <Card
+            className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform bg-gradient-to-br from-green-500/10 to-green-600/5"
+            onClick={() => navigate('/admin/financeiro')}
+          >
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-16 h-16 rounded-xl bg-green-500/20 flex items-center justify-center">
+                  <span className="text-3xl">💰</span>
+                </div>
+                <span className="text-lg font-semibold text-foreground">Financeiro</span>
+                <span className="text-xs text-muted-foreground">Faturamento, Despesas</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Produtividade */}
+          <Card
+            className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform bg-gradient-to-br from-purple-500/10 to-purple-600/5"
+            onClick={() => navigate('/admin/produtividade')}
+          >
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-16 h-16 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <span className="text-3xl">📊</span>
+                </div>
+                <span className="text-lg font-semibold text-foreground">Produtividade</span>
+                <span className="text-xs text-muted-foreground">Métricas, Performance</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Agenda */}
+          <Card
+            className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform bg-gradient-to-br from-orange-500/10 to-orange-600/5"
+            onClick={() => navigate('/admin/agenda-mecanicos')}
+          >
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-16 h-16 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                  <span className="text-3xl">📅</span>
+                </div>
+                <span className="text-lg font-semibold text-foreground">Agenda</span>
+                <span className="text-xs text-muted-foreground">Mecânicos, Feedback</span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Indicadores */}
@@ -396,7 +445,7 @@ const AdminDashboard = () => {
           </Card>
 
           {/* Direita: Agendamentos Hoje */}
-          <Card 
+          <Card
             className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={handleAppointmentsClick}
           >
@@ -414,7 +463,7 @@ const AdminDashboard = () => {
           </Card>
 
           {/* Esquerda: Novos Clientes */}
-          <Card 
+          <Card
             className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={handleNewClientsClick}
           >
@@ -432,7 +481,7 @@ const AdminDashboard = () => {
           </Card>
 
           {/* Direita: Retorno do Mês */}
-          <Card 
+          <Card
             className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={handleReturnsClick}
           >
@@ -450,7 +499,7 @@ const AdminDashboard = () => {
           </Card>
 
           {/* Esquerda: Valor para Sair */}
-          <Card 
+          <Card
             className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={handleReadyToDeliverClick}
           >
@@ -470,7 +519,7 @@ const AdminDashboard = () => {
           </Card>
 
           {/* Direita: Agendamentos Cancelados */}
-          <Card 
+          <Card
             className="glass-card border-none cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={handleCancelledClick}
           >

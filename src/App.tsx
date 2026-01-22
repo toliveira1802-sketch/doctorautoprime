@@ -86,184 +86,180 @@ const AppRoutes = () => {
       <Route path="/verify-otp" element={<VerifyOTP />} />
       <Route path="/biometric-setup" element={<BiometricSetup />} />
       <Route path="/install" element={<Install />} />
-      <Route 
-        path="/" 
-        element={
-          <ProtectedRoute>
-            <Index />
-          </ProtectedRoute>
-        } 
+      <Route
+        path="/"
+        element={<Navigate to="/admin" replace />}
       />
-      <Route 
-        path="/agenda" 
+      <Route
+        path="/agenda"
         element={
           <ProtectedRoute>
             <Agenda />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/avisos" 
+      <Route
+        path="/avisos"
         element={
           <ProtectedRoute>
             <Avisos />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/performance" 
+      <Route
+        path="/performance"
         element={
           <ProtectedRoute>
             <Performance />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/blog" 
+      <Route
+        path="/blog"
         element={
           <ProtectedRoute>
             <Blog />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/novo-agendamento" 
+      <Route
+        path="/novo-agendamento"
         element={
           <ProtectedRoute>
             <NovoAgendamento />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/historico" 
+      <Route
+        path="/historico"
         element={
           <ProtectedRoute>
             <Historico />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/agendamento-sucesso" 
+      <Route
+        path="/agendamento-sucesso"
         element={
           <ProtectedRoute>
             <AgendamentoSucesso />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/reagendamento" 
+      <Route
+        path="/reagendamento"
         element={
           <ProtectedRoute>
             <Reagendamento />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/veiculo/:vehicleId" 
+      <Route
+        path="/veiculo/:vehicleId"
         element={
           <ProtectedRoute>
             <VehicleDetails />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/perfil" 
+      <Route
+        path="/perfil"
         element={
           <ProtectedRoute>
             <Profile />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/profile" 
+      <Route
+        path="/profile"
         element={
           <ProtectedRoute>
             <Profile />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/configuracoes" 
+      <Route
+        path="/configuracoes"
         element={
           <ProtectedRoute>
             <Configuracoes />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/servico/:vehicleId" 
+      <Route
+        path="/servico/:vehicleId"
         element={
           <ProtectedRoute>
             <ServicoDetalhes />
           </ProtectedRoute>
         }
       />
-      <Route 
-        path="/orcamento/:osId" 
-        element={<OrcamentoCliente />} 
+      <Route
+        path="/orcamento/:osId"
+        element={<OrcamentoCliente />}
       />
       {/* Admin Routes - Protected by role */}
-      <Route 
-        path="/admin" 
+      <Route
+        path="/admin"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminDashboard />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/agendamentos" 
+      <Route
+        path="/admin/agendamentos"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminAgendamentos />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/dashboard" 
+      <Route
+        path="/admin/dashboard"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminDashboardOverview />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/nova-os" 
+      <Route
+        path="/admin/nova-os"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminNovaOS />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/ordens-servico" 
+      <Route
+        path="/admin/ordens-servico"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminOrdensServico />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/ordens-servico/:osId" 
+      <Route
+        path="/admin/ordens-servico/:osId"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminOSDetalhes />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
+      <Route
         path="/admin/patio"
         element={
           <ProtectedRoute>
@@ -271,181 +267,181 @@ const AppRoutes = () => {
               <AdminPatio />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/patio/:patioId" 
+      <Route
+        path="/admin/patio/:patioId"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminPatioDetalhes />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/feedback-mecanicos" 
+      <Route
+        path="/admin/feedback-mecanicos"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminMechanicFeedback />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/analytics-mecanicos" 
+      <Route
+        path="/admin/analytics-mecanicos"
         element={
           <ProtectedRoute>
             <AdminOnlyRoute>
               <AdminMechanicAnalytics />
             </AdminOnlyRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/financeiro" 
+      <Route
+        path="/admin/financeiro"
         element={
           <ProtectedRoute>
             <AdminOnlyRoute>
               <AdminFinanceiro />
             </AdminOnlyRoute>
           </ProtectedRoute>
-        } 
+        }
       />
       <Route
-        path="/admin/clientes" 
+        path="/admin/clientes"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminClientes />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/servicos" 
+      <Route
+        path="/admin/servicos"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminServicos />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/configuracoes" 
+      <Route
+        path="/admin/configuracoes"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminConfiguracoes />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/admin/documentacao" 
+      <Route
+        path="/admin/documentacao"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <AdminDocumentacao />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
       {/* Gestão Routes */}
-      <Route 
-        path="/gestao" 
+      <Route
+        path="/gestao"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <GestaoDashboards />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/gestao/dashboard/:dashboardId" 
+      <Route
+        path="/gestao/dashboard/:dashboardId"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <GestaoDashboardView />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/gestao/melhorias" 
+      <Route
+        path="/gestao/melhorias"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <GestaoMelhorias />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/gestao/rh" 
+      <Route
+        path="/gestao/rh"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <GestaoRH />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/gestao/operacoes" 
+      <Route
+        path="/gestao/operacoes"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <GestaoOperacoes />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/gestao/financeiro" 
+      <Route
+        path="/gestao/financeiro"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <GestaoFinanceiro />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/gestao/tecnologia" 
+      <Route
+        path="/gestao/tecnologia"
         element={
           <ProtectedRoute>
             <AdminRoute>
               <GestaoTecnologia />
             </AdminRoute>
           </ProtectedRoute>
-        } 
+        }
       />
-        <Route 
-          path="/gestao/comercial" 
-          element={
-            <ProtectedRoute>
-              <AdminRoute>
-                <GestaoComercial />
-              </AdminRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/gestao/usuarios" 
-          element={
-            <ProtectedRoute>
-              <AdminOnlyRoute>
-                <GestaoUsuarios />
-              </AdminOnlyRoute>
-            </ProtectedRoute>
-          } 
-        />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
+      <Route
+        path="/gestao/comercial"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <GestaoComercial />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/gestao/usuarios"
+        element={
+          <ProtectedRoute>
+            <AdminOnlyRoute>
+              <GestaoUsuarios />
+            </AdminOnlyRoute>
+          </ProtectedRoute>
+        }
+      />
+      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

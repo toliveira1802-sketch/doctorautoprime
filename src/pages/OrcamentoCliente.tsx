@@ -1,16 +1,17 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { 
-  ArrowLeft, Car, Phone, AlertTriangle, 
-  Clock, Loader2, CheckCircle, XCircle, User, Calendar, Cake
+import {
+  ArrowLeft, Car, Phone, AlertTriangle,
+  Clock, Loader2, CheckCircle, XCircle, User, Calendar, Cake, ThumbsUp, ThumbsDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface OrdemServicoItem {
   id: string;
@@ -39,24 +40,24 @@ interface OrdemServico {
 }
 
 const prioridadeConfig: Record<string, { label: string; description: string; borderColor: string; bgColor: string; icon: React.ElementType }> = {
-  vermelho: { 
-    label: "Urgente", 
+  vermelho: {
+    label: "Urgente",
     description: "Troca imediata necessária - risco de segurança",
-    borderColor: "border-red-500", 
+    borderColor: "border-red-500",
     bgColor: "bg-red-500/10",
     icon: AlertTriangle
   },
-  amarelo: { 
-    label: "Atenção", 
+  amarelo: {
+    label: "Atenção",
     description: "Recomendamos fazer em breve",
-    borderColor: "border-yellow-500", 
+    borderColor: "border-yellow-500",
     bgColor: "bg-yellow-500/10",
     icon: Clock
   },
-  verde: { 
-    label: "Preventivo", 
+  verde: {
+    label: "Preventivo",
     description: "Pode aguardar, mas fique atento",
-    borderColor: "border-green-500", 
+    borderColor: "border-green-500",
     bgColor: "bg-green-500/10",
     icon: CheckCircle
   },
@@ -65,13 +66,51 @@ const prioridadeConfig: Record<string, { label: string; description: string; bor
 export default function OrcamentoCliente() {
   const { osId } = useParams<{ osId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Mutation para aprovar item
+  const aprovarItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const { error } = await supabase
+        .from("ordens_servico_itens")
+        .update({ status: "aprovado", motivo_recusa: null })
+        .eq("id", itemId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ordem-servico-itens-cliente", osId] });
+      toast.success("Item aprovado! ✅");
+    },
+    onError: () => {
+      toast.error("Erro ao aprovar item");
+    },
+  });
+
+  // Mutation para recusar item
+  const recusarItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const { error } = await supabase
+        .from("ordens_servico_itens")
+        .update({ status: "recusado", motivo_recusa: "Recusado pelo cliente" })
+        .eq("id", itemId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ordem-servico-itens-cliente", osId] });
+      toast.success("Item recusado");
+    },
+    onError: () => {
+      toast.error("Erro ao recusar item");
+    },
+  });
+
 
   // Fetch OS data
   const { data: os, isLoading: loadingOS } = useQuery({
     queryKey: ["ordem-servico-cliente", osId],
     queryFn: async () => {
       if (!osId) throw new Error("ID não fornecido");
-      
+
       const { data, error } = await supabase
         .from("ordens_servico")
         .select("id, numero_os, plate, vehicle, client_name, client_phone, status, data_entrada, descricao_problema, diagnostico")
@@ -89,7 +128,7 @@ export default function OrcamentoCliente() {
     queryKey: ["ordem-servico-itens-cliente", osId],
     queryFn: async () => {
       if (!osId) return [];
-      
+
       const { data, error } = await supabase
         .from("ordens_servico_itens")
         .select("id, descricao, tipo, quantidade, valor_unitario, valor_total, status, motivo_recusa, prioridade, data_retorno_estimada")
@@ -107,9 +146,9 @@ export default function OrcamentoCliente() {
     queryKey: ["client-profile", os?.client_phone],
     queryFn: async () => {
       if (!os?.client_phone) return null;
-      
+
       const phoneDigits = os.client_phone.replace(/\D/g, '');
-      
+
       const { data, error } = await supabase
         .from("profiles")
         .select("full_name, phone, birthday")
@@ -142,6 +181,12 @@ export default function OrcamentoCliente() {
 
   // Calculate totals
   const totalOrcado = itens.reduce((acc, item) => acc + (item.valor_total || 0), 0);
+  const totalPecas = itens
+    .filter(item => item.tipo === "peca")
+    .reduce((acc, item) => acc + (item.valor_total || 0), 0);
+  const totalServicos = itens
+    .filter(item => item.tipo === "mao_de_obra")
+    .reduce((acc, item) => acc + (item.valor_total || 0), 0);
   const totalAprovado = itens
     .filter(item => item.status === "aprovado")
     .reduce((acc, item) => acc + (item.valor_total || 0), 0);
@@ -177,8 +222,8 @@ export default function OrcamentoCliente() {
     const isRecusado = item.status === "recusado";
 
     return (
-      <Card 
-        key={item.id} 
+      <Card
+        key={item.id}
         className={cn(
           "border-2 transition-all",
           prioridade.borderColor,
@@ -227,7 +272,7 @@ export default function OrcamentoCliente() {
               <span className="text-sm font-medium text-green-700">Aprovado</span>
             </div>
           )}
-          
+
           {isRecusado && (
             <div className="space-y-1">
               <div className="flex items-center gap-2 p-2 bg-red-500/20 rounded-lg">
@@ -240,10 +285,47 @@ export default function OrcamentoCliente() {
             </div>
           )}
 
+
           {isPendente && (
-            <div className="flex items-center gap-2 p-2 bg-yellow-500/20 rounded-lg">
-              <Clock className="w-4 h-4 text-yellow-600" />
-              <span className="text-sm font-medium text-yellow-700">Aguardando aprovação</span>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-2 bg-yellow-500/20 rounded-lg">
+                <Clock className="w-4 h-4 text-yellow-600" />
+                <span className="text-sm font-medium text-yellow-700">Aguardando sua decisão</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-green-500 text-green-600 hover:bg-green-500/10"
+                  onClick={() => aprovarItemMutation.mutate(item.id)}
+                  disabled={aprovarItemMutation.isPending || recusarItemMutation.isPending}
+                >
+                  {aprovarItemMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <ThumbsUp className="w-4 h-4 mr-1" />
+                      Aprovar
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-red-500 text-red-600 hover:bg-red-500/10"
+                  onClick={() => recusarItemMutation.mutate(item.id)}
+                  disabled={aprovarItemMutation.isPending || recusarItemMutation.isPending}
+                >
+                  {recusarItemMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <ThumbsDown className="w-4 h-4 mr-1" />
+                      Recusar
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -297,7 +379,7 @@ export default function OrcamentoCliente() {
                 <div>
                   <p className="text-xs text-muted-foreground">Telefone</p>
                   {clientPhone ? (
-                    <a 
+                    <a
                       href={`https://wa.me/55${clientPhone.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -414,17 +496,30 @@ export default function OrcamentoCliente() {
       {/* Fixed Bottom Summary */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t border-border p-4">
         <div className="max-w-2xl mx-auto space-y-3">
-          <div className="flex justify-between items-center">
+          {/* Detalhamento por tipo */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="flex justify-between items-center p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+              <span className="text-muted-foreground">Peças:</span>
+              <span className="font-semibold text-foreground">{formatCurrency(totalPecas)}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+              <span className="text-muted-foreground">Serviços:</span>
+              <span className="font-semibold text-foreground">{formatCurrency(totalServicos)}</span>
+            </div>
+          </div>
+
+          {/* Total Geral */}
+          <div className="flex justify-between items-center pt-2 border-t border-border">
             <div>
               <p className="text-sm text-muted-foreground">Total do Orçamento</p>
               <p className="text-2xl font-bold text-foreground">{formatCurrency(totalOrcado)}</p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">Aprovado até agora</p>
+              <p className="text-sm text-muted-foreground">Aprovado</p>
               <p className="text-xl font-semibold text-green-600">{formatCurrency(totalAprovado)}</p>
             </div>
           </div>
-          
+
           {itensPendentes.length > 0 && (
             <p className="text-xs text-center text-muted-foreground">
               {itensPendentes.length} {itensPendentes.length === 1 ? 'item aguardando' : 'itens aguardando'} aprovação

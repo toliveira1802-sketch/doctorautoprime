@@ -11,9 +11,11 @@ export function useUserRole() {
     async function fetchRole() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        
+
         if (!user) {
-          setRole(null);
+          // DEVELOPMENT MODE: Default to admin when auth is disabled
+          console.log("No user found - using development mode with admin role");
+          setRole("admin");
           setIsLoading(false);
           return;
         }

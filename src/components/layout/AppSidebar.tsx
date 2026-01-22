@@ -1,7 +1,7 @@
-import { 
-  Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut, 
+import {
+  Home, Calendar, FileSearch, Wrench, Settings, Users, BarChart3, LogOut,
   Plus, Car, Star, TrendingUp, DollarSign, FileText, ChevronDown,
-  ClipboardList, Gauge, LayoutDashboard, Lightbulb, UserCog, Cog, 
+  ClipboardList, Gauge, LayoutDashboard, Lightbulb, UserCog, Cog,
   Megaphone, ShoppingCart, Laptop, Crown
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -56,19 +56,19 @@ type AdminMenuGroup = {
   items: AdminMenuItem[];
 };
 
-// MODULE: Gestão (dashboards customizados) - DEV, GESTÃO e ADMIN
+// MODULE: Gestão (dashboards customizados) - APENAS DEV e GESTÃO
 const gestaoModule: AdminMenuGroup = {
   label: "Gestão",
   icon: LayoutDashboard,
-  roles: ["dev", "gestao", "admin"],
+  roles: ["dev", "gestao"],
   items: [
-    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["dev", "gestao", "admin"] },
-    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["dev", "gestao", "admin"] },
-    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["dev", "gestao", "admin"] },
-    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["dev", "gestao", "admin"] },
-    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["dev", "gestao", "admin"] },
-    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["dev", "gestao", "admin"] },
-    { title: "Usuários", url: "/gestao/usuarios", icon: Crown, roles: ["dev", "gestao", "admin"] },
+    { title: "Meus Dashboards", url: "/gestao", icon: LayoutDashboard, roles: ["dev", "gestao"] },
+    { title: "Recursos Humanos", url: "/gestao/rh", icon: UserCog, roles: ["dev", "gestao"] },
+    { title: "Operações", url: "/gestao/operacoes", icon: Cog, roles: ["dev", "gestao"] },
+    { title: "Financeiro", url: "/gestao/financeiro", icon: DollarSign, roles: ["dev", "gestao"] },
+    { title: "Tecnologia", url: "/gestao/tecnologia", icon: Laptop, roles: ["dev", "gestao"] },
+    { title: "Comercial e Marketing", url: "/gestao/comercial", icon: Megaphone, roles: ["dev", "gestao"] },
+    { title: "Usuários", url: "/gestao/usuarios", icon: Crown, roles: ["dev", "gestao"] },
   ],
 };
 
@@ -98,8 +98,6 @@ const sistemaModule: AdminMenuGroup = {
   roles: ["dev", "admin", "gestao"],
   items: [
     { title: "Melhorias", url: "/gestao/melhorias", icon: Lightbulb, roles: ["dev", "admin", "gestao"] },
-    { title: "Configurações", url: "/admin/configuracoes", icon: Settings, roles: ["dev", "admin", "gestao"] },
-    { title: "Documentação", url: "/admin/documentacao", icon: FileText, roles: ["dev", "admin", "gestao"] },
   ],
 };
 
@@ -145,9 +143,9 @@ export function AppSidebar({ variant = "client" }: AppSidebarProps) {
           "flex items-center gap-3 transition-all",
           collapsed && "justify-center"
         )}>
-          <img 
-            src="/logo.png" 
-            alt="Doctor Auto Prime" 
+          <img
+            src="/logo.png"
+            alt="Doctor Auto Prime"
             className="w-8 h-8 rounded-lg object-contain"
           />
           {!collapsed && (

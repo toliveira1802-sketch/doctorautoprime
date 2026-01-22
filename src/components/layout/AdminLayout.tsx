@@ -1,13 +1,29 @@
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Menu } from "lucide-react";
-import { ViewSwitcher } from "./ViewSwitcher";
+import { Menu, Sun, Moon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  useEffect(() => {
+    // Load theme from localStorage
+    const savedTheme = localStorage.getItem('theme') as 'dark' | 'light' || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+  }, []);
+
+  const toggleTheme = (newTheme: 'dark' | 'light') => {
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full gradient-bg dark">
@@ -20,8 +36,25 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex-1">
               <h1 className="text-lg font-semibold text-foreground">Painel Admin</h1>
             </div>
-            {/* View Switcher - Only for thales */}
-            <ViewSwitcher />
+            {/* Theme Toggle */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={theme === 'dark' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => toggleTheme('dark')}
+                className="h-9 w-9 p-0"
+              >
+                <Moon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={theme === 'light' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => toggleTheme('light')}
+                className="h-9 w-9 p-0"
+              >
+                <Sun className="h-4 w-4" />
+              </Button>
+            </div>
           </header>
           <main className="flex-1 overflow-y-auto">
             {children}
