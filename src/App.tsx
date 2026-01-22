@@ -64,27 +64,25 @@ import KommoIntegracao from "./pages/gestao/integracoes/KommoIntegracao";
 import MigracaoTrello from "./pages/gestao/MigracaoTrello";
 const queryClient = new QueryClient();
 
-// Protected Route component - TEMPORARILY DISABLED for development
-// To re-enable authentication, uncomment the auth check logic below
+// Protected Route component - AUTHENTICATION ENABLED
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  // Authentication temporarily disabled
-  // const { isAuthenticated, isLoading } = useAuth();
-  // const location = useLocation();
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-background">
-  //       <div className="text-center">
-  //         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-  //         <p className="text-muted-foreground">Carregando...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login" state={{ from: location }} replace />;
-  // }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
   return <>{children}</>;
 };
@@ -99,7 +97,7 @@ const AppRoutes = () => {
       <Route path="/install" element={<Install />} />
       <Route
         path="/"
-        element={<Navigate to="/admin" replace />}
+        element={<Navigate to="/login" replace />}
       />
       <Route
         path="/agenda"
