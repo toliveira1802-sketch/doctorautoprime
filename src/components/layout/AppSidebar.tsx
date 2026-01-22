@@ -72,22 +72,19 @@ const gestaoModule: AdminMenuGroup = {
   ],
 };
 
-// MODULE: Painel ADM (dev + admin + gestao - dev e gestão têm acesso a tudo)
+// MODULE: POMBAL (dev + admin + gestao - dev e gestão têm acesso a tudo)
 const painelAdmModule: AdminMenuGroup = {
-  label: "Painel ADM",
+  label: "POMBAL",
   icon: Gauge,
   roles: ["dev", "admin", "gestao"],
   items: [
+    { title: "Home", url: "/admin", icon: Home, roles: ["dev", "admin", "gestao"] },
+    { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["dev", "admin", "gestao"] },
     { title: "Nova OS", url: "/admin/nova-os", icon: Plus, roles: ["dev", "admin", "gestao"] },
     { title: "Clientes", url: "/admin/clientes", icon: Users, roles: ["dev", "admin", "gestao"] },
     { title: "Ordens de Serviço", url: "/admin/ordens-servico", icon: FileText, roles: ["dev", "admin", "gestao"] },
     { title: "Pátio", url: "/admin/patio", icon: Car, roles: ["dev", "admin", "gestao"] },
     { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar, roles: ["dev", "admin", "gestao"] },
-    { title: "Visão Geral", url: "/admin/dashboard", icon: BarChart3, roles: ["dev", "admin", "gestao"] },
-    { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, roles: ["dev", "gestao"] },
-    { title: "Analytics Mecânicos", url: "/admin/analytics-mecanicos", icon: TrendingUp, roles: ["dev", "gestao"] },
-    { title: "Feedback Mecânicos", url: "/admin/feedback-mecanicos", icon: Star, roles: ["dev", "admin", "gestao"] },
-    { title: "Cronograma", url: "/admin/agenda-mecanicos", icon: ClipboardList, roles: ["dev", "admin", "gestao"] },
   ],
 };
 

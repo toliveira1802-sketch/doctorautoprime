@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,16 +20,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -40,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Search, Plus, Pencil, Trash2, User } from "lucide-react";
+import { Search, Plus, Pencil, User, Car } from "lucide-react";
 import { format } from "date-fns";
 
 interface Profile {
@@ -57,11 +48,16 @@ interface Profile {
   created_at: string;
 }
 
+interface Vehicle {
+  plate: string;
+}
+
 export default function AdminClientes() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCreateMode, setIsCreateMode] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Profile | null>(null);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -73,16 +69,64 @@ export default function AdminClientes() {
     internal_notes: "",
   });
 
+  // Buscar clientes com seus veículos
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["admin-clients"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select(`
+          *,
+          vehicles (plate)
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Profile[];
+      return (data || []) as any[];
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (newClient: Partial<Profile>) => {
+      // Criar usuário auth primeiro
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: `${newClient.phone}@temp.com`, // Email temporário
+        password: Math.random().toString(36).slice(-8),
+        options: {
+          data: {
+            full_name: newClient.full_name,
+            phone: newClient.phone,
+          }
+        }
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Falha ao criar usuário");
+
+      // Atualizar perfil
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          full_name: newClient.full_name,
+          phone: newClient.phone,
+          cpf: newClient.cpf,
+          birthday: newClient.birthday,
+          loyalty_level: newClient.loyalty_level || "bronze",
+          loyalty_points: 0,
+          tags: newClient.tags,
+          internal_notes: newClient.internal_notes,
+        })
+        .eq("user_id", authData.user.id);
+
+      if (profileError) throw profileError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("Cliente criado com sucesso!");
+      handleCloseDialog();
+    },
+    onError: (error) => {
+      toast.error("Erro ao criar cliente: " + error.message);
     },
   });
 
@@ -107,14 +151,33 @@ export default function AdminClientes() {
 
   const filteredClients = clients.filter((client) => {
     const searchLower = search.toLowerCase();
+    const plateMatch = client.vehicles?.some(v =>
+      v.plate?.toLowerCase().includes(searchLower)
+    );
     return (
       client.full_name?.toLowerCase().includes(searchLower) ||
       client.phone?.includes(search) ||
-      client.cpf?.includes(search)
+      plateMatch
     );
   });
 
-  const handleOpenEdit = (client: Profile) => {
+  const handleOpenCreate = () => {
+    setIsCreateMode(true);
+    setSelectedClient(null);
+    setFormData({
+      full_name: "",
+      phone: "",
+      cpf: "",
+      birthday: "",
+      loyalty_level: "bronze",
+      tags: "",
+      internal_notes: "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleOpenEdit = (client: Profile & { vehicles: Vehicle[] }) => {
+    setIsCreateMode(false);
     setSelectedClient(client);
     setFormData({
       full_name: client.full_name || "",
@@ -130,6 +193,7 @@ export default function AdminClientes() {
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
+    setIsCreateMode(false);
     setSelectedClient(null);
     setFormData({
       full_name: "",
@@ -143,19 +207,29 @@ export default function AdminClientes() {
   };
 
   const handleSubmit = () => {
-    if (!selectedClient) return;
-
-    const updates: Partial<Profile> = {
-      full_name: formData.full_name || null,
-      phone: formData.phone || null,
-      cpf: formData.cpf || null,
-      birthday: formData.birthday || null,
-      loyalty_level: formData.loyalty_level,
-      tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()) : [],
-      internal_notes: formData.internal_notes || null,
-    };
-
-    updateMutation.mutate({ id: selectedClient.id, updates });
+    if (isCreateMode) {
+      const newClient: Partial<Profile> = {
+        full_name: formData.full_name || null,
+        phone: formData.phone || null,
+        cpf: formData.cpf || null,
+        birthday: formData.birthday || null,
+        loyalty_level: formData.loyalty_level,
+        tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()) : [],
+        internal_notes: formData.internal_notes || null,
+      };
+      createMutation.mutate(newClient);
+    } else if (selectedClient) {
+      const updates: Partial<Profile> = {
+        full_name: formData.full_name || null,
+        phone: formData.phone || null,
+        cpf: formData.cpf || null,
+        birthday: formData.birthday || null,
+        loyalty_level: formData.loyalty_level,
+        tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()) : [],
+        internal_notes: formData.internal_notes || null,
+      };
+      updateMutation.mutate({ id: selectedClient.id, updates });
+    }
   };
 
   const getLoyaltyBadgeColor = (level: string | null) => {
@@ -180,13 +254,17 @@ export default function AdminClientes() {
               Gerencie os clientes cadastrados
             </p>
           </div>
+          <Button onClick={handleOpenCreate} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Novo Cliente
+          </Button>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, telefone ou CPF..."
+              placeholder="Buscar por nome, telefone ou placa..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
@@ -201,9 +279,9 @@ export default function AdminClientes() {
               <TableRow>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Telefone</TableHead>
-                <TableHead>CPF</TableHead>
-                <TableHead>Nível</TableHead>
+                <TableHead>Placa</TableHead>
                 <TableHead>Pontos</TableHead>
+                <TableHead>Nível</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="w-[100px]">Ações</TableHead>
               </TableRow>
@@ -248,13 +326,33 @@ export default function AdminClientes() {
                       </div>
                     </TableCell>
                     <TableCell>{client.phone || "-"}</TableCell>
-                    <TableCell>{client.cpf || "-"}</TableCell>
+                    <TableCell>
+                      {client.vehicles && client.vehicles.length > 0 ? (
+                        <div className="flex items-center gap-1">
+                          <Car className="w-3 h-3 text-muted-foreground" />
+                          <span className="font-mono text-sm">
+                            {client.vehicles[0].plate}
+                          </span>
+                          {client.vehicles.length > 1 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{client.vehicles.length - 1}
+                            </Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-semibold">
+                        {client.loyalty_points || 0}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <Badge className={getLoyaltyBadgeColor(client.loyalty_level)}>
                         {client.loyalty_level || "bronze"}
                       </Badge>
                     </TableCell>
-                    <TableCell>{client.loyalty_points || 0}</TableCell>
                     <TableCell>
                       {format(new Date(client.created_at), "dd/MM/yyyy")}
                     </TableCell>
@@ -276,32 +374,36 @@ export default function AdminClientes() {
           </Table>
         </div>
 
-        {/* Edit Dialog */}
+        {/* Create/Edit Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Editar Cliente</DialogTitle>
+              <DialogTitle>
+                {isCreateMode ? "Novo Cliente" : "Editar Cliente"}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="full_name">Nome Completo</Label>
+                <Label htmlFor="full_name">Nome Completo *</Label>
                 <Input
                   id="full_name"
                   value={formData.full_name}
                   onChange={(e) =>
                     setFormData({ ...formData, full_name: e.target.value })
                   }
+                  placeholder="Nome completo do cliente"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
+                  <Label htmlFor="phone">Telefone *</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
+                    placeholder="(11) 99999-9999"
                   />
                 </div>
                 <div className="space-y-2">
@@ -312,6 +414,7 @@ export default function AdminClientes() {
                     onChange={(e) =>
                       setFormData({ ...formData, cpf: e.target.value })
                     }
+                    placeholder="000.000.000-00"
                   />
                 </div>
               </div>
@@ -376,9 +479,13 @@ export default function AdminClientes() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={updateMutation.isPending}
+                disabled={updateMutation.isPending || createMutation.isPending}
               >
-                {updateMutation.isPending ? "Salvando..." : "Salvar"}
+                {updateMutation.isPending || createMutation.isPending
+                  ? "Salvando..."
+                  : isCreateMode
+                    ? "Criar Cliente"
+                    : "Salvar"}
               </Button>
             </DialogFooter>
           </DialogContent>

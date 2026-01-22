@@ -1,26 +1,28 @@
 import { useState, useEffect } from "react";
-import { Header } from "@/components/layout/Header";
-import { BottomNavigation } from "@/components/layout/BottomNavigation";
-import { ActionButtons } from "@/components/home/ActionButtons";
-import { MyVehiclesSection } from "@/components/home/MyVehiclesSection";
-import { Youtube, Instagram, BookOpen } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-
-// TikTok icon component (Lucide doesn't have one)
-const TikTokIcon = ({ className }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill="currentColor" 
-    className={className}
-  >
-    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-  </svg>
-);
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Car,
+  Bell,
+  Gift,
+  ChevronRight,
+  Home,
+  Calendar,
+  History,
+  TrendingUp,
+  Instagram,
+  Youtube,
+  Music,
+  BookOpen,
+  User,
+} from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState<string>("");
+  const [userName, setUserName] = useState("...");
+  const [activeTab, setActiveTab] = useState("cliente");
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -31,7 +33,7 @@ const Index = () => {
           .select("full_name")
           .eq("user_id", user.id)
           .single();
-        
+
         if (profile?.full_name) {
           const firstName = profile.full_name.split(" ")[0];
           setUserName(firstName);
@@ -41,69 +43,205 @@ const Index = () => {
     fetchUserName();
   }, []);
 
+  const handleSocialClick = (platform: string) => {
+    const urls = {
+      instagram: "https://www.instagram.com/doctorauto.prime?igsh=ejRheXE2dzB2NGo%3D&utm_source=qr",
+      youtube: "https://www.youtube.com/@PerformanceDoctorAuto/shorts",
+      tiktok: "https://www.tiktok.com/@doctorauto.prime",
+      blog: "/blog",
+    };
+
+    if (platform === "blog") {
+      navigate("/blog");
+    } else {
+      window.open(urls[platform as keyof typeof urls], "_blank");
+    }
+  };
 
   return (
-    <div className="min-h-screen gradient-bg dark flex flex-col">
-      <Header />
-
-      <main className="flex-1 px-4 pt-6 pb-24 flex flex-col">
-        {/* Welcome Section */}
-        <section className="animate-fade-in">
-          <h2 className="text-2xl font-bold text-foreground mb-4">
-            Olá, {userName || "..."} 👋
-          </h2>
-        </section>
-
-        {/* My Vehicles */}
-        <MyVehiclesSection />
-
-        {/* Action Buttons */}
-        <section className="mt-4">
-          <ActionButtons />
-        </section>
-
-        {/* Social Links */}
-        <section className="py-2 mt-auto">
-          <div className="flex justify-between px-4">
-            <a
-              href="https://www.instagram.com/doctorauto.prime?igsh=ejRheXE2dzB2NGo%3D&utm_source=qr"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-            >
-              <Instagram className="h-5 w-5 text-white" />
-              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-            </a>
-            <a
-              href="https://www.youtube.com/@PerformanceDoctorAuto/shorts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-            >
-              <Youtube className="h-5 w-5 text-white" />
-              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-            </a>
-            <a
-              href="https://www.tiktok.com/@doctorauto.prime"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-            >
-              <TikTokIcon className="h-5 w-5 text-white" />
-              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-            </a>
-            <button
-              onClick={() => navigate("/blog")}
-              className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-            >
-              <BookOpen className="h-5 w-5 text-white" />
-              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-            </button>
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      {/* Header */}
+      <header className="bg-[#111] border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center">
+            <Car className="w-6 h-6" />
           </div>
-        </section>
+          <h1 className="text-lg font-bold">Doctor Auto Prime</h1>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={activeTab === "cliente" ? "default" : "ghost"}
+            size="sm"
+            className={activeTab === "cliente" ? "bg-red-600 hover:bg-red-700" : ""}
+            onClick={() => setActiveTab("cliente")}
+          >
+            <Home className="w-4 h-4 mr-2" />
+            Cliente
+          </Button>
+          <Button
+            variant={activeTab === "admin" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => navigate("/admin")}
+          >
+            Admin
+          </Button>
+          <Button
+            variant={activeTab === "gestao" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => navigate("/gestao")}
+          >
+            Gestão
+          </Button>
+        </div>
+
+        <Button variant="ghost" size="icon" onClick={() => navigate("/perfil")}>
+          <User className="w-5 h-5" />
+        </Button>
+      </header>
+
+      {/* Main Content */}
+      <main className="p-4 pb-24 max-w-2xl mx-auto">
+        {/* Greeting */}
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold mb-1">
+            Olá, {userName} 👋
+          </h2>
+        </div>
+
+        {/* Meus Veículos */}
+        <Card
+          className="bg-[#111] border-gray-800 p-4 mb-4 cursor-pointer hover:bg-[#151515] transition-colors"
+          onClick={() => navigate("/agenda")}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-red-600/20 rounded-full flex items-center justify-center">
+                <Car className="w-6 h-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">MEUS VEÍCULOS</h3>
+                <p className="text-sm text-gray-400">Nenhum veículo</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </div>
+        </Card>
+
+        {/* Lembretes */}
+        <Card
+          className="bg-[#111] border-gray-800 p-4 mb-4 cursor-pointer hover:bg-[#151515] transition-colors"
+          onClick={() => navigate("/agenda")}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-yellow-600/20 rounded-full flex items-center justify-center">
+                <Bell className="w-6 h-6 text-yellow-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Lembretes</h3>
+                <p className="text-sm text-gray-400">Nenhum pendente</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </div>
+        </Card>
+
+        {/* Promoções */}
+        <Card
+          className="bg-[#111] border-gray-800 p-4 mb-6 cursor-pointer hover:bg-[#151515] transition-colors"
+          onClick={() => navigate("/blog")}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-green-600/20 rounded-full flex items-center justify-center">
+                <Gift className="w-6 h-6 text-green-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Promoções</h3>
+                <p className="text-sm text-gray-400">Aguarde novidades</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </div>
+        </Card>
+
+        {/* Social Media Links */}
+        <div className="grid grid-cols-4 gap-3">
+          <button
+            onClick={() => handleSocialClick("instagram")}
+            className="relative bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-4 aspect-square flex items-center justify-center hover:scale-105 transition-transform"
+          >
+            <Instagram className="w-8 h-8" />
+            <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
+          </button>
+
+          <button
+            onClick={() => handleSocialClick("youtube")}
+            className="relative bg-red-600 rounded-2xl p-4 aspect-square flex items-center justify-center hover:scale-105 transition-transform"
+          >
+            <Youtube className="w-8 h-8" />
+            <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
+          </button>
+
+          <button
+            onClick={() => handleSocialClick("tiktok")}
+            className="relative bg-gradient-to-br from-cyan-500 to-pink-500 rounded-2xl p-4 aspect-square flex items-center justify-center hover:scale-105 transition-transform"
+          >
+            <Music className="w-8 h-8" />
+            <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
+          </button>
+
+          <button
+            onClick={() => handleSocialClick("blog")}
+            className="relative bg-orange-600 rounded-2xl p-4 aspect-square flex items-center justify-center hover:scale-105 transition-transform"
+          >
+            <BookOpen className="w-8 h-8" />
+            <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
+          </button>
+        </div>
       </main>
 
-      <BottomNavigation />
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#111] border-t border-gray-800 px-4 py-3">
+        <div className="max-w-2xl mx-auto grid grid-cols-4 gap-2">
+          <Button
+            variant="ghost"
+            className="flex flex-col items-center gap-1 h-auto py-2 text-red-500"
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-xs">Home</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="flex flex-col items-center gap-1 h-auto py-2 text-gray-400"
+            onClick={() => navigate("/agenda")}
+          >
+            <Calendar className="w-5 h-5" />
+            <span className="text-xs">Agenda</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="flex flex-col items-center gap-1 h-auto py-2 text-gray-400"
+            onClick={() => navigate("/historico")}
+          >
+            <History className="w-5 h-5" />
+            <span className="text-xs">Histórico</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="flex flex-col items-center gap-1 h-auto py-2 text-gray-400"
+            onClick={() => navigate("/performance")}
+          >
+            <TrendingUp className="w-5 h-5" />
+            <span className="text-xs">Performance</span>
+          </Button>
+        </div>
+      </nav>
     </div>
   );
 };

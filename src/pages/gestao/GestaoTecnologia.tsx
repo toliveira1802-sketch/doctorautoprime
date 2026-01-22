@@ -5,10 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "@/components/gestao/ExportButtons";
 import { CustomizableDashboard } from "@/components/gestao/CustomizableDashboard";
 import { exportToPDF, exportToExcel, type ReportData } from "@/utils/exportReport";
-import { Laptop, Users, Database, Activity, Loader2, Clock } from "lucide-react";
+import { Laptop, Users, Database, Activity, Loader2, Clock, Brain, Lock } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend 
+import {
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend
 } from "recharts";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
@@ -41,7 +41,7 @@ export default function GestaoTecnologia() {
         .select("*", { count: "exact", head: true })
         .eq("is_active", true);
 
-      // Buscar total de agendamentos
+      // Buscar total de agendamentos 
       const { count: appointmentCount } = await supabase
         .from("appointments")
         .select("*", { count: "exact", head: true });
@@ -143,6 +143,36 @@ export default function GestaoTecnologia() {
             />
           </div>
 
+          {/* QG das IAs - AI Headquarters */}
+          <Card className="mb-6 border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-blue-500/5 hover:border-purple-500/50 transition-all cursor-pointer" onClick={() => window.location.href = '/gestao/ia/configuracoes'}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="p-2 rounded-lg bg-purple-500/10">
+                  <Brain className="w-6 h-6 text-purple-500" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    QG das IAs
+                    <Lock className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <p className="text-sm font-normal text-muted-foreground mt-1">
+                    Central de configuração e orquestração de inteligência artificial
+                  </p>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  Acesso protegido por senha secundária
+                </span>
+                <span className="text-purple-500 font-medium">
+                  Acessar Configurações →
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -190,12 +220,12 @@ export default function GestaoTecnologia() {
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: "hsl(var(--popover))", 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--popover))",
                               border: "1px solid hsl(var(--border))",
                               borderRadius: "8px"
-                            }} 
+                            }}
                           />
                           <Legend />
                         </PieChart>
@@ -244,3 +274,4 @@ export default function GestaoTecnologia() {
     </AdminLayout>
   );
 }
+

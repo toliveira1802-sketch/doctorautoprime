@@ -18,7 +18,7 @@ export default function AdminNovaOS() {
   const vehicle = searchParams.get("vehicle");
   const clientName = searchParams.get("client_name");
   const clientPhone = searchParams.get("client_phone");
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [formData, setFormData] = useState({
@@ -38,17 +38,17 @@ export default function AdminNovaOS() {
   // Busca unificada: primeiro na tabela vehicles+profiles (clientes reais), depois em OS antigas
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    
+
     if (query.length < 3) {
       setSearchResults([]);
       setShowResults(false);
       return;
     }
-    
+
     setIsSearching(true);
     try {
       const results: any[] = [];
-      
+
       // 1. Buscar na tabela de veículos (dados reais dos clientes)
       const { data: vehiclesData } = await supabase
         .from("vehicles")
@@ -177,7 +177,7 @@ export default function AdminNovaOS() {
   // Buscar dados do veículo quando a placa mudar - PRIMEIRO no banco de clientes
   const searchByPlate = async (plateValue: string) => {
     if (plateValue.length < 7) return;
-    
+
     setIsSearching(true);
     try {
       // 1. Primeiro buscar na tabela de veículos reais
@@ -251,9 +251,9 @@ export default function AdminNovaOS() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent, quickCreate = false) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createOS(quickCreate);
+    await createOS();
   };
 
   const createOS = async (quickCreate = false) => {
@@ -262,6 +262,93 @@ export default function AdminNovaOS() {
       const now = new Date();
       const numeroOS = `OS-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
 
+      let clientUserId = null;
+      let vehicleId = null;
+
+      // 1. Se tiver telefone, verificar/criar cliente
+      if (formData.client_phone && formData.client_phone.trim()) {
+        const phone = formData.client_phone.trim();
+
+        // Verificar se já existe um perfil com esse telefone
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("phone", phone)
+          .single();
+
+        if (existingProfile) {
+          clientUserId = existingProfile.user_id;
+          toast.info("Cliente já cadastrado no sistema");
+        } else if (formData.client_name && formData.client_name.trim()) {
+          // Criar novo usuário/perfil para o cliente
+          // Nota: Como não temos acesso direto ao auth.admin, vamos criar apenas o profile
+          // com um user_id temporário que será substituído quando o cliente fizer login
+          const tempUserId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+          const { data: newProfile, error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+              user_id: tempUserId,
+              full_name: formData.client_name.trim(),
+              phone: phone,
+              role: "cliente",
+            })
+            .select()
+            .single();
+
+          if (profileError) {
+            console.error("Erro ao criar perfil:", profileError);
+          } else {
+            clientUserId = newProfile.user_id;
+            toast.success("Novo cliente cadastrado!");
+          }
+        }
+      }
+
+      // 2. Se tiver placa e clientUserId, verificar/criar veículo
+      if (formData.plate && formData.plate.trim() && clientUserId) {
+        const plate = formData.plate.trim().toUpperCase();
+
+        // Verificar se já existe um veículo com essa placa
+        const { data: existingVehicle } = await supabase
+          .from("vehicles")
+          .select("id")
+          .eq("plate", plate)
+          .eq("is_active", true)
+          .single();
+
+        if (existingVehicle) {
+          vehicleId = existingVehicle.id;
+        } else if (formData.vehicle && formData.vehicle.trim()) {
+          // Extrair marca, modelo e ano do campo veículo
+          const vehicleParts = formData.vehicle.trim().split(" ");
+          const brand = vehicleParts[0] || "";
+          const year = vehicleParts[vehicleParts.length - 1];
+          const model = vehicleParts.slice(1, -1).join(" ") || vehicleParts.slice(1).join(" ");
+
+          const { data: newVehicle, error: vehicleError } = await supabase
+            .from("vehicles")
+            .insert({
+              user_id: clientUserId,
+              plate: plate,
+              brand: brand,
+              model: model,
+              year: year.match(/^\d{4}$/) ? year : null,
+              is_active: true,
+            })
+            .select()
+            .single();
+
+          if (vehicleError) {
+            console.error("Erro ao criar veículo:", vehicleError);
+          } else {
+            vehicleId = newVehicle.id;
+            toast.success("Veículo cadastrado!");
+          }
+        }
+      }
+
+      // 3. Criar a OS
       const { data, error } = await supabase
         .from("ordens_servico")
         .insert([{
@@ -274,6 +361,12 @@ export default function AdminNovaOS() {
           descricao_problema: formData.descricao_problema.trim() || null,
           status: formData.status,
           data_entrada: new Date().toISOString(),
+          posicao_patio: 'entrada',
+          prioridade: 'media',
+          cor_card: '#3b82f6',
+          tags: [],
+          client_user_id: clientUserId, // Vincula ao cliente
+          vehicle_id: vehicleId, // Vincula ao veículo
         }])
         .select()
         .single();
@@ -281,7 +374,8 @@ export default function AdminNovaOS() {
       if (error) throw error;
 
       toast.success("OS criada com sucesso!");
-      navigate(`/admin/ordens-servico/${data.id}?new=true`);
+      // Redireciona para a página de detalhes da OS criada
+      navigate(`/admin/ordens-servico/${data.id}`);
     } catch (err: any) {
       console.error("Erro ao criar OS:", err);
       toast.error("Erro ao criar OS: " + (err.message || "Erro desconhecido"));
@@ -295,8 +389,8 @@ export default function AdminNovaOS() {
       <div className="p-6 max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
           >
@@ -330,7 +424,7 @@ export default function AdminNovaOS() {
                 ) : (
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 )}
-                
+
                 {/* Resultados da busca */}
                 {showResults && searchResults.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-card border rounded-lg shadow-lg max-h-60 overflow-auto">
@@ -493,15 +587,15 @@ export default function AdminNovaOS() {
           </Card>
 
           <div className="flex gap-3">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => navigate(-1)}
             >
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="flex-1 gradient-primary"
               disabled={isSubmitting}
             >

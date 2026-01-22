@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Search, Plus, Filter, Eye, FileText, AlertTriangle, 
+import {
+  Search, Plus, Filter, Eye, FileText, AlertTriangle,
   CheckCircle, XCircle, Clock, Wrench, Loader2, Phone,
   ChevronDown, ChevronRight, DollarSign, Calendar, ExternalLink
 } from "lucide-react";
@@ -102,6 +102,7 @@ export default function AdminOrdensServico() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [monthFilter, setMonthFilter] = useState<string>("all");
   const [selectedOS, setSelectedOS] = useState<OrdemServico | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
@@ -133,9 +134,9 @@ export default function AdminOrdensServico() {
     },
   });
 
-  // Filter OS based on search and status
+  // Filter OS based on search, status, and month
   const filteredOS = ordensServico.filter(os => {
-    const matchesSearch = 
+    const matchesSearch =
       os.numero_os.toLowerCase().includes(searchQuery.toLowerCase()) ||
       os.plate.toLowerCase().includes(searchQuery.toLowerCase()) ||
       os.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -143,7 +144,15 @@ export default function AdminOrdensServico() {
 
     const matchesStatus = statusFilter === "all" || os.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    // Month filter
+    let matchesMonth = true;
+    if (monthFilter !== "all" && os.data_entrada) {
+      const osDate = new Date(os.data_entrada);
+      const osMonth = `${osDate.getFullYear()}-${String(osDate.getMonth() + 1).padStart(2, '0')}`;
+      matchesMonth = osMonth === monthFilter;
+    }
+
+    return matchesSearch && matchesStatus && matchesMonth;
   });
 
   // Stats
@@ -193,7 +202,10 @@ export default function AdminOrdensServico() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Ordens de Serviço</h1>
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <FileText className="w-7 h-7 text-primary" />
+              Ordens de Serviço
+            </h1>
             <p className="text-muted-foreground text-sm">Gerencie todas as OS da oficina</p>
           </div>
           <Button onClick={() => navigate("/admin/nova-os")} className="gradient-primary">
@@ -309,6 +321,26 @@ export default function AdminOrdensServico() {
                   <SelectItem value="entregue">Entregue</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={monthFilter} onValueChange={setMonthFilter}>
+                <SelectTrigger className="w-full md:w-48">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Filtrar mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {(() => {
+                    const months = [];
+                    const now = new Date();
+                    for (let i = 0; i < 12; i++) {
+                      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                      const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                      const label = format(date, "MMMM 'de' yyyy", { locale: ptBR });
+                      months.push(<SelectItem key={value} value={value}>{label}</SelectItem>);
+                    }
+                    return months;
+                  })()}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Table */}
@@ -322,7 +354,7 @@ export default function AdminOrdensServico() {
                   <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-foreground mb-2">Nenhuma OS encontrada</h3>
                   <p className="text-muted-foreground mb-4">
-                    {searchQuery || statusFilter !== "all" 
+                    {searchQuery || statusFilter !== "all"
                       ? "Tente ajustar os filtros de busca"
                       : "Comece criando uma nova ordem de serviço"}
                   </p>
@@ -356,8 +388,8 @@ export default function AdminOrdensServico() {
 
                       return (
                         <>
-                          <TableRow 
-                            key={os.id} 
+                          <TableRow
+                            key={os.id}
                             className="hover:bg-muted/30 cursor-pointer"
                             onClick={() => hasItems && toggleRow(os.id)}
                           >
@@ -696,8 +728,8 @@ export default function AdminOrdensServico() {
             <DialogTitle className="flex items-center gap-3">
               <span className="font-mono">{selectedOS?.numero_os}</span>
               {selectedOS && (
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className={statusConfig[selectedOS.status]?.color}
                 >
                   {statusConfig[selectedOS.status]?.label}
@@ -705,7 +737,7 @@ export default function AdminOrdensServico() {
               )}
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedOS && (
             <div className="space-y-6">
               {/* Client & Vehicle Info */}
@@ -714,7 +746,7 @@ export default function AdminOrdensServico() {
                   <p className="text-sm text-muted-foreground">Cliente</p>
                   <p className="font-medium">{selectedOS.client_name || "-"}</p>
                   {selectedOS.client_phone && (
-                    <a 
+                    <a
                       href={`tel:${selectedOS.client_phone}`}
                       className="text-sm text-primary hover:underline flex items-center gap-1"
                     >
@@ -863,7 +895,7 @@ export default function AdminOrdensServico() {
 
               {/* Action Button */}
               <div className="pt-4 border-t">
-                <Button 
+                <Button
                   className="w-full"
                   onClick={() => {
                     setSelectedOS(null);

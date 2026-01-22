@@ -35,6 +35,10 @@ import AdminServicos from "./pages/admin/AdminServicos";
 import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
 import AdminFinanceiro from "./pages/admin/AdminFinanceiro";
 import AdminDocumentacao from "./pages/admin/AdminDocumentacao";
+import AdminAgendaMecanicos from "./pages/admin/AdminAgendaMecanicos";
+import AdminOperacional from "./pages/admin/AdminOperacional";
+import AdminPainelTV from "./pages/admin/AdminPainelTV";
+import AdminProdutividade from "./pages/admin/AdminProdutividade";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
 import OrcamentoCliente from "./pages/OrcamentoCliente";
 import VehicleDetails from "./pages/VehicleDetails";
@@ -48,9 +52,16 @@ import GestaoOperacoes from "./pages/gestao/GestaoOperacoes";
 import GestaoFinanceiro from "./pages/gestao/GestaoFinanceiro";
 import GestaoTecnologia from "./pages/gestao/GestaoTecnologia";
 import GestaoComercial from "./pages/gestao/GestaoComercial";
+import BIOverview from "./pages/gestao/bi/BIOverview";
+import BIConversao from "./pages/gestao/bi/BIConversao";
+import BIMargens from "./pages/gestao/bi/BIMargens";
+import IAConfiguracoes from "./pages/gestao/ia/IAConfiguracoes";
 import GestaoUsuarios from "./pages/gestao/GestaoUsuarios";
 import Configuracoes from "./pages/Configuracoes";
 import Install from "./pages/Install";
+import KommoCallback from "./pages/kommo/KommoCallback";
+import KommoIntegracao from "./pages/gestao/integracoes/KommoIntegracao";
+import MigracaoTrello from "./pages/gestao/MigracaoTrello";
 const queryClient = new QueryClient();
 
 // Protected Route component - TEMPORARILY DISABLED for development
@@ -349,6 +360,46 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/agenda-mecanicos"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminAgendaMecanicos />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/operacional"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminOperacional />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/painel-tv"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminPainelTV />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/produtividade"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <AdminProdutividade />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
       {/* Gestão Routes */}
       <Route
         path="/gestao"
@@ -440,6 +491,78 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
+      {/* Rotas de BI */}
+      <Route
+        path="/gestao/bi"
+        element={
+          <ProtectedRoute>
+            <AdminOnlyRoute>
+              <BIOverview />
+            </AdminOnlyRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/gestao/bi/conversao"
+        element={
+          <ProtectedRoute>
+            <AdminOnlyRoute>
+              <BIConversao />
+            </AdminOnlyRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/gestao/bi/margens"
+        element={
+          <ProtectedRoute>
+            <AdminOnlyRoute>
+              <BIMargens />
+            </AdminOnlyRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rotas de IA */}
+      <Route
+        path="/gestao/ia/configuracoes"
+        element={
+          <ProtectedRoute>
+            <AdminOnlyRoute>
+              <IAConfiguracoes />
+            </AdminOnlyRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rotas de Integrações */}
+      <Route
+        path="/gestao/integracoes/kommo"
+        element={
+          <ProtectedRoute>
+            <AdminOnlyRoute>
+              <KommoIntegracao />
+            </AdminOnlyRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rota pública de callback OAuth Kommo */}
+      <Route path="/kommo/callback" element={<KommoCallback />} />
+
+      {/* Rota de Migração Trello */}
+      <Route
+        path="/gestao/migracao-trello"
+        element={
+          <ProtectedRoute>
+            <AdminOnlyRoute>
+              <MigracaoTrello />
+            </AdminOnlyRoute>
+          </ProtectedRoute>
+        }
+      />
+
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
