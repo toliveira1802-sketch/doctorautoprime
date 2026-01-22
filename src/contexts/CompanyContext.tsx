@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
 import type { Empresa } from '@/types/database'
 
 interface CompanyContextType {
@@ -47,7 +47,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true)
     const [isAllCompaniesView, setIsAllCompaniesView] = useState(false)
 
-    const useMock = !isSupabaseConfigured()
+    const useMock = !import.meta.env.VITE_SUPABASE_URL
 
     useEffect(() => {
         const loadCompanies = async () => {

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useUserRole } from '@/hooks/useUserRole'
 import { Header } from '@/components/layout/Header'
 import { BottomNavigation } from '@/components/layout/BottomNavigation'
 import { AppSidebar } from '@/components/layout/AppSidebar'
@@ -9,7 +10,7 @@ import { Loader2 } from 'lucide-react'
 // Client Pages
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
-import Home from '@/pages/Home'
+import Index from '@/pages/Index'
 import Agenda from '@/pages/Agenda'
 import Profile from '@/pages/Profile'
 import NovoAgendamento from '@/pages/NovoAgendamento'
@@ -80,7 +81,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 
 // Root redirect component - redirects based on user role
 function RootRedirect() {
-    const { role } = useAuth()
+    const { role } = useUserRole()
     
     // Redirect based on role
     if (role === 'gestao' || role === 'dev') {
@@ -90,7 +91,7 @@ function RootRedirect() {
     }
     
     // Default to client view
-    return <ClientLayout><Home /></ClientLayout>
+    return <ClientLayout><Index /></ClientLayout>
 }
 
 export default function App() {
