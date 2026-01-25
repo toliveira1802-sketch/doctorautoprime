@@ -1,6 +1,4 @@
-import GestaoIAs from '@/pages/gestao/ia/GestaoIAs'
-import IAIndividual from '@/pages/gestao/ia/IAIndividual'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUserRole } from '@/hooks/useUserRole'
@@ -18,16 +16,15 @@ import Profile from '@/pages/Profile'
 import NovoAgendamento from '@/pages/NovoAgendamento'
 import AgendamentoSucesso from '@/pages/AgendamentoSucesso'
 import Avisos from '@/pages/Avisos'
-import Teste from '@/pages/Teste'
 import TesteExpandido from '@/pages/TesteExpandido'
 
 // Admin Pages
-import AdminDashboard from '@/pages/admin/Dashboard'
-import Patio from '@/pages/admin/Patio'
-import Clientes from '@/pages/admin/Clientes'
-import OrdensServico from '@/pages/admin/OrdensServico'
-import NovaOS from '@/pages/admin/NovaOS'
-import Servicos from '@/pages/admin/Servicos'
+import AdminDashboard from '@/pages/admin/AdminDashboard'
+import AdminPatio from '@/pages/admin/AdminPatio'
+import AdminClientes from '@/pages/admin/AdminClientes'
+import AdminOrdensServico from '@/pages/admin/AdminOrdensServico'
+import AdminNovaOS from '@/pages/admin/AdminNovaOS'
+import AdminServicos from '@/pages/admin/AdminServicos'
 import AdminOSDetalhes from '@/pages/admin/AdminOSDetalhes'
 
 // Protected Route wrapper
@@ -66,8 +63,8 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
     )
 }
 
-// Admin Layout
-function AdminLayout({ children }: { children: React.ReactNode }) {
+// Admin Layout (local version)
+function AdminLayoutWrapper({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(true)
 
     return (
@@ -166,148 +163,133 @@ export default function App() {
                     </ClientLayout>
                 </ProtectedRoute>
             } />
-            <Route path="/teste" element={
-                <ProtectedRoute>
-                    <AdminLayout><Teste /></AdminLayout>
-                </ProtectedRoute>
-            } />
             <Route path="/teste-expandido" element={
                 <ProtectedRoute>
-                    <AdminLayout><TesteExpandido /></AdminLayout>
+                    <AdminLayoutWrapper><TesteExpandido /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
+
             {/* Admin Routes */}
             <Route path="/admin" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout><AdminDashboard /></AdminLayout>
+                    <AdminLayoutWrapper><AdminDashboard /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/admin/agendamentos" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout><Agenda isAdmin /></AdminLayout>
+                    <AdminLayoutWrapper><Agenda /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/admin/patio" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout><Patio /></AdminLayout>
+                    <AdminLayoutWrapper><AdminPatio /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/admin/clientes" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout><Clientes /></AdminLayout>
+                    <AdminLayoutWrapper><AdminClientes /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/admin/ordens-servico" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout><OrdensServico /></AdminLayout>
+                    <AdminLayoutWrapper><AdminOrdensServico /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/admin/nova-os" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout><NovaOS /></AdminLayout>
+                    <AdminLayoutWrapper><AdminNovaOS /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/admin/os/:osId" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout><AdminOSDetalhes /></AdminLayout>
+                    <AdminOSDetalhes />
                 </ProtectedRoute>
             } />
             <Route path="/admin/servicos" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout><Servicos /></AdminLayout>
+                    <AdminLayoutWrapper><AdminServicos /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/admin/financeiro" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout>
+                    <AdminLayoutWrapper>
                         <div className="text-center py-12 text-muted-foreground">
                             <p>Financeiro - Em desenvolvimento</p>
                         </div>
-                    </AdminLayout>
+                    </AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/admin/configuracoes" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayout>
+                    <AdminLayoutWrapper>
                         <div className="text-center py-12 text-muted-foreground">
                             <p>Configurações - Em desenvolvimento</p>
                         </div>
-                    </AdminLayout>
+                    </AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
 
             {/* Gestão Routes */}
             <Route path="/gestao" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout><AdminDashboard /></AdminLayout>
+                    <AdminLayoutWrapper><AdminDashboard /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/agendamentos" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout><Agenda isAdmin /></AdminLayout>
+                    <AdminLayoutWrapper><Agenda /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/patio" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout><Patio /></AdminLayout>
+                    <AdminLayoutWrapper><AdminPatio /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/clientes" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout><Clientes /></AdminLayout>
+                    <AdminLayoutWrapper><AdminClientes /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/ordens-servico" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout><OrdensServico /></AdminLayout>
+                    <AdminLayoutWrapper><AdminOrdensServico /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/nova-os" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout><NovaOS /></AdminLayout>
+                    <AdminLayoutWrapper><AdminNovaOS /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/os/:osId" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout><AdminOSDetalhes /></AdminLayout>
+                    <AdminOSDetalhes />
                 </ProtectedRoute>
             } />
             <Route path="/gestao/servicos" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout><Servicos /></AdminLayout>
+                    <AdminLayoutWrapper><AdminServicos /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/financeiro" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout>
+                    <AdminLayoutWrapper>
                         <div className="text-center py-12 text-muted-foreground">
                             <p>Financeiro - Em desenvolvimento</p>
                         </div>
-                    </AdminLayout>
+                    </AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/configuracoes" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayout>
+                    <AdminLayoutWrapper>
                         <div className="text-center py-12 text-muted-foreground">
                             <p>Configurações - Em desenvolvimento</p>
                         </div>
-                    </AdminLayout>
+                    </AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
 
             {/* Catch all */}
-          <Route path="/gestao/ia" element={
-    <ProtectedRoute requiredRoles={['dev', 'gestao']}>
-        <AdminLayout><GestaoIAs /></AdminLayout>
-    </ProtectedRoute>
-} />
-<Route path="/gestao/ia/:id" element={
-    <ProtectedRoute requiredRoles={['dev', 'gestao']}>
-        <AdminLayout><IAIndividual /></AdminLayout>
-    </ProtectedRoute>
-} />       
-          
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     )

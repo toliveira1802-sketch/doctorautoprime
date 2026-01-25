@@ -58,7 +58,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full gradient-bg">
-        <AppSidebar variant="admin" />
+        <AppSidebar isOpen={true} onToggle={() => {}} />
         <SidebarInset className="flex-1 flex flex-col">
           <header className="h-14 flex items-center gap-4 border-b border-border/50 px-4 bg-background/50 backdrop-blur-sm">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground">
@@ -78,36 +78,58 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               </Button>
             )}
 
+            <div className="flex-1" />
 
-            <div className="flex-1">
-              <h1 className="text-lg font-semibold text-foreground">Painel Admin</h1>
-            </div>
+            {/* View Switcher */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <LayoutDashboard className="w-4 h-4" />
+                  Trocar Visão
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Selecione a Visão</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleNavigateToView('cliente')}>
+                  <Users className="w-4 h-4 mr-2" />
+                  Cliente
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleNavigateToView('admin')}>
+                  <Briefcase className="w-4 h-4 mr-2" />
+                  Admin
+                </DropdownMenuItem>
+                {isGestor && (
+                  <DropdownMenuItem onClick={() => handleNavigateToView('gestao')}>
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Gestão
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-            {/* Profile Switcher */}
+            {/* Theme Switcher */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => toggleTheme('light')}>
+                  <Sun className="w-4 h-4 mr-2" />
+                  Claro
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toggleTheme('dark')}>
+                  <Moon className="w-4 h-4 mr-2" />
+                  Escuro
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <ProfileSwitcher />
-
-
-            {/* Theme Toggle */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant={theme === 'dark' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => toggleTheme('dark')}
-                className="h-9 w-9 p-0"
-              >
-                <Moon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={theme === 'light' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => toggleTheme('light')}
-                className="h-9 w-9 p-0"
-              >
-                <Sun className="h-4 w-4" />
-              </Button>
-            </div>
           </header>
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-auto">
             {children}
           </main>
         </SidebarInset>
