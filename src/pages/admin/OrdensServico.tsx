@@ -9,12 +9,12 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { ClipboardList, Search, Plus, Filter, ChevronRight } from 'lucide-react'
 import type { OrderStatus } from '@/types/database'
 
-const statusConfig: Record<OrderStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline' }> = {
+const statusConfig: Record<OrderStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
     open: { label: 'Aberta', variant: 'secondary' },
     in_progress: { label: 'Em andamento', variant: 'default' },
-    waiting_parts: { label: 'Aguardando peças', variant: 'warning' },
-    waiting_approval: { label: 'Aguardando aprovação', variant: 'warning' },
-    completed: { label: 'Concluída', variant: 'success' },
+    waiting_parts: { label: 'Aguardando peças', variant: 'outline' },
+    waiting_approval: { label: 'Aguardando aprovação', variant: 'outline' },
+    completed: { label: 'Concluída', variant: 'default' },
     cancelled: { label: 'Cancelada', variant: 'destructive' },
 }
 

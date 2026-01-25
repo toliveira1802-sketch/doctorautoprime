@@ -2,11 +2,22 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
+type AppRole = 'admin' | 'user' | 'gestao' | 'dev';
+
+interface Profile {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  role: AppRole | null;
+  profile: Profile | null;
   signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
@@ -31,6 +42,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [role, setRole] = useState<AppRole | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.log('No role found, defaulting to user');
+        return 'user' as AppRole;
+      }
+
+      return data?.role as AppRole || 'user';
+    } catch (err) {
+      console.error('Error fetching role:', err);
+      return 'user' as AppRole;
+    }
+  };
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone, avatar_url')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.log('No profile found');
+        return null;
+      }
+
+      return data as Profile;
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      return null;
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -39,14 +92,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+
+        if (session?.user) {
+          // Fetch role and profile
+          const userRole = await fetchUserRole(session.user.id);
+          setRole(userRole);
+          
+          const userProfile = await fetchProfile(session.user.id);
+          setProfile(userProfile);
+        } else {
+          setRole(null);
+          setProfile(null);
+        }
+
         setIsLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        const userRole = await fetchUserRole(session.user.id);
+        setRole(userRole);
+        
+        const userProfile = await fetchProfile(session.user.id);
+        setProfile(userProfile);
+      }
+
       setIsLoading(false);
     });
 
@@ -123,6 +198,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
+    setRole(null);
+    setProfile(null);
   };
 
   return (
@@ -132,6 +209,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user,
         session,
         isLoading,
+        role,
+        profile,
         signUp,
         signIn,
         signInWithGoogle,

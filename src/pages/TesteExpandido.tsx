@@ -50,7 +50,7 @@ type FormData = {
 
 export default function TesteExpandido() {
   const { user, role } = useAuth()
-  const { role: userRole, loading: roleLoading } = useUserRole()
+  const { role: userRole, isLoading: roleLoading } = useUserRole()
   
   // Estados do formulário
   const [formData, setFormData] = useState<FormData>({
