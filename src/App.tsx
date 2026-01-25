@@ -1,3 +1,5 @@
+import GestaoIAs from '@/pages/gestao/ia/GestaoIAs'
+import IAIndividual from '@/pages/gestao/ia/IAIndividual'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -295,6 +297,17 @@ export default function App() {
             } />
 
             {/* Catch all */}
+          <Route path="/gestao/ia" element={
+    <ProtectedRoute requiredRoles={['dev', 'gestao']}>
+        <AdminLayout><GestaoIAs /></AdminLayout>
+    </ProtectedRoute>
+} />
+<Route path="/gestao/ia/:id" element={
+    <ProtectedRoute requiredRoles={['dev', 'gestao']}>
+        <AdminLayout><IAIndividual /></AdminLayout>
+    </ProtectedRoute>
+} />       
+          
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     )
