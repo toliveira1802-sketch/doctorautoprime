@@ -1860,7 +1860,32 @@ export type Database = {
       }
     }
     Functions: {
+      aplicar_regras_automacao: { Args: { p_os_id: string }; Returns: Json }
+      buscar_diagnosticos_similares: {
+        Args: { p_limite?: number; p_modelo?: string; p_sintomas?: string }
+        Returns: {
+          custo_estimado: number
+          diagnostico: string
+          id: string
+          modelo_veiculo: string
+          similaridade: number
+          sintomas: string
+          solucao: string
+          tempo_medio_minutos: number
+        }[]
+      }
       can_manage_roles: { Args: { _user_id: string }; Returns: boolean }
+      get_active_kommo_config: {
+        Args: never
+        Returns: {
+          access_token: string
+          client_id: string
+          client_secret: string
+          redirect_uri: string
+          refresh_token: string
+          subdomain: string
+        }[]
+      }
       has_admin_access: { Args: never; Returns: boolean }
       has_any_role: { Args: { _roles: string[] }; Returns: boolean }
       has_role: {
@@ -1872,6 +1897,10 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_dev: { Args: { _user_id: string }; Returns: boolean }
+      log_kommo_sync: {
+        Args: { p_detalhes?: Json; p_erro?: string; p_tipo: string }
+        Returns: string
+      }
       use_invite:
         | { Args: { invite_code: string }; Returns: boolean }
         | { Args: { invite_code: string; user_uuid: string }; Returns: boolean }
