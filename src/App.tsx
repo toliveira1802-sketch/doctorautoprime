@@ -16,6 +16,8 @@ import Profile from '@/pages/Profile'
 import NovoAgendamento from '@/pages/NovoAgendamento'
 import AgendamentoSucesso from '@/pages/AgendamentoSucesso'
 import Avisos from '@/pages/Avisos'
+import Teste from '@/pages/Teste'
+import TesteExpandido from '@/pages/TesteExpandido'
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard'
@@ -162,7 +164,16 @@ export default function App() {
                     </ClientLayout>
                 </ProtectedRoute>
             } />
-
+            <Route path="/teste" element={
+                <ProtectedRoute>
+                    <AdminLayout><Teste /></AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/teste-expandido" element={
+                <ProtectedRoute>
+                    <AdminLayout><TesteExpandido /></AdminLayout>
+                </ProtectedRoute>
+            } />
             {/* Admin Routes */}
             <Route path="/admin" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
