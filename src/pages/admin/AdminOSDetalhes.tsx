@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { 
-  ArrowLeft, Save, Plus, Trash2, Phone, Car, User, 
+import {
+  ArrowLeft, Save, Plus, Trash2, Phone, Car, User,
   Calendar, DollarSign, FileText, Wrench, CheckCircle,
   XCircle, AlertTriangle, Clock, Loader2, Edit2,
   ClipboardCheck, Camera, ChevronDown, ChevronUp, Gauge, ShieldCheck, Activity, Image,
@@ -139,7 +139,7 @@ export default function AdminOSDetalhes() {
   const isNewOS = searchParams.get("new") === "true";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedOS, setEditedOS] = useState<Partial<OrdemServico>>({});
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
@@ -166,21 +166,21 @@ export default function AdminOSDetalhes() {
   const [pendingItem, setPendingItem] = useState<typeof newItem | null>(null);
   const [justificativa, setJustificativa] = useState("");
   const MARGEM_MINIMA = 40; // Margem mínima de 40% definida pela gestão
-  
+
   // Collapsible sections - open by default if new OS
   const [checklistOpen, setChecklistOpen] = useState(isNewOS);
   const [fotosOpen, setFotosOpen] = useState(isNewOS);
   const [servicosOpen, setServicosOpen] = useState(isNewOS);
   const [upsellOpen, setUpsellOpen] = useState(isNewOS);
   const [checklistType, setChecklistType] = useState<'entrada' | 'dinamometro' | 'precompra' | 'geral'>('entrada');
-  
+
   // Google Drive link and scanner
   const [googleDriveLink, setGoogleDriveLink] = useState("");
   const [scannerAvarias, setScannerAvarias] = useState("");
-  
+
   // Client loyalty level - fetched from profile
   const [clientLoyaltyLevel, setClientLoyaltyLevel] = useState<'bronze' | 'prata' | 'ouro' | 'diamante'>('bronze');
-  
+
   // Checklist states
   const [checklistEntrada, setChecklistEntrada] = useState<Record<string, boolean>>({});
   const [checklistDyno, setChecklistDyno] = useState<Record<string, boolean>>({});
@@ -225,7 +225,7 @@ export default function AdminOSDetalhes() {
     queryKey: ["ordem-servico", osId],
     queryFn: async () => {
       if (!osId) throw new Error("ID não fornecido");
-      
+
       const { data, error } = await supabase
         .from("ordens_servico")
         .select("*")
@@ -243,7 +243,7 @@ export default function AdminOSDetalhes() {
     queryKey: ["ordem-servico-itens", osId],
     queryFn: async () => {
       if (!osId) return [];
-      
+
       const { data, error } = await supabase
         .from("ordens_servico_itens")
         .select("*")
@@ -301,10 +301,10 @@ export default function AdminOSDetalhes() {
     mutationFn: async (item: typeof newItem & { justificativa?: string }) => {
       const valor_venda_sugerido = item.valor_custo * (1 + item.margem / 100) * item.quantidade;
       const valor_total = item.valor_unitario * item.quantidade;
-      const margem_real = item.valor_custo > 0 
-        ? ((item.valor_unitario - item.valor_custo) / item.valor_custo) * 100 
+      const margem_real = item.valor_custo > 0
+        ? ((item.valor_unitario - item.valor_custo) / item.valor_custo) * 100
         : item.margem;
-      
+
       const { error } = await supabase
         .from("ordens_servico_itens")
         .insert([{
@@ -343,7 +343,7 @@ export default function AdminOSDetalhes() {
   const addMaoDeObraMutation = useMutation({
     mutationFn: async (item: typeof newMaoDeObra) => {
       const valor_total = item.valor_unitario * item.quantidade;
-      
+
       const { error } = await supabase
         .from("ordens_servico_itens")
         .insert([{
@@ -446,10 +446,10 @@ export default function AdminOSDetalhes() {
   // Fetch AI suggestions
   const fetchAISuggestions = useCallback(async () => {
     if (!os) return;
-    
+
     setIsLoadingAI(true);
     setAiError(null);
-    
+
     try {
       const response = await supabase.functions.invoke('ai-budget-suggestions', {
         body: {
@@ -483,10 +483,10 @@ export default function AdminOSDetalhes() {
   // Fetch AI Checklist Analysis
   const fetchChecklistAnalysis = useCallback(async (showNotifications = false) => {
     if (!os) return;
-    
+
     setIsLoadingChecklistAI(true);
     setChecklistAIError(null);
-    
+
     try {
       const response = await supabase.functions.invoke('ai-checklist-analysis', {
         body: {
@@ -517,11 +517,11 @@ export default function AdminOSDetalhes() {
         if (data.alertasSeguranca && data.alertasSeguranca.length > 0) {
           toast.error(
             `⚠️ ALERTA DE SEGURANÇA: ${data.alertasSeguranca[0]}`,
-            { 
+            {
               duration: 10000,
-              description: data.alertasSeguranca.length > 1 
-                ? `+${data.alertasSeguranca.length - 1} outros alertas detectados` 
-                : undefined 
+              description: data.alertasSeguranca.length > 1
+                ? `+${data.alertasSeguranca.length - 1} outros alertas detectados`
+                : undefined
             }
           );
         }
@@ -544,7 +544,7 @@ export default function AdminOSDetalhes() {
           if (criticalProblems.length > 1) {
             toast.info(
               `📋 ${criticalProblems.length} problemas críticos/altos identificados`,
-              { 
+              {
                 duration: 5000,
                 description: "Verifique a análise completa no checklist"
               }
@@ -576,12 +576,12 @@ export default function AdminOSDetalhes() {
   // Auto-analyze checklist when items are checked
   const triggerAutoAnalysis = useCallback(() => {
     // Only trigger if we have minimum required items checked
-    const hasRequiredItems = checklistEntrada.nivelOleo || checklistEntrada.nivelAgua || 
-                             checklistEntrada.freios || checklistEntrada.kmAtual;
+    const hasRequiredItems = checklistEntrada.nivelOleo || checklistEntrada.nivelAgua ||
+      checklistEntrada.freios || checklistEntrada.kmAtual;
     const totalChecked = Object.values(checklistEntrada).filter(Boolean).length +
-                         Object.values(checklistDyno).filter(Boolean).length +
-                         Object.values(checklistPreCompra).filter(Boolean).length;
-    
+      Object.values(checklistDyno).filter(Boolean).length +
+      Object.values(checklistPreCompra).filter(Boolean).length;
+
     // Trigger analysis when at least 3 items are checked or any required item is checked
     if ((hasRequiredItems || totalChecked >= 3) && !isLoadingChecklistAI) {
       setAutoAnalysisPending(true);
@@ -591,7 +591,7 @@ export default function AdminOSDetalhes() {
   // Debounced auto-analysis effect
   useEffect(() => {
     if (!autoAnalysisPending || !os) return;
-    
+
     const timer = setTimeout(() => {
       fetchChecklistAnalysis(true);
     }, 2000); // Wait 2 seconds after last change before analyzing
@@ -618,7 +618,7 @@ export default function AdminOSDetalhes() {
 
   const handleStatusChange = (newStatus: string) => {
     const updates: Partial<OrdemServico> = { status: newStatus };
-    
+
     if (newStatus === "orcamento" && !os?.data_orcamento) {
       updates.data_orcamento = new Date().toISOString();
     } else if ((newStatus === "aprovado" || newStatus === "parcial") && !os?.data_aprovacao) {
@@ -669,1405 +669,1404 @@ export default function AdminOSDetalhes() {
     .reduce((acc, item) => acc + (item.valor_total || 0), 0);
 
   return (
-      <div className="p-4 md:p-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/admin/ordens-servico")}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold font-mono text-foreground">{os.numero_os}</h1>
-                <Badge variant="outline" className={cn("gap-1", currentStatus.color)}>
-                  <StatusIcon className="w-3 h-3" />
-                  {currentStatus.label}
-                </Badge>
-              </div>
-              <p className="text-muted-foreground text-sm">
-                Entrada: {formatDate(os.data_entrada)}
-              </p>
+    <div className="p-4 md:p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/admin/ordens-servico")}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold font-mono text-foreground">{os.numero_os}</h1>
+              <Badge variant="outline" className={cn("gap-1", currentStatus.color)}>
+                <StatusIcon className="w-3 h-3" />
+                {currentStatus.label}
+              </Badge>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                const baseUrl = window.location.origin;
-                const clientLink = `${baseUrl}/orcamento/${osId}`;
-                navigator.clipboard.writeText(clientLink);
-                toast.success("Link Cliente copiado!");
-              }}
-              title="Copiar link do orçamento para o cliente"
-            >
-              <Link className="w-4 h-4 mr-2" />
-              Link Cliente
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                const baseUrl = window.location.origin;
-                const adminLink = `${baseUrl}/admin/os/${osId}`;
-                navigator.clipboard.writeText(adminLink);
-                toast.success("Link Admin copiado!");
-              }}
-              title="Copiar link da OS para administradores"
-            >
-              <Link className="w-4 h-4 mr-2" />
-              Link Admin
-            </Button>
-            {isEditing ? (
-              <>
-                <Button variant="outline" onClick={() => setIsEditing(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleSave} disabled={updateOSMutation.isPending}>
-                  {updateOSMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-2" />
-                  )}
-                  Salvar
-                </Button>
-              </>
-            ) : (
-              <Button variant="outline" onClick={() => setIsEditing(true)}>
-                <Edit2 className="w-4 h-4 mr-2" />
-                Editar
-              </Button>
-            )}
+            <p className="text-muted-foreground text-sm">
+              Entrada: {formatDate(os.data_entrada)}
+            </p>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Main Info */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Client & Vehicle */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between text-lg">
-                  <div className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    Cliente e Veículo
-                  </div>
-                  {/* Loyalty Badge */}
-                  {(() => {
-                    const loyalty = loyaltyBadgeConfig[clientLoyaltyLevel];
-                    const LoyaltyIcon = loyalty.icon;
-                    return (
-                      <Badge variant="outline" className={cn("gap-1.5 px-3 py-1", loyalty.color)}>
-                        <LoyaltyIcon className="w-4 h-4" />
-                        {loyalty.label}
-                      </Badge>
-                    );
-                  })()}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">Nome</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editedOS.client_name || ""}
-                        onChange={(e) => setEditedOS({ ...editedOS, client_name: e.target.value })}
-                      />
-                    ) : (
-                      <p className="font-medium mt-1">{os.client_name || "-"}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Telefone</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editedOS.client_phone || ""}
-                        onChange={(e) => setEditedOS({ ...editedOS, client_phone: e.target.value })}
-                      />
-                    ) : (
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="font-medium">{os.client_phone || "-"}</p>
-                        {os.client_phone && (
-                          <a 
-                            href={`https://wa.me/55${os.client_phone.replace(/\D/g, '')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-green-600 hover:text-green-700"
-                          >
-                            <Phone className="w-4 h-4" />
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground flex items-center gap-1">
-                      KM Atual <span className="text-red-500">*</span>
-                    </Label>
-                    {isEditing ? (
-                      <Input
-                        value={editedOS.km_atual || ""}
-                        onChange={(e) => setEditedOS({ ...editedOS, km_atual: e.target.value })}
-                        placeholder="Ex: 45.000"
-                        className={cn(!os.km_atual && "border-red-500/50")}
-                      />
-                    ) : (
-                      <p className={cn(
-                        "font-medium font-mono mt-1",
-                        !os.km_atual && "text-red-500"
-                      )}>
-                        {os.km_atual ? `${os.km_atual} km` : "⚠️ Não informado"}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Veículo</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editedOS.vehicle || ""}
-                        onChange={(e) => setEditedOS({ ...editedOS, vehicle: e.target.value })}
-                      />
-                    ) : (
-                      <p className="font-medium mt-1">{os.vehicle}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Placa</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editedOS.plate || ""}
-                        onChange={(e) => setEditedOS({ ...editedOS, plate: e.target.value.toUpperCase() })}
-                      />
-                    ) : (
-                      <p className="font-medium font-mono mt-1">{os.plate}</p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Problem Description */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <FileText className="w-5 h-5" />
-                  Descrição do Problema
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isEditing ? (
-                  <Textarea
-                    value={editedOS.descricao_problema || ""}
-                    onChange={(e) => setEditedOS({ ...editedOS, descricao_problema: e.target.value })}
-                    className="min-h-[100px]"
-                    placeholder="Descreva o problema relatado..."
-                  />
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const baseUrl = window.location.origin;
+              const clientLink = `${baseUrl}/orcamento/${osId}`;
+              navigator.clipboard.writeText(clientLink);
+              toast.success("Link Cliente copiado!");
+            }}
+            title="Copiar link do orçamento para o cliente"
+          >
+            <Link className="w-4 h-4 mr-2" />
+            Link Cliente
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const baseUrl = window.location.origin;
+              const adminLink = `${baseUrl}/admin/os/${osId}`;
+              navigator.clipboard.writeText(adminLink);
+              toast.success("Link Admin copiado!");
+            }}
+            title="Copiar link da OS para administradores"
+          >
+            <Link className="w-4 h-4 mr-2" />
+            Link Admin
+          </Button>
+          {isEditing ? (
+            <>
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSave} disabled={updateOSMutation.isPending}>
+                {updateOSMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <p className="text-foreground whitespace-pre-wrap">
-                    {os.descricao_problema || "Nenhuma descrição informada"}
-                  </p>
+                  <Save className="w-4 h-4 mr-2" />
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Checklist Section - Moved below problem description */}
-            <Collapsible open={checklistOpen} onOpenChange={setChecklistOpen}>
-              <Card className="bg-card/50 border-border/50">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                    <CardTitle className="flex items-center justify-between text-lg">
-                      <div className="flex items-center gap-2">
-                        <ClipboardCheck className="w-5 h-5" />
-                        Checklist
-                        {(Object.values(checklistEntrada).some(v => v) || 
-                          Object.values(checklistDyno).some(v => v) || 
-                          Object.values(checklistPreCompra).some(v => v)) && (
-                          <Badge variant="secondary" className="ml-2">Preenchido</Badge>
-                        )}
-                      </div>
-                      {checklistOpen ? (
-                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0 space-y-4">
-                    <Tabs value={checklistType} onValueChange={(v) => setChecklistType(v as 'entrada' | 'dinamometro' | 'precompra' | 'geral')}>
-                      <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="entrada" className="flex items-center gap-1 text-xs">
-                          <ClipboardCheck className="w-3 h-3" />
-                          <span className="hidden sm:inline">Entrada</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="dinamometro" className="flex items-center gap-1 text-xs">
-                          <Gauge className="w-3 h-3" />
-                          <span className="hidden sm:inline">Dyno</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="precompra" className="flex items-center gap-1 text-xs">
-                          <ShieldCheck className="w-3 h-3" />
-                          <span className="hidden sm:inline">Pré-Compra</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="geral" className="flex items-center gap-1 text-xs">
-                          <FileText className="w-3 h-3" />
-                          <span className="hidden sm:inline">Geral</span>
-                        </TabsTrigger>
-                      </TabsList>
-
-                      {/* Checklist Entrada - Com itens obrigatórios */}
-                      <TabsContent value="entrada" className="mt-4 space-y-4">
-                        {/* Itens Obrigatórios */}
-                        <div className="space-y-3">
-                          <h4 className="font-semibold text-sm flex items-center gap-2 text-red-600">
-                            <AlertTriangle className="w-4 h-4" />
-                            Obrigatórios
-                          </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-red-500/5 border border-red-500/20 rounded-lg">
-                            {[
-                              { key: "nivelOleo", label: "Nível de Óleo" },
-                              { key: "nivelAgua", label: "Nível de Água" },
-                              { key: "freios", label: "Freios" },
-                              { key: "kmAtual", label: "KM Atual Registrado" },
-                            ].map((item) => (
-                              <div key={item.key} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`entrada-obr-${item.key}`}
-                                  checked={checklistEntrada[item.key] || false}
-                                  onCheckedChange={(checked) => {
-                                    const updated = { ...checklistEntrada, [item.key]: checked === true };
-                                    setChecklistEntrada(updated);
-                                    updateOSMutation.mutate({ checklist_entrada: updated, _isChecklistUpdate: true });
-                                  }}
-                                />
-                                <label htmlFor={`entrada-obr-${item.key}`} className="text-sm font-medium leading-none cursor-pointer">
-                                  {item.label}
-                                </label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        {/* Itens Opcionais */}
-                        <div className="space-y-3">
-                          <h4 className="font-semibold text-sm text-muted-foreground">Verificações Adicionais</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {[
-                              { key: "pneus", label: "Pneus" },
-                              { key: "luzes", label: "Luzes" },
-                              { key: "bateria", label: "Bateria" },
-                              { key: "correia", label: "Correia" },
-                              { key: "suspensao", label: "Suspensão" },
-                              { key: "limpadores", label: "Limpadores" },
-                              { key: "arCondicionado", label: "Ar Condicionado" },
-                              { key: "vidros", label: "Vidros" },
-                            ].map((item) => (
-                              <div key={item.key} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`entrada-${item.key}`}
-                                  checked={checklistEntrada[item.key] || false}
-                                  onCheckedChange={(checked) => {
-                                    const updated = { ...checklistEntrada, [item.key]: checked === true };
-                                    setChecklistEntrada(updated);
-                                    updateOSMutation.mutate({ checklist_entrada: updated, _isChecklistUpdate: true });
-                                  }}
-                                />
-                                <label htmlFor={`entrada-${item.key}`} className="text-sm leading-none cursor-pointer">
-                                  {item.label}
-                                </label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        {/* Scanner / Códigos de Erro */}
-                        <div className="space-y-3 pt-4 border-t border-border">
-                          <h4 className="font-semibold text-sm flex items-center gap-2 text-blue-600">
-                            <Scan className="w-4 h-4" />
-                            Scanner / Códigos de Erro
-                          </h4>
-                          {isEditing ? (
-                            <Textarea
-                              value={scannerAvarias}
-                              onChange={(e) => setScannerAvarias(e.target.value)}
-                              placeholder="Códigos de erro do scanner (ex: P0300, P0171)..."
-                              className="min-h-[80px]"
-                            />
-                          ) : (
-                            <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg min-h-[60px]">
-                              <p className="text-sm text-foreground whitespace-pre-wrap">
-                                {scannerAvarias || "Nenhum código registrado"}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </TabsContent>
-
-                      {/* Checklist Dinamômetro */}
-                      <TabsContent value="dinamometro" className="mt-4 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {[
-                            { key: "combustivelAdequado", label: "Combustível adequado" },
-                            { key: "oleoNivel", label: "Óleo no nível correto" },
-                            { key: "arrefecimentoOk", label: "Arrefecimento ok" },
-                            { key: "pneusCalibrados", label: "Pneus calibrados" },
-                            { key: "correiasPolias", label: "Correias e polias" },
-                            { key: "escapamentoOk", label: "Escapamento ok" },
-                            { key: "sensorOxigenio", label: "Sensor de oxigênio" },
-                            { key: "ignioOk", label: "Sistema de ignição" },
-                          ].map((item) => (
-                            <div key={item.key} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`dyno-${item.key}`}
-                                checked={checklistDyno[item.key] || false}
-                                onCheckedChange={(checked) => {
-                                  const updated = { ...checklistDyno, [item.key]: checked === true };
-                                  setChecklistDyno(updated);
-                                  updateOSMutation.mutate({ checklist_dinamometro: updated, _isChecklistUpdate: true });
-                                }}
-                              />
-                              <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
-                                {item.label}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </TabsContent>
-
-                      {/* Checklist Pré-Compra */}
-                      <TabsContent value="precompra" className="mt-4 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {[
-                            { key: "documentacao", label: "Documentação em dia" },
-                            { key: "pintura", label: "Pintura original" },
-                            { key: "motor", label: "Motor ok" },
-                            { key: "cambio", label: "Câmbio ok" },
-                            { key: "suspensao", label: "Suspensão ok" },
-                            { key: "freios", label: "Freios ok" },
-                            { key: "eletrica", label: "Parte elétrica" },
-                            { key: "estrutura", label: "Estrutura íntegra" },
-                            { key: "historico", label: "Histórico limpo" },
-                            { key: "sinistro", label: "Sem sinistro" },
-                          ].map((item) => (
-                            <div key={item.key} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`precompra-${item.key}`}
-                                checked={checklistPreCompra[item.key] || false}
-                                onCheckedChange={(checked) => {
-                                  const updated = { ...checklistPreCompra, [item.key]: checked === true };
-                                  setChecklistPreCompra(updated);
-                                  updateOSMutation.mutate({ checklist_precompra: updated, _isChecklistUpdate: true });
-                                }}
-                              />
-                              <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
-                                {item.label}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </TabsContent>
-
-                      {/* Checklist Geral - Com muitos itens opcionais */}
-                      <TabsContent value="geral" className="mt-4 space-y-4">
-                        <p className="text-xs text-muted-foreground">Verificações completas para inspeção detalhada</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {[
-                            { key: "parabrisa", label: "Parabrisa" },
-                            { key: "retrovisores", label: "Retrovisores" },
-                            { key: "cintos", label: "Cintos de segurança" },
-                            { key: "airbag", label: "Indicador Airbag" },
-                            { key: "buzina", label: "Buzina" },
-                            { key: "travaPortas", label: "Trava das portas" },
-                            { key: "vidrosEletricos", label: "Vidros elétricos" },
-                            { key: "bancosAjuste", label: "Ajuste dos bancos" },
-                            { key: "arCondicionadoFunc", label: "Funcionamento A/C" },
-                            { key: "aquecedor", label: "Aquecedor" },
-                            { key: "radioSom", label: "Rádio/Som" },
-                            { key: "painel", label: "Painel de instrumentos" },
-                            { key: "volanteFolga", label: "Folga do volante" },
-                            { key: "pedais", label: "Pedais" },
-                            { key: "freioMao", label: "Freio de mão" },
-                            { key: "cambioFunc", label: "Funcionamento câmbio" },
-                            { key: "embreagem", label: "Embreagem" },
-                            { key: "partidaMotor", label: "Partida do motor" },
-                            { key: "marcha", label: "Marcha lenta" },
-                            { key: "aceleracao", label: "Aceleração" },
-                            { key: "escapamento", label: "Escapamento" },
-                            { key: "direcao", label: "Direção" },
-                            { key: "amortecedores", label: "Amortecedores" },
-                            { key: "pneuEstepe", label: "Pneu estepe" },
-                            { key: "ferramentas", label: "Ferramentas" },
-                            { key: "triangulo", label: "Triângulo" },
-                            { key: "macaco", label: "Macaco" },
-                            { key: "chaveRodas", label: "Chave de rodas" },
-                          ].map((item) => (
-                            <div key={item.key} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`geral-${item.key}`}
-                                checked={checklistGeral[item.key] || false}
-                                onCheckedChange={(checked) => {
-                                  const updated = { ...checklistGeral, [item.key]: checked === true };
-                                  setChecklistGeral(updated);
-                                  // Save to a general checklist field if needed
-                                }}
-                              />
-                              <label htmlFor={`geral-${item.key}`} className="text-sm cursor-pointer">
-                                {item.label}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-
-                    {/* AI Checklist Analysis Section */}
-                    <div className="pt-4 border-t border-border space-y-4">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-sm flex items-center gap-2 text-purple-600">
-                            <Sparkles className="w-4 h-4" />
-                            Análise Inteligente do Checklist
-                          </h4>
-                          {autoAnalysisPending && !isLoadingChecklistAI && (
-                            <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-500/30 animate-pulse">
-                              <Clock className="w-3 h-3" />
-                              Análise automática em 2s...
-                            </Badge>
-                          )}
-                          {isLoadingChecklistAI && (
-                            <Badge variant="outline" className="text-xs gap-1 text-purple-600 border-purple-500/30">
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              Analisando...
-                            </Badge>
-                          )}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => fetchChecklistAnalysis(false)}
-                          disabled={isLoadingChecklistAI}
-                          className="gap-2"
-                        >
-                          {isLoadingChecklistAI ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Sparkles className="w-4 h-4" />
-                          )}
-                          {isLoadingChecklistAI ? "Analisando..." : "Analisar com IA"}
-                        </Button>
-                      </div>
-
-                      {checklistAIError && (
-                        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                          <p className="text-sm text-destructive">{checklistAIError}</p>
-                        </div>
-                      )}
-
-                      {checklistAnalysis && (
-                        <div className="space-y-4">
-                          {/* Summary and Risk Level */}
-                          <div className={cn(
-                            "p-4 rounded-lg border",
-                            checklistAnalysis.nivelRisco === 'critico' && "bg-red-500/10 border-red-500/30",
-                            checklistAnalysis.nivelRisco === 'alto' && "bg-orange-500/10 border-orange-500/30",
-                            checklistAnalysis.nivelRisco === 'medio' && "bg-yellow-500/10 border-yellow-500/30",
-                            checklistAnalysis.nivelRisco === 'baixo' && "bg-green-500/10 border-green-500/30"
-                          )}>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-semibold text-sm">Resumo da Análise</span>
-                              <Badge className={cn(
-                                checklistAnalysis.nivelRisco === 'critico' && "bg-red-500",
-                                checklistAnalysis.nivelRisco === 'alto' && "bg-orange-500",
-                                checklistAnalysis.nivelRisco === 'medio' && "bg-yellow-500",
-                                checklistAnalysis.nivelRisco === 'baixo' && "bg-green-500"
-                              )}>
-                                Risco {checklistAnalysis.nivelRisco.charAt(0).toUpperCase() + checklistAnalysis.nivelRisco.slice(1)}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{checklistAnalysis.resumo}</p>
-                          </div>
-
-                          {/* Security Alerts */}
-                          {checklistAnalysis.alertasSeguranca.length > 0 && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                              <h5 className="font-semibold text-sm text-red-600 flex items-center gap-2 mb-2">
-                                <AlertTriangle className="w-4 h-4" />
-                                Alertas de Segurança
-                              </h5>
-                              <ul className="space-y-1">
-                                {checklistAnalysis.alertasSeguranca.map((alerta, idx) => (
-                                  <li key={idx} className="text-sm text-red-700 flex items-start gap-2">
-                                    <span className="mt-1.5 w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />
-                                    {alerta}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {/* Identified Problems */}
-                          {checklistAnalysis.problemasIdentificados.length > 0 && (
-                            <div className="space-y-3">
-                              <h5 className="font-semibold text-sm flex items-center gap-2">
-                                <Activity className="w-4 h-4 text-orange-500" />
-                                Problemas Identificados ({checklistAnalysis.problemasIdentificados.length})
-                              </h5>
-                              <div className="grid gap-2">
-                                {checklistAnalysis.problemasIdentificados.map((problema, idx) => (
-                                  <div 
-                                    key={idx} 
-                                    className={cn(
-                                      "p-3 rounded-lg border flex flex-col md:flex-row md:items-center justify-between gap-2",
-                                      problema.risco === 'critico' && "border-red-500/30 bg-red-500/5",
-                                      problema.risco === 'alto' && "border-orange-500/30 bg-orange-500/5",
-                                      problema.risco === 'medio' && "border-yellow-500/30 bg-yellow-500/5",
-                                      problema.risco === 'baixo' && "border-green-500/30 bg-green-500/5"
-                                    )}
-                                  >
-                                    <div className="flex-1 space-y-1">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-medium text-sm">{problema.item}</span>
-                                        <Badge variant="outline" className={cn(
-                                          "text-xs",
-                                          problema.urgencia === 'imediata' && "border-red-500 text-red-600",
-                                          problema.urgencia === 'proxima_revisao' && "border-yellow-500 text-yellow-600",
-                                          problema.urgencia === 'monitorar' && "border-blue-500 text-blue-600"
-                                        )}>
-                                          {problema.urgencia === 'imediata' ? 'Imediata' : 
-                                           problema.urgencia === 'proxima_revisao' ? 'Próxima Revisão' : 'Monitorar'}
-                                        </Badge>
-                                      </div>
-                                      <p className="text-xs text-muted-foreground">{problema.descricao}</p>
-                                      <p className="text-xs text-primary font-medium">{problema.servicoSugerido}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      {problema.valorEstimado > 0 && (
-                                        <span className="text-sm font-semibold text-green-600">
-                                          {formatCurrency(problema.valorEstimado)}
-                                        </span>
-                                      )}
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                          setNewItem({
-                                            descricao: problema.servicoSugerido,
-                                            tipo: "servico",
-                                            quantidade: 1,
-                                            valor_custo: 0,
-                                            margem: 40,
-                                            valor_unitario: problema.valorEstimado,
-                                            prioridade: problema.risco === 'critico' || problema.risco === 'alto' ? 'vermelho' : 
-                                                        problema.risco === 'medio' ? 'amarelo' : 'verde',
-                                            data_retorno_estimada: ""
-                                          });
-                                          setShowAddItemDialog(true);
-                                        }}
-                                      >
-                                        <Plus className="w-3 h-3 mr-1" />
-                                        Adicionar
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* General Recommendations */}
-                          {checklistAnalysis.recomendacoesGerais.length > 0 && (
-                            <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
-                              <h5 className="font-semibold text-sm text-blue-600 flex items-center gap-2 mb-2">
-                                <Lightbulb className="w-4 h-4" />
-                                Recomendações Gerais
-                              </h5>
-                              <ul className="space-y-1">
-                                {checklistAnalysis.recomendacoesGerais.map((rec, idx) => (
-                                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                                    <span className="mt-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
-                                    {rec}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {/* Upcoming Services */}
-                          {checklistAnalysis.proximosServicos.length > 0 && (
-                            <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
-                              <h5 className="font-semibold text-sm text-purple-600 flex items-center gap-2 mb-2">
-                                <Calendar className="w-4 h-4" />
-                                Próximos Serviços Recomendados
-                              </h5>
-                              <ul className="space-y-1">
-                                {checklistAnalysis.proximosServicos.map((serv, idx) => (
-                                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                                    <span className="mt-1.5 w-1.5 h-1.5 bg-purple-500 rounded-full flex-shrink-0" />
-                                    {serv}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {!checklistAnalysis && !isLoadingChecklistAI && !checklistAIError && (
-                        <p className="text-xs text-muted-foreground text-center py-4">
-                          Clique em "Analisar com IA" para identificar problemas automaticamente baseado no checklist
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-
-            {/* Fotos e Vídeos Section - With Google Drive Link */}
-            <Collapsible open={fotosOpen} onOpenChange={setFotosOpen}>
-              <Card className="bg-card/50 border-border/50">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                    <CardTitle className="flex items-center justify-between text-lg">
-                      <div className="flex items-center gap-2">
-                        <Camera className="w-5 h-5" />
-                        Fotos e Vídeos
-                        {googleDriveLink && (
-                          <Badge variant="secondary" className="ml-2 gap-1">
-                            <Link className="w-3 h-3" />
-                            Link
-                          </Badge>
-                        )}
-                      </div>
-                      {fotosOpen ? (
-                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0 space-y-4">
-                    {/* Google Drive Link */}
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-sm">
-                        <Link className="w-4 h-4" />
-                        Link do Google Drive (Fotos/Vídeos)
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={googleDriveLink}
-                          onChange={(e) => setGoogleDriveLink(e.target.value)}
-                          placeholder="https://drive.google.com/drive/folders/..."
-                          className="flex-1"
-                        />
-                        {googleDriveLink && (
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => window.open(googleDriveLink, '_blank')}
-                          >
-                            <Link className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Cole o link da pasta do Google Drive para manter as fotos e vídeos organizados
-                      </p>
-                    </div>
-
-                    {googleDriveLink ? (
-                      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <Image className="w-6 h-6 text-blue-600" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">Pasta do Google Drive</p>
-                            <p className="text-xs text-muted-foreground truncate max-w-[300px]">
-                              {googleDriveLink}
-                            </p>
-                          </div>
-                          <Button 
-                            size="sm" 
-                            onClick={() => window.open(googleDriveLink, '_blank')}
-                            className="gap-2"
-                          >
-                            <Link className="w-4 h-4" />
-                            Abrir
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-6 text-muted-foreground border-2 border-dashed border-border rounded-lg">
-                        <Image className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Adicione o link do Google Drive</p>
-                        <p className="text-xs">As fotos ficam no Drive para não pesar a página</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-
-            {/* Diagnosis - After Fotos/Videos */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Wrench className="w-5 h-5" />
-                  Diagnóstico
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isEditing ? (
-                  <Textarea
-                    value={editedOS.diagnostico || ""}
-                    onChange={(e) => setEditedOS({ ...editedOS, diagnostico: e.target.value })}
-                    className="min-h-[100px]"
-                    placeholder="Diagnóstico técnico..."
-                  />
-                ) : (
-                  <p className="text-foreground whitespace-pre-wrap">
-                    {os.diagnostico || "Aguardando diagnóstico"}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Items / Budget - Serviços e Peças */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <DollarSign className="w-5 h-5" />
-                  Itens do Orçamento
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setShowAddMaoDeObraDialog(true)}>
-                    <Wrench className="w-4 h-4 mr-2" />
-                    Mão de Obra
-                  </Button>
-                  <Button size="sm" onClick={() => setShowAddItemDialog(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Item (Peça)
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {itens.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Nenhum item adicionado ao orçamento</p>
-                    <Button 
-                      variant="link" 
-                      className="mt-2"
-                      onClick={() => setShowAddItemDialog(true)}
-                    >
-                      Adicionar primeiro item
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {/* Mão de Obra Section */}
-                    {itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").length > 0 && (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 pb-2 border-b border-border">
-                          <Wrench className="w-4 h-4 text-primary" />
-                          <h4 className="font-semibold text-sm text-primary">MÃO DE OBRA</h4>
-                          <Badge variant="secondary" className="ml-auto text-xs">
-                            {itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").length} itens
-                          </Badge>
-                        </div>
-                        {itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").map((item) => {
-                          const itemStatus = itemStatusConfig[item.status] || itemStatusConfig.pendente;
-                          const prioridadeCfg = prioridadeConfig[item.prioridade || 'amarelo'];
-                          return (
-                            <div
-                              key={item.id}
-                              className={cn(
-                                "flex items-start justify-between p-4 rounded-lg border-2",
-                                prioridadeCfg.borderColor,
-                                prioridadeCfg.bgColor,
-                                item.status === "recusado" && "opacity-60"
-                              )}
-                            >
-                              <div className="flex-1 space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{item.descricao}</span>
-                                  <Badge variant="outline" className={cn(
-                                    "text-[10px] px-1.5",
-                                    item.prioridade === 'vermelho' && "border-red-500 text-red-600",
-                                    item.prioridade === 'amarelo' && "border-yellow-500 text-yellow-600",
-                                    item.prioridade === 'verde' && "border-green-500 text-green-600"
-                                  )}>
-                                    {prioridadeCfg.label}
-                                  </Badge>
-                                </div>
-                                <div className="text-sm font-medium">
-                                  {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
-                                </div>
-                                {item.data_retorno_estimada && (
-                                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
-                                    Retorno: {format(new Date(item.data_retorno_estimada), "dd/MM/yyyy", { locale: ptBR })}
-                                  </p>
-                                )}
-                                {item.justificativa_desconto && (
-                                  <p className="text-xs text-amber-600 bg-amber-500/10 px-2 py-1 rounded">
-                                    💬 {item.justificativa_desconto}
-                                  </p>
-                                )}
-                                {item.motivo_recusa && (
-                                  <p className="text-sm text-red-600">Motivo recusa: {item.motivo_recusa}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Select
-                                  value={item.status}
-                                  onValueChange={(value) => {
-                                    if (value === "recusado") {
-                                      const motivo = prompt("Motivo da recusa:");
-                                      updateItemStatusMutation.mutate({ 
-                                        itemId: item.id, 
-                                        status: value,
-                                        motivo_recusa: motivo || undefined
-                                      });
-                                    } else {
-                                      updateItemStatusMutation.mutate({ itemId: item.id, status: value });
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className={cn("w-32", itemStatus.color)}>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pendente">Pendente</SelectItem>
-                                    <SelectItem value="aprovado">Aprovado</SelectItem>
-                                    <SelectItem value="recusado">Recusado</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-destructive">
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Remover item?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Esta ação não pode ser desfeita.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => deleteItemMutation.mutate(item.id)}
-                                      >
-                                        Remover
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {/* Subtotal Mão de Obra */}
-                        <div className="flex justify-between text-sm px-4 py-2 bg-muted/50 rounded">
-                          <span className="text-muted-foreground">Subtotal Mão de Obra:</span>
-                          <span className="font-medium">
-                            {formatCurrency(itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").reduce((acc, item) => acc + (item.valor_total || 0), 0))}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Peças Section */}
-                    {itens.filter(i => i.tipo === "peca").length > 0 && (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 pb-2 border-b border-border">
-                          <Car className="w-4 h-4 text-orange-500" />
-                          <h4 className="font-semibold text-sm text-orange-600">PEÇAS</h4>
-                          <Badge variant="secondary" className="ml-auto text-xs">
-                            {itens.filter(i => i.tipo === "peca").length} itens
-                          </Badge>
-                        </div>
-                        {itens.filter(i => i.tipo === "peca").map((item) => {
-                          const itemStatus = itemStatusConfig[item.status] || itemStatusConfig.pendente;
-                          const prioridadeCfg = prioridadeConfig[item.prioridade || 'amarelo'];
-                          return (
-                            <div
-                              key={item.id}
-                              className={cn(
-                                "flex items-start justify-between p-4 rounded-lg border-2",
-                                prioridadeCfg.borderColor,
-                                prioridadeCfg.bgColor,
-                                item.status === "recusado" && "opacity-60"
-                              )}
-                            >
-                              <div className="flex-1 space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{item.descricao}</span>
-                                  <Badge variant="outline" className={cn(
-                                    "text-[10px] px-1.5",
-                                    item.prioridade === 'vermelho' && "border-red-500 text-red-600",
-                                    item.prioridade === 'amarelo' && "border-yellow-500 text-yellow-600",
-                                    item.prioridade === 'verde' && "border-green-500 text-green-600"
-                                  )}>
-                                    {prioridadeCfg.label}
-                                  </Badge>
-                                </div>
-                                <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                                  <span>Custo: {formatCurrency(item.valor_custo || 0)}</span>
-                                  <span>Venda: {formatCurrency(item.valor_unitario)}</span>
-                                  <span className={cn(
-                                    "font-medium",
-                                    (item.margem_aplicada || 0) < MARGEM_MINIMA ? "text-red-600" : "text-green-600"
-                                  )}>
-                                    Margem: {(item.margem_aplicada || 0).toFixed(0)}%
-                                  </span>
-                                </div>
-                                <div className="text-sm font-medium">
-                                  {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
-                                </div>
-                                {item.data_retorno_estimada && (
-                                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
-                                    Retorno: {format(new Date(item.data_retorno_estimada), "dd/MM/yyyy", { locale: ptBR })}
-                                  </p>
-                                )}
-                                {item.justificativa_desconto && (
-                                  <p className="text-xs text-amber-600 bg-amber-500/10 px-2 py-1 rounded">
-                                    💬 {item.justificativa_desconto}
-                                  </p>
-                                )}
-                                {item.motivo_recusa && (
-                                  <p className="text-sm text-red-600">Motivo recusa: {item.motivo_recusa}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Select
-                                  value={item.status}
-                                  onValueChange={(value) => {
-                                    if (value === "recusado") {
-                                      const motivo = prompt("Motivo da recusa:");
-                                      updateItemStatusMutation.mutate({ 
-                                        itemId: item.id, 
-                                        status: value,
-                                        motivo_recusa: motivo || undefined
-                                      });
-                                    } else {
-                                      updateItemStatusMutation.mutate({ itemId: item.id, status: value });
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className={cn("w-32", itemStatus.color)}>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pendente">Pendente</SelectItem>
-                                    <SelectItem value="aprovado">Aprovado</SelectItem>
-                                    <SelectItem value="recusado">Recusado</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-destructive">
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Remover item?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Esta ação não pode ser desfeita.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => deleteItemMutation.mutate(item.id)}
-                                      >
-                                        Remover
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {/* Subtotal Peças */}
-                        <div className="flex justify-between text-sm px-4 py-2 bg-muted/50 rounded">
-                          <span className="text-muted-foreground">Subtotal Peças:</span>
-                          <span className="font-medium">
-                            {formatCurrency(itens.filter(i => i.tipo === "peca").reduce((acc, item) => acc + (item.valor_total || 0), 0))}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Grand Totals */}
-                    <div className="border-t-2 border-border pt-4 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Orçado:</span>
-                        <span className="font-semibold">{formatCurrency(totalOrcado)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-green-600">Total Aprovado:</span>
-                        <span className="font-semibold text-green-600">{formatCurrency(totalAprovado)}</span>
-                      </div>
-                      {totalRecusado > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-red-600">Total Recusado:</span>
-                          <span className="font-semibold text-red-600">{formatCurrency(totalRecusado)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column - Status & Actions */}
-          <div className="space-y-4">
-            {/* Status Card */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Status da OS</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Select value={os.status} onValueChange={handleStatusChange}>
-                  <SelectTrigger className={cn(currentStatus.color)}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="diagnostico">Diagnóstico</SelectItem>
-                    <SelectItem value="orcamento">Orçamento</SelectItem>
-                    <SelectItem value="aguardando_aprovacao">Aguardando Aprovação</SelectItem>
-                    <SelectItem value="aprovado">Aprovado</SelectItem>
-                    <SelectItem value="parcial">Parcialmente Aprovado</SelectItem>
-                    <SelectItem value="recusado">Recusado</SelectItem>
-                    <SelectItem value="em_execucao">Em Execução</SelectItem>
-                    <SelectItem value="concluido">Concluído</SelectItem>
-                    <SelectItem value="entregue">Entregue</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Mechanic assignment */}
-                <div className="space-y-1">
-                  <Label className="text-xs">Mecânico</Label>
-                  <Select
-                    value={os.mechanic_id || "none"}
-                    onValueChange={(value) => {
-                      updateOSMutation.mutate({ mechanic_id: value === "none" ? null : value });
-                    }}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Selecionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Não atribuído</SelectItem>
-                      {mechanics.map((mec) => (
-                        <SelectItem key={mec.id} value={mec.id}>
-                          {mec.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Dates Card - Compact */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Calendar className="w-4 h-4" />
-                  Datas
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Entrada:</span>
-                  <span>{formatDate(os.data_entrada)}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Orçamento:</span>
-                  <span>{formatDate(os.data_orcamento)}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Aprovação:</span>
-                  <span>{formatDate(os.data_aprovacao)}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Conclusão:</span>
-                  <span>{formatDate(os.data_conclusao)}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Entrega:</span>
-                  <span>{formatDate(os.data_entrega)}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Observations - Compact */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Observações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isEditing ? (
-                  <Textarea
-                    value={editedOS.observacoes || ""}
-                    onChange={(e) => setEditedOS({ ...editedOS, observacoes: e.target.value })}
-                    placeholder="Observações internas..."
-                    className="min-h-[60px] text-sm"
-                  />
-                ) : (
-                  <p className="text-xs text-foreground whitespace-pre-wrap">
-                    {os.observacoes || "Nenhuma observação"}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* AI Sales Assistant - Smart Suggestions */}
-            <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center justify-between text-base">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-purple-500" />
-                    Sugestões IA
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-7 px-2 text-xs gap-1"
-                    onClick={fetchAISuggestions}
-                    disabled={isLoadingAI}
-                  >
-                    {isLoadingAI ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-3 h-3" />
-                    )}
-                    {isLoadingAI ? 'Analisando...' : 'Gerar'}
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {/* Cashback hint */}
-                {(() => {
-                  const currentTotal = totalAprovado || totalOrcado || 0;
-                  const nextTier = currentTotal < 500 ? 500 : currentTotal < 1000 ? 1000 : currentTotal < 2000 ? 2000 : 5000;
-                  const remaining = nextTier - currentTotal;
-                  const cashbackPercent = nextTier >= 2000 ? 10 : nextTier >= 1000 ? 7 : 5;
-                  
-                  if (remaining > 0 && remaining < nextTier) {
-                    return (
-                      <div className="p-2 rounded bg-green-500/10 border border-green-500/20">
-                        <p className="text-xs">
-                          <Gift className="w-3 h-3 inline mr-1 text-green-600" />
-                          Faltam <strong className="text-green-600">{formatCurrency(remaining)}</strong> para {cashbackPercent}% cashback
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-
-                {/* AI Error */}
-                {aiError && (
-                  <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
-                    <p className="text-xs text-red-600">{aiError}</p>
-                  </div>
-                )}
-
-                {/* AI Sales Tip */}
-                {aiDicaVenda && (
-                  <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20">
-                    <p className="text-xs flex items-start gap-1.5">
-                      <Lightbulb className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-amber-700">{aiDicaVenda}</span>
-                    </p>
-                  </div>
-                )}
-
-                {/* AI Suggestions */}
-                {aiSuggestions.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {aiSuggestions.map((sug, idx) => {
-                      const priorityColors: Record<string, string> = {
-                        vermelho: 'border-l-red-500',
-                        amarelo: 'border-l-yellow-500',
-                        verde: 'border-l-green-500'
-                      };
-                      return (
-                        <div 
-                          key={idx} 
-                          className={cn(
-                            "p-2 bg-background/50 rounded border-l-2",
-                            priorityColors[sug.prioridade] || 'border-l-muted'
-                          )}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{sug.descricao}</p>
-                              <p className="text-[10px] text-muted-foreground line-clamp-2">{sug.justificativa}</p>
-                            </div>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="h-6 px-2 text-xs flex-shrink-0 text-green-600 hover:text-green-700 hover:bg-green-500/10"
-                              onClick={() => {
-                                setNewMaoDeObra({ 
-                                  descricao: sug.descricao, 
-                                  quantidade: 1, 
-                                  valor_unitario: sug.valorEstimado, 
-                                  prioridade: sug.prioridade, 
-                                  data_retorno_estimada: "" 
-                                });
-                                setShowAddMaoDeObraDialog(true);
-                              }}
-                            >
-                              +{formatCurrency(sug.valorEstimado)}
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : !isLoadingAI && !aiError ? (
-                  <div className="text-center py-4">
-                    <Sparkles className="w-6 h-6 text-muted-foreground mx-auto mb-2 opacity-50" />
-                    <p className="text-xs text-muted-foreground">
-                      Clique em "Gerar" para receber sugestões<br />baseadas no diagnóstico
-                    </p>
-                  </div>
-                ) : null}
-
-                {isLoadingAI && (
-                  <div className="text-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-purple-500 mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground">Analisando diagnóstico...</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Values + Tools */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <DollarSign className="w-4 h-4" />
-                  Valores
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Orçado:</span>
-                    <span className="font-medium">{formatCurrency(totalOrcado || os.valor_orcado)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-green-600">Aprovado:</span>
-                    <span className="font-medium text-green-600">{formatCurrency(totalAprovado || os.valor_aprovado)}</span>
-                  </div>
-                  <div className="border-t border-border pt-2">
-                    <div className="flex justify-between">
-                      <span className="font-medium text-sm">Final:</span>
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          className="w-28 h-8 text-right text-sm"
-                          value={editedOS.valor_final || 0}
-                          onChange={(e) => setEditedOS({ ...editedOS, valor_final: parseFloat(e.target.value) || 0 })}
-                        />
-                      ) : (
-                        <span className="font-bold text-lg">{formatCurrency(os.valor_final)}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Calculator and Discount buttons */}
-                <div className="flex gap-2 pt-2 border-t border-border">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 h-8 text-xs gap-1"
-                    onClick={() => setShowCalculator(true)}
-                  >
-                    <Calculator className="w-3 h-3" />
-                    Calculadora
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 h-8 text-xs gap-1"
-                    onClick={() => toast.info("Funcionalidade em desenvolvimento")}
-                  >
-                    <Zap className="w-3 h-3" />
-                    Desconto
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Enviar Orçamento */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Send className="w-4 h-4" />
-                  Enviar Orçamento
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full justify-start gap-2 h-9"
-                  onClick={() => {
-                    const phone = os.client_phone?.replace(/\D/g, '');
-                    if (phone) {
-                      const message = encodeURIComponent(
-                        `Olá ${os.client_name || 'Cliente'}! 🚗\n\nSeu orçamento está pronto!\n\nOS: ${os.numero_os}\nVeículo: ${os.vehicle} - ${os.plate}\nValor Total: ${formatCurrency(totalOrcado)}\n\nPodemos prosseguir?`
-                      );
-                      window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
-                    } else {
-                      toast.error("Telefone do cliente não informado");
-                    }
-                  }}
-                >
-                  <MessageSquare className="w-4 h-4 text-green-600" />
-                  Enviar por WhatsApp
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full justify-start gap-2 h-9"
-                  onClick={() => toast.info("Orçamento enviado pelo sistema")}
-                >
-                  <Send className="w-4 h-4 text-blue-600" />
-                  Enviar pelo Sistema
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full justify-start gap-2 h-9"
-                  onClick={() => toast.info("Gerando PDF para download...")}
-                >
-                  <Download className="w-4 h-4 text-purple-600" />
-                  Baixar PDF
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                Salvar
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" onClick={() => setIsEditing(true)}>
+              <Edit2 className="w-4 h-4 mr-2" />
+              Editar
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Add Item Dialog (Peças) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Main Info */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Client & Vehicle */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between text-lg">
+                <div className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Cliente e Veículo
+                </div>
+                {/* Loyalty Badge */}
+                {(() => {
+                  const loyalty = loyaltyBadgeConfig[clientLoyaltyLevel];
+                  const LoyaltyIcon = loyalty.icon;
+                  return (
+                    <Badge variant="outline" className={cn("gap-1.5 px-3 py-1", loyalty.color)}>
+                      <LoyaltyIcon className="w-4 h-4" />
+                      {loyalty.label}
+                    </Badge>
+                  );
+                })()}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Nome</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedOS.client_name || ""}
+                      onChange={(e) => setEditedOS({ ...editedOS, client_name: e.target.value })}
+                    />
+                  ) : (
+                    <p className="font-medium mt-1">{os.client_name || "-"}</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Telefone</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedOS.client_phone || ""}
+                      onChange={(e) => setEditedOS({ ...editedOS, client_phone: e.target.value })}
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="font-medium">{os.client_phone || "-"}</p>
+                      {os.client_phone && (
+                        <a
+                          href={`https://wa.me/55${os.client_phone.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          <Phone className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground flex items-center gap-1">
+                    KM Atual <span className="text-red-500">*</span>
+                  </Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedOS.km_atual || ""}
+                      onChange={(e) => setEditedOS({ ...editedOS, km_atual: e.target.value })}
+                      placeholder="Ex: 45.000"
+                      className={cn(!os.km_atual && "border-red-500/50")}
+                    />
+                  ) : (
+                    <p className={cn(
+                      "font-medium font-mono mt-1",
+                      !os.km_atual && "text-red-500"
+                    )}>
+                      {os.km_atual ? `${os.km_atual} km` : "⚠️ Não informado"}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Veículo</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedOS.vehicle || ""}
+                      onChange={(e) => setEditedOS({ ...editedOS, vehicle: e.target.value })}
+                    />
+                  ) : (
+                    <p className="font-medium mt-1">{os.vehicle}</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Placa</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedOS.plate || ""}
+                      onChange={(e) => setEditedOS({ ...editedOS, plate: e.target.value.toUpperCase() })}
+                    />
+                  ) : (
+                    <p className="font-medium font-mono mt-1">{os.plate}</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Problem Description */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="w-5 h-5" />
+                Descrição do Problema
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <Textarea
+                  value={editedOS.descricao_problema || ""}
+                  onChange={(e) => setEditedOS({ ...editedOS, descricao_problema: e.target.value })}
+                  className="min-h-[100px]"
+                  placeholder="Descreva o problema relatado..."
+                />
+              ) : (
+                <p className="text-foreground whitespace-pre-wrap">
+                  {os.descricao_problema || "Nenhuma descrição informada"}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Checklist Section - Moved below problem description */}
+          <Collapsible open={checklistOpen} onOpenChange={setChecklistOpen}>
+            <Card className="bg-card/50 border-border/50">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="flex items-center justify-between text-lg">
+                    <div className="flex items-center gap-2">
+                      <ClipboardCheck className="w-5 h-5" />
+                      Checklist
+                      {(Object.values(checklistEntrada).some(v => v) ||
+                        Object.values(checklistDyno).some(v => v) ||
+                        Object.values(checklistPreCompra).some(v => v)) && (
+                          <Badge variant="secondary" className="ml-2">Preenchido</Badge>
+                        )}
+                    </div>
+                    {checklistOpen ? (
+                      <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0 space-y-4">
+                  <Tabs value={checklistType} onValueChange={(v) => setChecklistType(v as 'entrada' | 'dinamometro' | 'precompra' | 'geral')}>
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="entrada" className="flex items-center gap-1 text-xs">
+                        <ClipboardCheck className="w-3 h-3" />
+                        <span className="hidden sm:inline">Entrada</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="dinamometro" className="flex items-center gap-1 text-xs">
+                        <Gauge className="w-3 h-3" />
+                        <span className="hidden sm:inline">Dyno</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="precompra" className="flex items-center gap-1 text-xs">
+                        <ShieldCheck className="w-3 h-3" />
+                        <span className="hidden sm:inline">Pré-Compra</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="geral" className="flex items-center gap-1 text-xs">
+                        <FileText className="w-3 h-3" />
+                        <span className="hidden sm:inline">Geral</span>
+                      </TabsTrigger>
+                    </TabsList>
+
+                    {/* Checklist Entrada - Com itens obrigatórios */}
+                    <TabsContent value="entrada" className="mt-4 space-y-4">
+                      {/* Itens Obrigatórios */}
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-sm flex items-center gap-2 text-red-600">
+                          <AlertTriangle className="w-4 h-4" />
+                          Obrigatórios
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-red-500/5 border border-red-500/20 rounded-lg">
+                          {[
+                            { key: "nivelOleo", label: "Nível de Óleo" },
+                            { key: "nivelAgua", label: "Nível de Água" },
+                            { key: "freios", label: "Freios" },
+                            { key: "kmAtual", label: "KM Atual Registrado" },
+                          ].map((item) => (
+                            <div key={item.key} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`entrada-obr-${item.key}`}
+                                checked={checklistEntrada[item.key] || false}
+                                onCheckedChange={(checked) => {
+                                  const updated = { ...checklistEntrada, [item.key]: checked === true };
+                                  setChecklistEntrada(updated);
+                                  updateOSMutation.mutate({ checklist_entrada: updated, _isChecklistUpdate: true });
+                                }}
+                              />
+                              <label htmlFor={`entrada-obr-${item.key}`} className="text-sm font-medium leading-none cursor-pointer">
+                                {item.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Itens Opcionais */}
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-sm text-muted-foreground">Verificações Adicionais</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {[
+                            { key: "pneus", label: "Pneus" },
+                            { key: "luzes", label: "Luzes" },
+                            { key: "bateria", label: "Bateria" },
+                            { key: "correia", label: "Correia" },
+                            { key: "suspensao", label: "Suspensão" },
+                            { key: "limpadores", label: "Limpadores" },
+                            { key: "arCondicionado", label: "Ar Condicionado" },
+                            { key: "vidros", label: "Vidros" },
+                          ].map((item) => (
+                            <div key={item.key} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`entrada-${item.key}`}
+                                checked={checklistEntrada[item.key] || false}
+                                onCheckedChange={(checked) => {
+                                  const updated = { ...checklistEntrada, [item.key]: checked === true };
+                                  setChecklistEntrada(updated);
+                                  updateOSMutation.mutate({ checklist_entrada: updated, _isChecklistUpdate: true });
+                                }}
+                              />
+                              <label htmlFor={`entrada-${item.key}`} className="text-sm leading-none cursor-pointer">
+                                {item.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Scanner / Códigos de Erro */}
+                      <div className="space-y-3 pt-4 border-t border-border">
+                        <h4 className="font-semibold text-sm flex items-center gap-2 text-blue-600">
+                          <Scan className="w-4 h-4" />
+                          Scanner / Códigos de Erro
+                        </h4>
+                        {isEditing ? (
+                          <Textarea
+                            value={scannerAvarias}
+                            onChange={(e) => setScannerAvarias(e.target.value)}
+                            placeholder="Códigos de erro do scanner (ex: P0300, P0171)..."
+                            className="min-h-[80px]"
+                          />
+                        ) : (
+                          <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg min-h-[60px]">
+                            <p className="text-sm text-foreground whitespace-pre-wrap">
+                              {scannerAvarias || "Nenhum código registrado"}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* Checklist Dinamômetro */}
+                    <TabsContent value="dinamometro" className="mt-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {[
+                          { key: "combustivelAdequado", label: "Combustível adequado" },
+                          { key: "oleoNivel", label: "Óleo no nível correto" },
+                          { key: "arrefecimentoOk", label: "Arrefecimento ok" },
+                          { key: "pneusCalibrados", label: "Pneus calibrados" },
+                          { key: "correiasPolias", label: "Correias e polias" },
+                          { key: "escapamentoOk", label: "Escapamento ok" },
+                          { key: "sensorOxigenio", label: "Sensor de oxigênio" },
+                          { key: "ignioOk", label: "Sistema de ignição" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`dyno-${item.key}`}
+                              checked={checklistDyno[item.key] || false}
+                              onCheckedChange={(checked) => {
+                                const updated = { ...checklistDyno, [item.key]: checked === true };
+                                setChecklistDyno(updated);
+                                updateOSMutation.mutate({ checklist_dinamometro: updated, _isChecklistUpdate: true });
+                              }}
+                            />
+                            <label htmlFor={`dyno-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </TabsContent>
+
+                    {/* Checklist Pré-Compra */}
+                    <TabsContent value="precompra" className="mt-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {[
+                          { key: "documentacao", label: "Documentação em dia" },
+                          { key: "pintura", label: "Pintura original" },
+                          { key: "motor", label: "Motor ok" },
+                          { key: "cambio", label: "Câmbio ok" },
+                          { key: "suspensao", label: "Suspensão ok" },
+                          { key: "freios", label: "Freios ok" },
+                          { key: "eletrica", label: "Parte elétrica" },
+                          { key: "estrutura", label: "Estrutura íntegra" },
+                          { key: "historico", label: "Histórico limpo" },
+                          { key: "sinistro", label: "Sem sinistro" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`precompra-${item.key}`}
+                              checked={checklistPreCompra[item.key] || false}
+                              onCheckedChange={(checked) => {
+                                const updated = { ...checklistPreCompra, [item.key]: checked === true };
+                                setChecklistPreCompra(updated);
+                                updateOSMutation.mutate({ checklist_precompra: updated, _isChecklistUpdate: true });
+                              }}
+                            />
+                            <label htmlFor={`precompra-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </TabsContent>
+
+                    {/* Checklist Geral - Com muitos itens opcionais */}
+                    <TabsContent value="geral" className="mt-4 space-y-4">
+                      <p className="text-xs text-muted-foreground">Verificações completas para inspeção detalhada</p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {[
+                          { key: "parabrisa", label: "Parabrisa" },
+                          { key: "retrovisores", label: "Retrovisores" },
+                          { key: "cintos", label: "Cintos de segurança" },
+                          { key: "airbag", label: "Indicador Airbag" },
+                          { key: "buzina", label: "Buzina" },
+                          { key: "travaPortas", label: "Trava das portas" },
+                          { key: "vidrosEletricos", label: "Vidros elétricos" },
+                          { key: "bancosAjuste", label: "Ajuste dos bancos" },
+                          { key: "arCondicionadoFunc", label: "Funcionamento A/C" },
+                          { key: "aquecedor", label: "Aquecedor" },
+                          { key: "radioSom", label: "Rádio/Som" },
+                          { key: "painel", label: "Painel de instrumentos" },
+                          { key: "volanteFolga", label: "Folga do volante" },
+                          { key: "pedais", label: "Pedais" },
+                          { key: "freioMao", label: "Freio de mão" },
+                          { key: "cambioFunc", label: "Funcionamento câmbio" },
+                          { key: "embreagem", label: "Embreagem" },
+                          { key: "partidaMotor", label: "Partida do motor" },
+                          { key: "marcha", label: "Marcha lenta" },
+                          { key: "aceleracao", label: "Aceleração" },
+                          { key: "escapamento", label: "Escapamento" },
+                          { key: "direcao", label: "Direção" },
+                          { key: "amortecedores", label: "Amortecedores" },
+                          { key: "pneuEstepe", label: "Pneu estepe" },
+                          { key: "ferramentas", label: "Ferramentas" },
+                          { key: "triangulo", label: "Triângulo" },
+                          { key: "macaco", label: "Macaco" },
+                          { key: "chaveRodas", label: "Chave de rodas" },
+                        ].map((item) => (
+                          <div key={item.key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`geral-${item.key}`}
+                              checked={checklistGeral[item.key] || false}
+                              onCheckedChange={(checked) => {
+                                const updated = { ...checklistGeral, [item.key]: checked === true };
+                                setChecklistGeral(updated);
+                                // Save to a general checklist field if needed
+                              }}
+                            />
+                            <label htmlFor={`geral-${item.key}`} className="text-sm cursor-pointer">
+                              {item.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+
+                  {/* AI Checklist Analysis Section */}
+                  <div className="pt-4 border-t border-border space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-sm flex items-center gap-2 text-purple-600">
+                          <Sparkles className="w-4 h-4" />
+                          Análise Inteligente do Checklist
+                        </h4>
+                        {autoAnalysisPending && !isLoadingChecklistAI && (
+                          <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-500/30 animate-pulse">
+                            <Clock className="w-3 h-3" />
+                            Análise automática em 2s...
+                          </Badge>
+                        )}
+                        {isLoadingChecklistAI && (
+                          <Badge variant="outline" className="text-xs gap-1 text-purple-600 border-purple-500/30">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Analisando...
+                          </Badge>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchChecklistAnalysis(false)}
+                        disabled={isLoadingChecklistAI}
+                        className="gap-2"
+                      >
+                        {isLoadingChecklistAI ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4" />
+                        )}
+                        {isLoadingChecklistAI ? "Analisando..." : "Analisar com IA"}
+                      </Button>
+                    </div>
+
+                    {checklistAIError && (
+                      <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                        <p className="text-sm text-destructive">{checklistAIError}</p>
+                      </div>
+                    )}
+
+                    {checklistAnalysis && (
+                      <div className="space-y-4">
+                        {/* Summary and Risk Level */}
+                        <div className={cn(
+                          "p-4 rounded-lg border",
+                          checklistAnalysis.nivelRisco === 'critico' && "bg-red-500/10 border-red-500/30",
+                          checklistAnalysis.nivelRisco === 'alto' && "bg-orange-500/10 border-orange-500/30",
+                          checklistAnalysis.nivelRisco === 'medio' && "bg-yellow-500/10 border-yellow-500/30",
+                          checklistAnalysis.nivelRisco === 'baixo' && "bg-green-500/10 border-green-500/30"
+                        )}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold text-sm">Resumo da Análise</span>
+                            <Badge className={cn(
+                              checklistAnalysis.nivelRisco === 'critico' && "bg-red-500",
+                              checklistAnalysis.nivelRisco === 'alto' && "bg-orange-500",
+                              checklistAnalysis.nivelRisco === 'medio' && "bg-yellow-500",
+                              checklistAnalysis.nivelRisco === 'baixo' && "bg-green-500"
+                            )}>
+                              Risco {checklistAnalysis.nivelRisco.charAt(0).toUpperCase() + checklistAnalysis.nivelRisco.slice(1)}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{checklistAnalysis.resumo}</p>
+                        </div>
+
+                        {/* Security Alerts */}
+                        {checklistAnalysis.alertasSeguranca.length > 0 && (
+                          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                            <h5 className="font-semibold text-sm text-red-600 flex items-center gap-2 mb-2">
+                              <AlertTriangle className="w-4 h-4" />
+                              Alertas de Segurança
+                            </h5>
+                            <ul className="space-y-1">
+                              {checklistAnalysis.alertasSeguranca.map((alerta, idx) => (
+                                <li key={idx} className="text-sm text-red-700 flex items-start gap-2">
+                                  <span className="mt-1.5 w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />
+                                  {alerta}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Identified Problems */}
+                        {checklistAnalysis.problemasIdentificados.length > 0 && (
+                          <div className="space-y-3">
+                            <h5 className="font-semibold text-sm flex items-center gap-2">
+                              <Activity className="w-4 h-4 text-orange-500" />
+                              Problemas Identificados ({checklistAnalysis.problemasIdentificados.length})
+                            </h5>
+                            <div className="grid gap-2">
+                              {checklistAnalysis.problemasIdentificados.map((problema, idx) => (
+                                <div
+                                  key={idx}
+                                  className={cn(
+                                    "p-3 rounded-lg border flex flex-col md:flex-row md:items-center justify-between gap-2",
+                                    problema.risco === 'critico' && "border-red-500/30 bg-red-500/5",
+                                    problema.risco === 'alto' && "border-orange-500/30 bg-orange-500/5",
+                                    problema.risco === 'medio' && "border-yellow-500/30 bg-yellow-500/5",
+                                    problema.risco === 'baixo' && "border-green-500/30 bg-green-500/5"
+                                  )}
+                                >
+                                  <div className="flex-1 space-y-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-medium text-sm">{problema.item}</span>
+                                      <Badge variant="outline" className={cn(
+                                        "text-xs",
+                                        problema.urgencia === 'imediata' && "border-red-500 text-red-600",
+                                        problema.urgencia === 'proxima_revisao' && "border-yellow-500 text-yellow-600",
+                                        problema.urgencia === 'monitorar' && "border-blue-500 text-blue-600"
+                                      )}>
+                                        {problema.urgencia === 'imediata' ? 'Imediata' :
+                                          problema.urgencia === 'proxima_revisao' ? 'Próxima Revisão' : 'Monitorar'}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">{problema.descricao}</p>
+                                    <p className="text-xs text-primary font-medium">{problema.servicoSugerido}</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {problema.valorEstimado > 0 && (
+                                      <span className="text-sm font-semibold text-green-600">
+                                        {formatCurrency(problema.valorEstimado)}
+                                      </span>
+                                    )}
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setNewItem({
+                                          descricao: problema.servicoSugerido,
+                                          tipo: "servico",
+                                          quantidade: 1,
+                                          valor_custo: 0,
+                                          margem: 40,
+                                          valor_unitario: problema.valorEstimado,
+                                          prioridade: problema.risco === 'critico' || problema.risco === 'alto' ? 'vermelho' :
+                                            problema.risco === 'medio' ? 'amarelo' : 'verde',
+                                          data_retorno_estimada: ""
+                                        });
+                                        setShowAddItemDialog(true);
+                                      }}
+                                    >
+                                      <Plus className="w-3 h-3 mr-1" />
+                                      Adicionar
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* General Recommendations */}
+                        {checklistAnalysis.recomendacoesGerais.length > 0 && (
+                          <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                            <h5 className="font-semibold text-sm text-blue-600 flex items-center gap-2 mb-2">
+                              <Lightbulb className="w-4 h-4" />
+                              Recomendações Gerais
+                            </h5>
+                            <ul className="space-y-1">
+                              {checklistAnalysis.recomendacoesGerais.map((rec, idx) => (
+                                <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                  <span className="mt-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+                                  {rec}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Upcoming Services */}
+                        {checklistAnalysis.proximosServicos.length > 0 && (
+                          <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
+                            <h5 className="font-semibold text-sm text-purple-600 flex items-center gap-2 mb-2">
+                              <Calendar className="w-4 h-4" />
+                              Próximos Serviços Recomendados
+                            </h5>
+                            <ul className="space-y-1">
+                              {checklistAnalysis.proximosServicos.map((serv, idx) => (
+                                <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                  <span className="mt-1.5 w-1.5 h-1.5 bg-purple-500 rounded-full flex-shrink-0" />
+                                  {serv}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!checklistAnalysis && !isLoadingChecklistAI && !checklistAIError && (
+                      <p className="text-xs text-muted-foreground text-center py-4">
+                        Clique em "Analisar com IA" para identificar problemas automaticamente baseado no checklist
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Fotos e Vídeos Section - With Google Drive Link */}
+          <Collapsible open={fotosOpen} onOpenChange={setFotosOpen}>
+            <Card className="bg-card/50 border-border/50">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="flex items-center justify-between text-lg">
+                    <div className="flex items-center gap-2">
+                      <Camera className="w-5 h-5" />
+                      Fotos e Vídeos
+                      {googleDriveLink && (
+                        <Badge variant="secondary" className="ml-2 gap-1">
+                          <Link className="w-3 h-3" />
+                          Link
+                        </Badge>
+                      )}
+                    </div>
+                    {fotosOpen ? (
+                      <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0 space-y-4">
+                  {/* Google Drive Link */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm">
+                      <Link className="w-4 h-4" />
+                      Link do Google Drive (Fotos/Vídeos)
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={googleDriveLink}
+                        onChange={(e) => setGoogleDriveLink(e.target.value)}
+                        placeholder="https://drive.google.com/drive/folders/..."
+                        className="flex-1"
+                      />
+                      {googleDriveLink && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => window.open(googleDriveLink, '_blank')}
+                        >
+                          <Link className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Cole o link da pasta do Google Drive para manter as fotos e vídeos organizados
+                    </p>
+                  </div>
+
+                  {googleDriveLink ? (
+                    <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                          <Image className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">Pasta do Google Drive</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[300px]">
+                            {googleDriveLink}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => window.open(googleDriveLink, '_blank')}
+                          className="gap-2"
+                        >
+                          <Link className="w-4 h-4" />
+                          Abrir
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-muted-foreground border-2 border-dashed border-border rounded-lg">
+                      <Image className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Adicione o link do Google Drive</p>
+                      <p className="text-xs">As fotos ficam no Drive para não pesar a página</p>
+                    </div>
+                  )}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Diagnosis - After Fotos/Videos */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Wrench className="w-5 h-5" />
+                Diagnóstico
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <Textarea
+                  value={editedOS.diagnostico || ""}
+                  onChange={(e) => setEditedOS({ ...editedOS, diagnostico: e.target.value })}
+                  className="min-h-[100px]"
+                  placeholder="Diagnóstico técnico..."
+                />
+              ) : (
+                <p className="text-foreground whitespace-pre-wrap">
+                  {os.diagnostico || "Aguardando diagnóstico"}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Items / Budget - Serviços e Peças */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <DollarSign className="w-5 h-5" />
+                Itens do Orçamento
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setShowAddMaoDeObraDialog(true)}>
+                  <Wrench className="w-4 h-4 mr-2" />
+                  Mão de Obra
+                </Button>
+                <Button size="sm" onClick={() => setShowAddItemDialog(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Item (Peça)
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {itens.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhum item adicionado ao orçamento</p>
+                  <Button
+                    variant="link"
+                    className="mt-2"
+                    onClick={() => setShowAddItemDialog(true)}
+                  >
+                    Adicionar primeiro item
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Mão de Obra Section */}
+                  {itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border">
+                        <Wrench className="w-4 h-4 text-primary" />
+                        <h4 className="font-semibold text-sm text-primary">MÃO DE OBRA</h4>
+                        <Badge variant="secondary" className="ml-auto text-xs">
+                          {itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").length} itens
+                        </Badge>
+                      </div>
+                      {itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").map((item) => {
+                        const itemStatus = itemStatusConfig[item.status] || itemStatusConfig.pendente;
+                        const prioridadeCfg = prioridadeConfig[item.prioridade || 'amarelo'];
+                        return (
+                          <div
+                            key={item.id}
+                            className={cn(
+                              "flex items-start justify-between p-4 rounded-lg border-2",
+                              prioridadeCfg.borderColor,
+                              prioridadeCfg.bgColor,
+                              item.status === "recusado" && "opacity-60"
+                            )}
+                          >
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{item.descricao}</span>
+                                <Badge variant="outline" className={cn(
+                                  "text-[10px] px-1.5",
+                                  item.prioridade === 'vermelho' && "border-red-500 text-red-600",
+                                  item.prioridade === 'amarelo' && "border-yellow-500 text-yellow-600",
+                                  item.prioridade === 'verde' && "border-green-500 text-green-600"
+                                )}>
+                                  {prioridadeCfg.label}
+                                </Badge>
+                              </div>
+                              <div className="text-sm font-medium">
+                                {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
+                              </div>
+                              {item.data_retorno_estimada && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  Retorno: {format(new Date(item.data_retorno_estimada), "dd/MM/yyyy", { locale: ptBR })}
+                                </p>
+                              )}
+                              {item.justificativa_desconto && (
+                                <p className="text-xs text-amber-600 bg-amber-500/10 px-2 py-1 rounded">
+                                  💬 {item.justificativa_desconto}
+                                </p>
+                              )}
+                              {item.motivo_recusa && (
+                                <p className="text-sm text-red-600">Motivo recusa: {item.motivo_recusa}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={item.status}
+                                onValueChange={(value) => {
+                                  if (value === "recusado") {
+                                    const motivo = prompt("Motivo da recusa:");
+                                    updateItemStatusMutation.mutate({
+                                      itemId: item.id,
+                                      status: value,
+                                      motivo_recusa: motivo || undefined
+                                    });
+                                  } else {
+                                    updateItemStatusMutation.mutate({ itemId: item.id, status: value });
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className={cn("w-32", itemStatus.color)}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pendente">Pendente</SelectItem>
+                                  <SelectItem value="aprovado">Aprovado</SelectItem>
+                                  <SelectItem value="recusado">Recusado</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remover item?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => deleteItemMutation.mutate(item.id)}
+                                    >
+                                      Remover
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {/* Subtotal Mão de Obra */}
+                      <div className="flex justify-between text-sm px-4 py-2 bg-muted/50 rounded">
+                        <span className="text-muted-foreground">Subtotal Mão de Obra:</span>
+                        <span className="font-medium">
+                          {formatCurrency(itens.filter(i => i.tipo === "servico" || i.tipo === "mao_de_obra").reduce((acc, item) => acc + (item.valor_total || 0), 0))}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Peças Section */}
+                  {itens.filter(i => i.tipo === "peca").length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border">
+                        <Car className="w-4 h-4 text-orange-500" />
+                        <h4 className="font-semibold text-sm text-orange-600">PEÇAS</h4>
+                        <Badge variant="secondary" className="ml-auto text-xs">
+                          {itens.filter(i => i.tipo === "peca").length} itens
+                        </Badge>
+                      </div>
+                      {itens.filter(i => i.tipo === "peca").map((item) => {
+                        const itemStatus = itemStatusConfig[item.status] || itemStatusConfig.pendente;
+                        const prioridadeCfg = prioridadeConfig[item.prioridade || 'amarelo'];
+                        return (
+                          <div
+                            key={item.id}
+                            className={cn(
+                              "flex items-start justify-between p-4 rounded-lg border-2",
+                              prioridadeCfg.borderColor,
+                              prioridadeCfg.bgColor,
+                              item.status === "recusado" && "opacity-60"
+                            )}
+                          >
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{item.descricao}</span>
+                                <Badge variant="outline" className={cn(
+                                  "text-[10px] px-1.5",
+                                  item.prioridade === 'vermelho' && "border-red-500 text-red-600",
+                                  item.prioridade === 'amarelo' && "border-yellow-500 text-yellow-600",
+                                  item.prioridade === 'verde' && "border-green-500 text-green-600"
+                                )}>
+                                  {prioridadeCfg.label}
+                                </Badge>
+                              </div>
+                              <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                                <span>Custo: {formatCurrency(item.valor_custo || 0)}</span>
+                                <span>Venda: {formatCurrency(item.valor_unitario)}</span>
+                                <span className={cn(
+                                  "font-medium",
+                                  (item.margem_aplicada || 0) < MARGEM_MINIMA ? "text-red-600" : "text-green-600"
+                                )}>
+                                  Margem: {(item.margem_aplicada || 0).toFixed(0)}%
+                                </span>
+                              </div>
+                              <div className="text-sm font-medium">
+                                {item.quantidade}x {formatCurrency(item.valor_unitario)} = {formatCurrency(item.valor_total)}
+                              </div>
+                              {item.data_retorno_estimada && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  Retorno: {format(new Date(item.data_retorno_estimada), "dd/MM/yyyy", { locale: ptBR })}
+                                </p>
+                              )}
+                              {item.justificativa_desconto && (
+                                <p className="text-xs text-amber-600 bg-amber-500/10 px-2 py-1 rounded">
+                                  💬 {item.justificativa_desconto}
+                                </p>
+                              )}
+                              {item.motivo_recusa && (
+                                <p className="text-sm text-red-600">Motivo recusa: {item.motivo_recusa}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={item.status}
+                                onValueChange={(value) => {
+                                  if (value === "recusado") {
+                                    const motivo = prompt("Motivo da recusa:");
+                                    updateItemStatusMutation.mutate({
+                                      itemId: item.id,
+                                      status: value,
+                                      motivo_recusa: motivo || undefined
+                                    });
+                                  } else {
+                                    updateItemStatusMutation.mutate({ itemId: item.id, status: value });
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className={cn("w-32", itemStatus.color)}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pendente">Pendente</SelectItem>
+                                  <SelectItem value="aprovado">Aprovado</SelectItem>
+                                  <SelectItem value="recusado">Recusado</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remover item?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => deleteItemMutation.mutate(item.id)}
+                                    >
+                                      Remover
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {/* Subtotal Peças */}
+                      <div className="flex justify-between text-sm px-4 py-2 bg-muted/50 rounded">
+                        <span className="text-muted-foreground">Subtotal Peças:</span>
+                        <span className="font-medium">
+                          {formatCurrency(itens.filter(i => i.tipo === "peca").reduce((acc, item) => acc + (item.valor_total || 0), 0))}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Grand Totals */}
+                  <div className="border-t-2 border-border pt-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total Orçado:</span>
+                      <span className="font-semibold">{formatCurrency(totalOrcado)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600">Total Aprovado:</span>
+                      <span className="font-semibold text-green-600">{formatCurrency(totalAprovado)}</span>
+                    </div>
+                    {totalRecusado > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-red-600">Total Recusado:</span>
+                        <span className="font-semibold text-red-600">{formatCurrency(totalRecusado)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Status & Actions */}
+        <div className="space-y-4">
+          {/* Status Card */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Status da OS</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Select value={os.status} onValueChange={handleStatusChange}>
+                <SelectTrigger className={cn(currentStatus.color)}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="diagnostico">Diagnóstico</SelectItem>
+                  <SelectItem value="orcamento">Orçamento</SelectItem>
+                  <SelectItem value="aguardando_aprovacao">Aguardando Aprovação</SelectItem>
+                  <SelectItem value="aprovado">Aprovado</SelectItem>
+                  <SelectItem value="parcial">Parcialmente Aprovado</SelectItem>
+                  <SelectItem value="recusado">Recusado</SelectItem>
+                  <SelectItem value="em_execucao">Em Execução</SelectItem>
+                  <SelectItem value="concluido">Concluído</SelectItem>
+                  <SelectItem value="entregue">Entregue</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Mechanic assignment */}
+              <div className="space-y-1">
+                <Label className="text-xs">Mecânico</Label>
+                <Select
+                  value={os.mechanic_id || "none"}
+                  onValueChange={(value) => {
+                    updateOSMutation.mutate({ mechanic_id: value === "none" ? null : value });
+                  }}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Selecionar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Não atribuído</SelectItem>
+                    {mechanics.map((mec) => (
+                      <SelectItem key={mec.id} value={mec.id}>
+                        {mec.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dates Card - Compact */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Calendar className="w-4 h-4" />
+                Datas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Entrada:</span>
+                <span>{formatDate(os.data_entrada)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Orçamento:</span>
+                <span>{formatDate(os.data_orcamento)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Aprovação:</span>
+                <span>{formatDate(os.data_aprovacao)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Conclusão:</span>
+                <span>{formatDate(os.data_conclusao)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Entrega:</span>
+                <span>{formatDate(os.data_entrega)}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Observations - Compact */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Observações</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <Textarea
+                  value={editedOS.observacoes || ""}
+                  onChange={(e) => setEditedOS({ ...editedOS, observacoes: e.target.value })}
+                  placeholder="Observações internas..."
+                  className="min-h-[60px] text-sm"
+                />
+              ) : (
+                <p className="text-xs text-foreground whitespace-pre-wrap">
+                  {os.observacoes || "Nenhuma observação"}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* AI Sales Assistant - Smart Suggestions */}
+          <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-base">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  Sugestões IA
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs gap-1"
+                  onClick={fetchAISuggestions}
+                  disabled={isLoadingAI}
+                >
+                  {isLoadingAI ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3 h-3" />
+                  )}
+                  {isLoadingAI ? 'Analisando...' : 'Gerar'}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {/* Cashback hint */}
+              {(() => {
+                const currentTotal = totalAprovado || totalOrcado || 0;
+                const nextTier = currentTotal < 500 ? 500 : currentTotal < 1000 ? 1000 : currentTotal < 2000 ? 2000 : 5000;
+                const remaining = nextTier - currentTotal;
+                const cashbackPercent = nextTier >= 2000 ? 10 : nextTier >= 1000 ? 7 : 5;
+
+                if (remaining > 0 && remaining < nextTier) {
+                  return (
+                    <div className="p-2 rounded bg-green-500/10 border border-green-500/20">
+                      <p className="text-xs">
+                        <Gift className="w-3 h-3 inline mr-1 text-green-600" />
+                        Faltam <strong className="text-green-600">{formatCurrency(remaining)}</strong> para {cashbackPercent}% cashback
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* AI Error */}
+              {aiError && (
+                <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
+                  <p className="text-xs text-red-600">{aiError}</p>
+                </div>
+              )}
+
+              {/* AI Sales Tip */}
+              {aiDicaVenda && (
+                <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20">
+                  <p className="text-xs flex items-start gap-1.5">
+                    <Lightbulb className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-amber-700">{aiDicaVenda}</span>
+                  </p>
+                </div>
+              )}
+
+              {/* AI Suggestions */}
+              {aiSuggestions.length > 0 ? (
+                <div className="space-y-1.5">
+                  {aiSuggestions.map((sug, idx) => {
+                    const priorityColors: Record<string, string> = {
+                      vermelho: 'border-l-red-500',
+                      amarelo: 'border-l-yellow-500',
+                      verde: 'border-l-green-500'
+                    };
+                    return (
+                      <div
+                        key={idx}
+                        className={cn(
+                          "p-2 bg-background/50 rounded border-l-2",
+                          priorityColors[sug.prioridade] || 'border-l-muted'
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{sug.descricao}</p>
+                            <p className="text-[10px] text-muted-foreground line-clamp-2">{sug.justificativa}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs flex-shrink-0 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                            onClick={() => {
+                              setNewMaoDeObra({
+                                descricao: sug.descricao,
+                                quantidade: 1,
+                                valor_unitario: sug.valorEstimado,
+                                prioridade: sug.prioridade,
+                                data_retorno_estimada: ""
+                              });
+                              setShowAddMaoDeObraDialog(true);
+                            }}
+                          >
+                            +{formatCurrency(sug.valorEstimado)}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : !isLoadingAI && !aiError ? (
+                <div className="text-center py-4">
+                  <Sparkles className="w-6 h-6 text-muted-foreground mx-auto mb-2 opacity-50" />
+                  <p className="text-xs text-muted-foreground">
+                    Clique em "Gerar" para receber sugestões<br />baseadas no diagnóstico
+                  </p>
+                </div>
+              ) : null}
+
+              {isLoadingAI && (
+                <div className="text-center py-4">
+                  <Loader2 className="w-6 h-6 animate-spin text-purple-500 mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">Analisando diagnóstico...</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Values + Tools */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <DollarSign className="w-4 h-4" />
+                Valores
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Orçado:</span>
+                  <span className="font-medium">{formatCurrency(totalOrcado || os.valor_orcado)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600">Aprovado:</span>
+                  <span className="font-medium text-green-600">{formatCurrency(totalAprovado || os.valor_aprovado)}</span>
+                </div>
+                <div className="border-t border-border pt-2">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-sm">Final:</span>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        className="w-28 h-8 text-right text-sm"
+                        value={editedOS.valor_final || 0}
+                        onChange={(e) => setEditedOS({ ...editedOS, valor_final: parseFloat(e.target.value) || 0 })}
+                      />
+                    ) : (
+                      <span className="font-bold text-lg">{formatCurrency(os.valor_final)}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Calculator and Discount buttons */}
+              <div className="flex gap-2 pt-2 border-t border-border">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-8 text-xs gap-1"
+                  onClick={() => setShowCalculator(true)}
+                >
+                  <Calculator className="w-3 h-3" />
+                  Calculadora
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-8 text-xs gap-1"
+                  onClick={() => toast.info("Funcionalidade em desenvolvimento")}
+                >
+                  <Zap className="w-3 h-3" />
+                  Desconto
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Enviar Orçamento */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Send className="w-4 h-4" />
+                Enviar Orçamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 h-9"
+                onClick={() => {
+                  const phone = os.client_phone?.replace(/\D/g, '');
+                  if (phone) {
+                    const message = encodeURIComponent(
+                      `Olá ${os.client_name || 'Cliente'}! 🚗\n\nSeu orçamento está pronto!\n\nOS: ${os.numero_os}\nVeículo: ${os.vehicle} - ${os.plate}\nValor Total: ${formatCurrency(totalOrcado)}\n\nPodemos prosseguir?`
+                    );
+                    window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
+                  } else {
+                    toast.error("Telefone do cliente não informado");
+                  }
+                }}
+              >
+                <MessageSquare className="w-4 h-4 text-green-600" />
+                Enviar por WhatsApp
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 h-9"
+                onClick={() => toast.info("Orçamento enviado pelo sistema")}
+              >
+                <Send className="w-4 h-4 text-blue-600" />
+                Enviar pelo Sistema
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 h-9"
+                onClick={() => toast.info("Gerando PDF para download...")}
+              >
+                <Download className="w-4 h-4 text-purple-600" />
+                Baixar PDF
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Add Item Dialog Pecas */}
       <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -2118,7 +2117,7 @@ export default function AdminOSDetalhes() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label className="text-xs">Custo (R$)</Label>
@@ -2130,8 +2129,8 @@ export default function AdminOSDetalhes() {
                   onChange={(e) => {
                     const custo = parseFloat(e.target.value) || 0;
                     const vendaSugerida = custo * (1 + newItem.margem / 100);
-                    setNewItem({ 
-                      ...newItem, 
+                    setNewItem({
+                      ...newItem,
                       valor_custo: custo,
                       valor_unitario: vendaSugerida
                     });
@@ -2149,8 +2148,8 @@ export default function AdminOSDetalhes() {
                   onChange={(e) => {
                     const margem = parseFloat(e.target.value) || 0;
                     const vendaSugerida = newItem.valor_custo * (1 + margem / 100);
-                    setNewItem({ 
-                      ...newItem, 
+                    setNewItem({
+                      ...newItem,
                       margem,
                       valor_unitario: vendaSugerida
                     });
@@ -2167,8 +2166,8 @@ export default function AdminOSDetalhes() {
                   value={newItem.valor_unitario}
                   onChange={(e) => {
                     const venda = parseFloat(e.target.value) || 0;
-                    const margemReal = newItem.valor_custo > 0 
-                      ? ((venda - newItem.valor_custo) / newItem.valor_custo) * 100 
+                    const margemReal = newItem.valor_custo > 0
+                      ? ((venda - newItem.valor_custo) / newItem.valor_custo) * 100
                       : newItem.margem;
                     setNewItem({ ...newItem, valor_unitario: venda, margem: margemReal });
                   }}
@@ -2181,8 +2180,8 @@ export default function AdminOSDetalhes() {
             {newItem.valor_custo > 0 && (
               <div className={cn(
                 "p-3 rounded-lg border text-sm",
-                newItem.margem < MARGEM_MINIMA 
-                  ? "bg-red-500/10 border-red-500/30 text-red-700" 
+                newItem.margem < MARGEM_MINIMA
+                  ? "bg-red-500/10 border-red-500/30 text-red-700"
                   : "bg-green-500/10 border-green-500/30 text-green-700"
               )}>
                 <div className="flex items-center justify-between">
@@ -2217,7 +2216,7 @@ export default function AdminOSDetalhes() {
                 Data estimada para retorno do cliente (se não aprovar agora)
               </p>
             </div>
-            
+
             <div className="p-3 bg-muted/50 rounded-lg space-y-1">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Sugerido:</span>
@@ -2233,7 +2232,7 @@ export default function AdminOSDetalhes() {
             <Button variant="outline" onClick={() => setShowAddItemDialog(false)}>
               Cancelar
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 if (newItem.margem < MARGEM_MINIMA && newItem.valor_custo > 0) {
                   setPendingItem(newItem);
@@ -2337,7 +2336,7 @@ export default function AdminOSDetalhes() {
                 Data estimada para retorno do cliente (se não aprovar agora)
               </p>
             </div>
-            
+
             <div className="p-3 bg-muted/50 rounded-lg">
               <div className="flex justify-between font-medium">
                 <span>Total:</span>
@@ -2349,7 +2348,7 @@ export default function AdminOSDetalhes() {
             <Button variant="outline" onClick={() => setShowAddMaoDeObraDialog(false)}>
               Cancelar
             </Button>
-            <Button 
+            <Button
               onClick={() => addMaoDeObraMutation.mutate(newMaoDeObra)}
               disabled={!newMaoDeObra.descricao.trim() || addMaoDeObraMutation.isPending || (newMaoDeObra.prioridade !== 'verde' && !newMaoDeObra.data_retorno_estimada)}
             >
@@ -2396,7 +2395,7 @@ export default function AdminOSDetalhes() {
             }}>
               Cancelar
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 if (pendingItem && justificativa.trim()) {
                   addItemMutation.mutate({ ...pendingItem, justificativa });
@@ -2427,8 +2426,8 @@ export default function AdminOSDetalhes() {
             </div>
             <div className="grid grid-cols-4 gap-2">
               {['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '=', '+'].map((key) => (
-                <Button 
-                  key={key} 
+                <Button
+                  key={key}
                   variant={['÷', '×', '-', '+', '='].includes(key) ? 'default' : 'outline'}
                   className="h-12 text-lg font-medium"
                   onClick={() => toast.info("Calculadora em desenvolvimento")}
