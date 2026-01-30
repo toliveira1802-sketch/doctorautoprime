@@ -7,6 +7,7 @@ import {
   Car,
   Bell,
   Gift,
+  Wrench,
   ChevronRight,
   Home,
   Calendar,
@@ -195,6 +196,25 @@ const Index = () => {
             <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
           </button>
         </div>
+
+        {/* Demo OS Ultimate */}
+        <Card
+          className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 p-4 mt-6 cursor-pointer hover:from-slate-800 hover:to-slate-700 transition-all transform hover:scale-[1.02]"
+          onClick={() => navigate("/os-ultimate")}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center">
+                <Wrench className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg text-white">OS Ultimate Demo</h3>
+                <p className="text-sm text-gray-400">Visualização moderna de OS</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </div>
+        </Card>
       </main>
 
       {/* Bottom Navigation */}
