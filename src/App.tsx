@@ -38,6 +38,32 @@ import AdminOrdensServico from '@/pages/admin/AdminOrdensServico'
 import AdminNovaOS from '@/pages/admin/AdminNovaOS'
 import AdminServicos from '@/pages/admin/AdminServicos'
 import AdminOSDetalhes from '@/pages/admin/AdminOSDetalhes'
+import AdminAgendaMecanicos from '@/pages/admin/AdminAgendaMecanicos'
+import AdminAgendamentos from '@/pages/admin/AdminAgendamentos'
+import AdminConfiguracoes from '@/pages/admin/AdminConfiguracoes'
+import AdminDocumentacao from '@/pages/admin/AdminDocumentacao'
+import AdminFinanceiro from '@/pages/admin/AdminFinanceiro'
+import AdminMechanicAnalytics from '@/pages/admin/AdminMechanicAnalytics'
+import AdminMechanicFeedback from '@/pages/admin/AdminMechanicFeedback'
+import AdminOperacional from '@/pages/admin/AdminOperacional'
+import AdminPainelTV from '@/pages/admin/AdminPainelTV'
+import AdminPatioDetalhes from '@/pages/admin/AdminPatioDetalhes'
+import AdminProdutividade from '@/pages/admin/AdminProdutividade'
+
+// Gestão Pages
+import GestaoComercial from '@/pages/gestao/GestaoComercial'
+import GestaoDashboards from '@/pages/gestao/GestaoDashboards'
+import GestaoFinanceiro from '@/pages/gestao/GestaoFinanceiro'
+import GestaoMelhorias from '@/pages/gestao/GestaoMelhorias'
+import GestaoOperacoes from '@/pages/gestao/GestaoOperacoes'
+import GestaoRH from '@/pages/gestao/GestaoRH'
+import GestaoTecnologia from '@/pages/gestao/GestaoTecnologia'
+import GestaoUsuarios from '@/pages/gestao/GestaoUsuarios'
+import IAConfiguracoes from '@/pages/gestao/ia/IAConfiguracoes'
+import MigracaoTrello from '@/pages/gestao/MigracaoTrello'
+
+// Cliente Pages
+import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 
 // Protected Route wrapper
 function ProtectedRoute({ children, requiredRoles }: { children: React.ReactNode; requiredRoles?: string[] }) {
@@ -124,12 +150,8 @@ export default function App() {
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} />
             <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/" replace />} />
 
-            {/* Root - redirects based on role */}
-            <Route path="/" element={
-                <ProtectedRoute>
-                    <RootRedirect />
-                </ProtectedRoute>
-            } />
+            {/* Root - Home do Cliente (pública) */}
+            <Route path="/" element={<Index />} />
 
             {/* Client Routes */}
             <Route path="/agenda" element={
@@ -251,27 +273,64 @@ export default function App() {
             } />
             <Route path="/admin/financeiro" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayoutWrapper>
-                        <div className="text-center py-12 text-muted-foreground">
-                            <p>Financeiro - Em desenvolvimento</p>
-                        </div>
-                    </AdminLayoutWrapper>
+                    <AdminLayoutWrapper><AdminFinanceiro /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/admin/configuracoes" element={
                 <ProtectedRoute requiredRoles={['admin', 'dev']}>
-                    <AdminLayoutWrapper>
-                        <div className="text-center py-12 text-muted-foreground">
-                            <p>Configurações - Em desenvolvimento</p>
-                        </div>
-                    </AdminLayoutWrapper>
+                    <AdminLayoutWrapper><AdminConfiguracoes /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/agenda-mecanicos" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayoutWrapper><AdminAgendaMecanicos /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/agendamentos-admin" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayoutWrapper><AdminAgendamentos /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/documentacao" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayoutWrapper><AdminDocumentacao /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/mechanic-analytics" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayoutWrapper><AdminMechanicAnalytics /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/mechanic-feedback" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayoutWrapper><AdminMechanicFeedback /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/operacional" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayoutWrapper><AdminOperacional /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/painel-tv" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminPainelTV />
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/patio/:patioId" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayoutWrapper><AdminPatioDetalhes /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/produtividade" element={
+                <ProtectedRoute requiredRoles={['admin', 'dev']}>
+                    <AdminLayoutWrapper><AdminProdutividade /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
 
             {/* Gestão Routes */}
             <Route path="/gestao" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayoutWrapper><AdminDashboard /></AdminLayoutWrapper>
+                    <AdminLayoutWrapper><GestaoDashboards /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/agendamentos" element={
@@ -311,20 +370,59 @@ export default function App() {
             } />
             <Route path="/gestao/financeiro" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayoutWrapper>
-                        <div className="text-center py-12 text-muted-foreground">
-                            <p>Financeiro - Em desenvolvimento</p>
-                        </div>
-                    </AdminLayoutWrapper>
+                    <AdminLayoutWrapper><GestaoFinanceiro /></AdminLayoutWrapper>
                 </ProtectedRoute>
             } />
             <Route path="/gestao/configuracoes" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
-                    <AdminLayoutWrapper>
-                        <div className="text-center py-12 text-muted-foreground">
-                            <p>Configurações - Em desenvolvimento</p>
-                        </div>
-                    </AdminLayoutWrapper>
+                    <AdminLayoutWrapper><AdminConfiguracoes /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/comercial" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayoutWrapper><GestaoComercial /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/melhorias" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayoutWrapper><GestaoMelhorias /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/operacoes" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayoutWrapper><GestaoOperacoes /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/rh" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayoutWrapper><GestaoRH /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/tecnologia" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayoutWrapper><GestaoTecnologia /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/usuarios" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayoutWrapper><GestaoUsuarios /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/ia-configuracoes" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayoutWrapper><IAConfiguracoes /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+            <Route path="/gestao/migracao-trello" element={
+                <ProtectedRoute requiredRoles={['gestao', 'dev']}>
+                    <AdminLayoutWrapper><MigracaoTrello /></AdminLayoutWrapper>
+                </ProtectedRoute>
+            } />
+
+            {/* Cliente Dashboard (alternativo) */}
+            <Route path="/cliente/dashboard" element={
+                <ProtectedRoute>
+                    <ClientLayout><ClienteDashboard /></ClientLayout>
                 </ProtectedRoute>
             } />
 

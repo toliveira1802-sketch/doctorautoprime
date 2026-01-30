@@ -18,6 +18,7 @@ import {
   BookOpen,
   User,
 } from "lucide-react";
+import { MyVehiclesSection } from "@/components/home/MyVehiclesSection";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -110,24 +111,10 @@ const Index = () => {
           </h2>
         </div>
 
-        {/* Meus Veículos */}
-        <Card
-          className="bg-[#111] border-gray-800 p-4 mb-4 cursor-pointer hover:bg-[#151515] transition-colors"
-          onClick={() => navigate("/agenda")}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-red-600/20 rounded-full flex items-center justify-center">
-                <Car className="w-6 h-6 text-red-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">MEUS VEÍCULOS</h3>
-                <p className="text-sm text-gray-400">Nenhum veículo</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-gray-400" />
-          </div>
-        </Card>
+        {/* Meus Veículos - Seção Expansível */}
+        <div className="mb-4">
+          <MyVehiclesSection />
+        </div>
 
         {/* Lembretes */}
         <Card
