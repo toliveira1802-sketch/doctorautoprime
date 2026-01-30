@@ -1,0 +1,31 @@
+{
+  "name": "@doctorautoprime/telegram-bot",
+  "version": "1.0.0",
+  "description": "Bot de Telegram integrado ao sistema Doctor Auto Prime com acesso aos 15 agentes de IA",
+  "main": "bot.js",
+  "type": "module",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node --watch bot.js",
+    "test": "node test-connection.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "doctor-auto-prime",
+    "ai-agents",
+    "crm",
+    "erp"
+  ],
+  "author": "Doctor Auto Prime <toliveira1802@gmail.com>",
+  "license": "PROPRIETARY",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "@supabase/supabase-js": "^2.39.3",
+    "dotenv": "^16.4.1",
+    "axios": "^1.6.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
