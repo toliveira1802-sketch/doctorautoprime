@@ -1,0 +1,15 @@
+*.md
+!README.md
+*.sql
+src/test
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+.env.local
+node_modules
+.git
+logs
+*.log
+.cache
+.vscode
