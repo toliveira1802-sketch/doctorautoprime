@@ -127,6 +127,11 @@ export function AddVehicleDialog({ onVehicleAdded, trigger }: AddVehicleDialogPr
               placeholder="Ex: Civic, Corolla, HB20..."
               value={model}
               onChange={(e) => setModel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && model.trim() && plate.trim()) {
+                  handleSubmit();
+                }
+              }}
               className="h-12"
               required
             />
@@ -139,6 +144,11 @@ export function AddVehicleDialog({ onVehicleAdded, trigger }: AddVehicleDialogPr
               placeholder="ABC-1234"
               value={plate}
               onChange={handlePlateChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && model.trim() && plate.trim()) {
+                  handleSubmit();
+                }
+              }}
               maxLength={8}
               className="h-12 uppercase"
               required

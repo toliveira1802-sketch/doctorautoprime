@@ -25,6 +25,7 @@ import ServicoDetalhes from '@/pages/ServicoDetalhes'
 import OrcamentoCliente from '@/pages/OrcamentoCliente'
 import Reagendamento from '@/pages/Reagendamento'
 import Blog from '@/pages/Blog'
+import Promocoes from '@/pages/Promocoes'
 import Install from '@/pages/Install'
 import BiometricSetup from '@/pages/BiometricSetup'
 import VerifyOTP from '@/pages/VerifyOTP'
@@ -218,6 +219,9 @@ export default function App() {
             } />
             <Route path="/blog" element={
                 <ClientLayout><Blog /></ClientLayout>
+            } />
+            <Route path="/promocoes" element={
+                <ClientLayout><Promocoes /></ClientLayout>
             } />
             <Route path="/pagina-teste" element={<PaginaTeste />} />
             <Route path="/teste-simples" element={<TesteSimples />} />
