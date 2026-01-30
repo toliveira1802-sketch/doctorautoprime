@@ -29,6 +29,7 @@ import Install from '@/pages/Install'
 import BiometricSetup from '@/pages/BiometricSetup'
 import VerifyOTP from '@/pages/VerifyOTP'
 import NotFound from '@/pages/NotFound'
+import PaginaTeste from '@/pages/PaginaTeste'
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/AdminDashboard'
@@ -217,6 +218,7 @@ export default function App() {
             <Route path="/blog" element={
                 <ClientLayout><Blog /></ClientLayout>
             } />
+            <Route path="/pagina-teste" element={<PaginaTeste />} />
             <Route path="/install" element={<Install />} />
             <Route path="/biometric-setup" element={
                 <ProtectedRoute>
