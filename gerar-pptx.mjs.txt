@@ -1,0 +1,11 @@
+import pptxgen from "pptxgenjs";
+
+const pptx = new pptxgen();
+pptx.layout = "LAYOUT_WIDE";
+
+const slide = pptx.addSlide();
+slide.addText("Doctor Auto Prime", { x: 0.7, y: 0.8, w: 12, h: 1, fontSize: 44, bold: true });
+slide.addText("PPT gerado via PptxGenJS 🚀", { x: 0.7, y: 2.0, w: 12, h: 0.6, fontSize: 20 });
+
+await pptx.writeFile({ fileName: "doctorautoprime.pptx" });
+console.log("✅ Gerado: doctorautoprime.pptx");
