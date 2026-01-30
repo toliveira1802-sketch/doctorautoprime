@@ -17,6 +17,18 @@ import NovoAgendamento from '@/pages/NovoAgendamento'
 import AgendamentoSucesso from '@/pages/AgendamentoSucesso'
 import Avisos from '@/pages/Avisos'
 import TesteExpandido from '@/pages/TesteExpandido'
+import Historico from '@/pages/Historico'
+import Configuracoes from '@/pages/Configuracoes'
+import Performance from '@/pages/Performance'
+import VehicleDetails from '@/pages/VehicleDetails'
+import ServicoDetalhes from '@/pages/ServicoDetalhes'
+import OrcamentoCliente from '@/pages/OrcamentoCliente'
+import Reagendamento from '@/pages/Reagendamento'
+import Blog from '@/pages/Blog'
+import Install from '@/pages/Install'
+import BiometricSetup from '@/pages/BiometricSetup'
+import VerifyOTP from '@/pages/VerifyOTP'
+import NotFound from '@/pages/NotFound'
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/AdminDashboard'
@@ -147,22 +159,49 @@ export default function App() {
             } />
             <Route path="/historico" element={
                 <ProtectedRoute>
-                    <ClientLayout>
-                        <div className="text-center py-12 text-muted-foreground">
-                            <p>Histórico - Em desenvolvimento</p>
-                        </div>
-                    </ClientLayout>
+                    <ClientLayout><Historico /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/configuracoes" element={
+                <ProtectedRoute>
+                    <ClientLayout><Configuracoes /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/performance" element={
+                <ProtectedRoute>
+                    <ClientLayout><Performance /></ClientLayout>
                 </ProtectedRoute>
             } />
             <Route path="/veiculo/:id" element={
                 <ProtectedRoute>
-                    <ClientLayout>
-                        <div className="text-center py-12 text-muted-foreground">
-                            <p>Detalhes do Veículo - Em desenvolvimento</p>
-                        </div>
-                    </ClientLayout>
+                    <ClientLayout><VehicleDetails /></ClientLayout>
                 </ProtectedRoute>
             } />
+            <Route path="/servico/:id" element={
+                <ProtectedRoute>
+                    <ClientLayout><ServicoDetalhes /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/orcamento/:id" element={
+                <ProtectedRoute>
+                    <ClientLayout><OrcamentoCliente /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/reagendamento" element={
+                <ProtectedRoute>
+                    <ClientLayout><Reagendamento /></ClientLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/blog" element={
+                <ClientLayout><Blog /></ClientLayout>
+            } />
+            <Route path="/install" element={<Install />} />
+            <Route path="/biometric-setup" element={
+                <ProtectedRoute>
+                    <BiometricSetup />
+                </ProtectedRoute>
+            } />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/teste-expandido" element={
                 <ProtectedRoute>
                     <AdminLayoutWrapper><TesteExpandido /></AdminLayoutWrapper>
@@ -289,8 +328,8 @@ export default function App() {
                 </ProtectedRoute>
             } />
 
-            {/* Catch all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Catch all - 404 */}
+            <Route path="*" element={<NotFound />} />
         </Routes>
     )
 }
