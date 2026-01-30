@@ -1,0 +1,6 @@
+codigo_peca,nome,categoria,fabricante,preco_custo,preco_venda,estoque_atual,estoque_minimo,localizacao,empresa_id,observacoes
+OLEO-5W30-4L,Óleo Mobil Super 5W30 (4L),Lubrificantes,Mobil,145.00,180.00,24,10,Prateleira A1,1,
+FILTRO-OLEO-123,Filtro de óleo universal,Filtros,Tecfil,22.00,35.00,45,15,Prateleira B2,1,
+CORREIA-5521XS,Correia dentada Gates 5521XS,Correias e Polias,Gates,215.00,280.00,8,5,Prateleira C3,1,Original
+PASTILHA-FREIO-D,Jogo de pastilhas freio dianteiro,Freios,Bosch,185.00,250.00,12,8,Prateleira D1,1,
+DISCO-FREIO-T,Disco de freio traseiro,Freios,TRW,280.00,380.00,6,4,Prateleira D2,1,

@@ -1,0 +1,4 @@
+numero_os,placa_veiculo,estagio_atual,data_entrada_patio,mecanico_responsavel,observacoes_patio
+OS-2026-0001,ABC-1234,aguardando_aprovacao,2026-01-30 08:30:00,João Mecânico,Aguardando cliente aprovar orçamento de R$ 850
+OS-2026-0002,XYZ-5678,em_execucao,2026-01-28 09:00:00,Pedro Mecânico,Revisão 40 mil - Faltando alinhamento
+OS-2026-0003,GHI-3456,diagnostico,2026-01-30 14:00:00,Carlos Mecânico,Investigando vazamento de óleo

@@ -1,0 +1,3 @@
+numero_os,placa_veiculo,cpf_cliente,status,descricao_problema,diagnostico,mecanico_responsavel,data_entrada,data_prevista_conclusao,valor_orcado,valor_aprovado,empresa_id,prioridade,observacoes
+OS-2026-0001,ABC-1234,123.456.789-00,orcamento,Barulho no motor ao acelerar,Necessário trocar correia dentada e tensor,João Mecânico,2026-01-30,2026-02-02,850.00,,1,amarelo,Cliente aguardando aprovação
+OS-2026-0002,XYZ-5678,123.456.789-00,em_execucao,Revisão dos 40 mil km,Troca de óleo + filtros + alinhamento,Pedro Mecânico,2026-01-28,2026-01-31,650.00,650.00,1,verde,

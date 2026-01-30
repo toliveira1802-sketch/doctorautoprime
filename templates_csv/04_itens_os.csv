@@ -1,0 +1,8 @@
+numero_os,tipo,descricao,quantidade,valor_unitario,status,observacoes
+OS-2026-0001,mao_de_obra,Troca de correia dentada,1,350.00,pendente,
+OS-2026-0001,peca,Correia dentada Gates,1,280.00,pendente,Código: 5521XS
+OS-2026-0001,peca,Tensor de correia,1,220.00,pendente,Código: T43089
+OS-2026-0002,mao_de_obra,Troca de óleo e filtros,1,150.00,concluido,
+OS-2026-0002,peca,Óleo Mobil Super 5W30 (4L),1,180.00,concluido,
+OS-2026-0002,peca,Filtro de óleo,1,35.00,concluido,
+OS-2026-0002,mao_de_obra,Alinhamento e balanceamento,1,120.00,em_andamento,

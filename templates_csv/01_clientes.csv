@@ -1,0 +1,4 @@
+nome_completo,cpf,email,telefone,data_nascimento,endereco_completo,cep,cidade,estado,tier_fidelidade,pontos_fidelidade,empresa_id,observacoes
+João Silva Santos,123.456.789-00,joao.silva@email.com,(11) 98765-4321,1985-03-15,"Rua das Flores, 123 - Jardim Paulista",01234-567,São Paulo,SP,platina,5000,1,Cliente VIP - prefere atendimento pela manhã
+Maria Oliveira Costa,987.654.321-00,maria.costa@email.com,(11) 97654-3210,1990-07-22,"Av. Paulista, 1500 - Bela Vista",01310-100,São Paulo,SP,ouro,3000,1,
+Pedro Santos Lima,456.789.123-00,pedro.lima@empresa.com,(11) 96543-2109,1978-11-08,"Rua Augusta, 2500 - Consolação",01412-100,São Paulo,SP,prata,1500,2,

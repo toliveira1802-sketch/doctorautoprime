@@ -1,0 +1,4 @@
+placa_veiculo,cpf_cliente,data_agendamento,hora_agendamento,servico_solicitado,status,observacoes_cliente,empresa_id
+ABC-1234,123.456.789-00,2026-02-05,09:00,Troca de pastilhas de freio,confirmado,Preferência: período da manhã,1
+DEF-9012,987.654.321-00,2026-02-08,14:00,Revisão completa,pendente,,1
+XYZ-5678,123.456.789-00,2026-02-10,10:30,Alinhamento e balanceamento,confirmado,,2
