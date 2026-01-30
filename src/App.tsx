@@ -26,6 +26,7 @@ import OrcamentoCliente from '@/pages/OrcamentoCliente'
 import Reagendamento from '@/pages/Reagendamento'
 import Blog from '@/pages/Blog'
 import Promocoes from '@/pages/Promocoes'
+import OSUltimate from '@/pages/OSUltimate'
 import Install from '@/pages/Install'
 import BiometricSetup from '@/pages/BiometricSetup'
 import VerifyOTP from '@/pages/VerifyOTP'
@@ -223,6 +224,7 @@ export default function App() {
             <Route path="/promocoes" element={
                 <ClientLayout><Promocoes /></ClientLayout>
             } />
+            <Route path="/os-ultimate" element={<OSUltimate />} />
             <Route path="/pagina-teste" element={<PaginaTeste />} />
             <Route path="/teste-simples" element={<TesteSimples />} />
             <Route path="/install" element={<Install />} />
