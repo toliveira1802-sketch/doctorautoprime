@@ -354,6 +354,48 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          cnpj: string | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          nome: string
+          razao_social: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          nome: string
+          razao_social?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          nome?: string
+          razao_social?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_clicks: {
         Row: {
           clicked_at: string
@@ -771,33 +813,59 @@ export type Database = {
       }
       mechanics: {
         Row: {
+          company_id: string | null
+          cpf: string | null
           created_at: string
+          email: string | null
+          grau_conhecimento: string | null
           id: string
           is_active: boolean
           name: string
           phone: string | null
+          qtde_negativos: number | null
+          qtde_positivos: number | null
           specialty: string | null
           updated_at: string
         }
         Insert: {
+          company_id?: string | null
+          cpf?: string | null
           created_at?: string
+          email?: string | null
+          grau_conhecimento?: string | null
           id?: string
           is_active?: boolean
           name: string
           phone?: string | null
+          qtde_negativos?: number | null
+          qtde_positivos?: number | null
           specialty?: string | null
           updated_at?: string
         }
         Update: {
+          company_id?: string | null
+          cpf?: string | null
           created_at?: string
+          email?: string | null
+          grau_conhecimento?: string | null
           id?: string
           is_active?: boolean
           name?: string
           phone?: string | null
+          qtde_negativos?: number | null
+          qtde_positivos?: number | null
           specialty?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mechanics_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       melhorias_sugestoes: {
         Row: {
@@ -1230,8 +1298,13 @@ export type Database = {
         Row: {
           avatar_url: string | null
           birthday: string | null
+          cep: string | null
+          cidade: string | null
+          company_id: string | null
           cpf: string | null
           created_at: string
+          endereco: string | null
+          estado: string | null
           full_name: string | null
           id: string
           internal_notes: string | null
@@ -1239,6 +1312,7 @@ export type Database = {
           lifetime_value: number | null
           loyalty_level: string | null
           loyalty_points: number | null
+          origem_cadastro: string | null
           phone: string | null
           priority_score: number | null
           referral_cashback_applied: boolean | null
@@ -1250,8 +1324,13 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           birthday?: string | null
+          cep?: string | null
+          cidade?: string | null
+          company_id?: string | null
           cpf?: string | null
           created_at?: string
+          endereco?: string | null
+          estado?: string | null
           full_name?: string | null
           id?: string
           internal_notes?: string | null
@@ -1259,6 +1338,7 @@ export type Database = {
           lifetime_value?: number | null
           loyalty_level?: string | null
           loyalty_points?: number | null
+          origem_cadastro?: string | null
           phone?: string | null
           priority_score?: number | null
           referral_cashback_applied?: boolean | null
@@ -1270,8 +1350,13 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           birthday?: string | null
+          cep?: string | null
+          cidade?: string | null
+          company_id?: string | null
           cpf?: string | null
           created_at?: string
+          endereco?: string | null
+          estado?: string | null
           full_name?: string | null
           id?: string
           internal_notes?: string | null
@@ -1279,6 +1364,7 @@ export type Database = {
           lifetime_value?: number | null
           loyalty_level?: string | null
           loyalty_points?: number | null
+          origem_cadastro?: string | null
           phone?: string | null
           priority_score?: number | null
           referral_cashback_applied?: boolean | null
@@ -1287,7 +1373,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       promo_clicks: {
         Row: {
@@ -1441,36 +1535,55 @@ export type Database = {
       }
       recursos: {
         Row: {
+          company_id: string | null
           created_at: string
+          horas_mes: number | null
           id: string
           nome: string
           ocupado_desde: string | null
           status: string
           tipo: string
+          ultima_manutencao: string | null
           updated_at: string
+          valor_produzido: number | null
           vehicle_id: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
+          horas_mes?: number | null
           id?: string
           nome: string
           ocupado_desde?: string | null
           status?: string
           tipo: string
+          ultima_manutencao?: string | null
           updated_at?: string
+          valor_produzido?: number | null
           vehicle_id?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string
+          horas_mes?: number | null
           id?: string
           nome?: string
           ocupado_desde?: string | null
           status?: string
           tipo?: string
+          ultima_manutencao?: string | null
           updated_at?: string
+          valor_produzido?: number | null
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "recursos_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "recursos_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -1737,37 +1850,52 @@ export type Database = {
         Row: {
           brand: string | null
           color: string | null
+          combustivel: string | null
           created_at: string
           id: string
           is_active: boolean
+          km_atual: number | null
           model: string
+          origem_contato: string | null
           plate: string
+          ultimo_km: number | null
           updated_at: string
           user_id: string
+          versao: string | null
           year: string | null
         }
         Insert: {
           brand?: string | null
           color?: string | null
+          combustivel?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          km_atual?: number | null
           model: string
+          origem_contato?: string | null
           plate: string
+          ultimo_km?: number | null
           updated_at?: string
           user_id: string
+          versao?: string | null
           year?: string | null
         }
         Update: {
           brand?: string | null
           color?: string | null
+          combustivel?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          km_atual?: number | null
           model?: string
+          origem_contato?: string | null
           plate?: string
+          ultimo_km?: number | null
           updated_at?: string
           user_id?: string
+          versao?: string | null
           year?: string | null
         }
         Relationships: []
