@@ -36,6 +36,7 @@ import PaginaTeste from '@/pages/PaginaTeste'
 import TesteSimples from '@/pages/TesteSimples'
 
 // Admin Pages
+import AdminLogin from '@/pages/admin/AdminLogin'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
 import AdminPatio from '@/pages/admin/AdminPatio'
 import AdminClientes from '@/pages/admin/AdminClientes'
@@ -153,6 +154,7 @@ export default function App() {
         <Routes>
             {/* Public Routes */}
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} />
+            <Route path="/admin/login" element={!isAuthenticated ? <AdminLogin /> : <Navigate to="/admin" replace />} />
             <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/" replace />} />
 
             {/* Root - Home do Cliente (pública) */}
