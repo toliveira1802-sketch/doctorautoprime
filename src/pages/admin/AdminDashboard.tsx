@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Calendar, Users, DollarSign, FileText, Loader2, TrendingUp, RotateCcw, XCircle, Syringe } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
@@ -332,17 +331,14 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         {/* Botão único de Pendências */}
         <div className="grid grid-cols-1 gap-4">
           <Card
@@ -536,7 +532,6 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
 
       {/* Modal Agendamentos Hoje */}
       <Dialog open={showAppointments} onOpenChange={setShowAppointments}>
@@ -720,7 +715,7 @@ const AdminDashboard = () => {
           </ScrollArea>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </div>
   );
 };
 
