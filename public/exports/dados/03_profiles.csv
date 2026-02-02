@@ -1,0 +1,6 @@
+id,user_id,full_name,phone,avatar_url,cpf,birthday,endereco,cep,cidade,estado,company_id,loyalty_level,loyalty_points,is_recurrent,lifetime_value,priority_score,origem_cadastro,created_at,updated_at
+4cf9efa2-e070-47e8-b1c8-13f6ae959cc2,c52c529a-65bc-4da9-875d-d06c030c229d,THALES OLIVEIRA,11967291822,,,,,,,,bronze,0,false,0,0,,2026-01-15 04:18:07,2026-01-16 17:49:09
+846b2147-165b-4051-a9f7-4369f7ae9970,fd31cf0a-64e4-4700-bc70-22b826507dda,thales oliveira,(11) 96729-1822,,,,,,,,bronze,0,false,0,0,,2026-01-16 17:56:22,2026-01-16 17:56:22
+2a689cb0-d685-42a2-bbef-efa687f54566,c9617f36-d4cc-45c9-ac85-5b82029c4499,sada a,(11) 11111-1111,,,,,,,,bronze,0,false,0,0,,2026-01-30 11:00:42,2026-01-30 11:00:42
+4f23d2ed-a32a-4995-96ab-b8f73708de50,ecb8427c-e738-49de-af4a-ef31d373a60f,xzc zxc,(11) 11111-1111,,,,,,,,bronze,0,false,0,0,,2026-01-30 12:02:46,2026-01-30 12:02:46
+61f4abdc-5bd0-49ac-9f15-601c6aa1ce5e,3c84c7a1-d4e5-48d9-bc8f-ce7533a490e6,THALES OLIVEIRA,(13) 82400-251,,,,,,,,bronze,0,false,0,0,,2026-01-30 12:16:55,2026-01-30 12:16:55

@@ -1,0 +1,19 @@
+id,nome,tipo,status,vehicle_id,ocupado_desde,company_id,ultima_manutencao,horas_mes,valor_produzido,created_at,updated_at
+034b7cd4-4efa-4ef9-bc62-c59a4cbec324,Elevador 1,elevador,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+031f97e4-1f8d-42f9-808f-e6ce72f1f60f,Elevador 2,elevador,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+f47317f7-58e5-4f94-b9a3-8212959ba02a,Elevador 3,elevador,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+c67e00f1-b57d-4bcc-9429-c0bbbef69991,Elevador 4,elevador,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+12f43992-bac2-4498-beeb-c9d42fcfc3a4,Elevador 5,elevador,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+06740c1c-5a1e-4ed8-bb5d-7b6d61b94b39,Elevador 6,elevador,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+91cb474e-ce0e-4c42-a101-db24a5028191,Elevador 7,elevador,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+0d73c7f4-48c2-41ea-905e-23f11dd39e41,Elevador 8,elevador,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+c5b7aa11-ee21-48ad-a432-ec4510a4a99a,Elevador 9,elevador,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+22a63521-e450-4349-93ce-a7fd42beb0d3,Box 1,box,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+8d2d6e9e-f26b-40d1-b862-c63b21c65363,Box 2,box,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+a03b69da-e02d-4892-9a8a-5d463a23e58f,Box 3,box,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+786166a0-56f1-439d-84d5-4852401dcfed,Box 4,box,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+7f9a5022-58dc-4fd6-9501-7eac89706cd1,Box 5,box,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+6bdbf6ec-af1e-4b57-af2e-73df22726453,Rampa,rampa,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+b0870325-4915-42b7-b48c-eb7332d8bb35,Dinamômetro,equipamento,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+b11ae714-d6fb-4b05-a7f5-9804000b0dde,VCDS,equipamento,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29
+93aed82a-129d-42ac-86ee-a3221f21f127,Remap,equipamento,livre,,,,,0,0,2026-01-31 02:28:29,2026-01-31 02:28:29

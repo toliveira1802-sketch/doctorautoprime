@@ -1,0 +1,4 @@
+id,nome,razao_social,cnpj,telefone,email,endereco,logo_url,is_active,created_at,updated_at
+22125da2-169c-4315-bba4-a33fa45bcc55,DOCTOR AUTO PRIME,DOCTOR AUTO PRIME,,,,,true,2026-01-31 02:32:43,2026-01-31 02:32:43
+8c79fc96-c7cc-4ba7-92b0-2f2160dbc9e8,DOCTOR AUTO BOSCH,POMBAL,,,,,true,2026-01-31 02:32:43,2026-01-31 02:32:43
+970fef96-ece4-41fe-bc11-6de64b67fb41,GARAGE 347,GARAGEM 1347,,,,,true,2026-01-31 02:32:43,2026-01-31 02:32:43

@@ -1,0 +1,4 @@
+id,code,name,cashback_points,is_active,max_uses,current_uses,valid_from,valid_to,created_at,updated_at
+b83e745e-0c81-4c19-9dc9-0a920608bb97,AMIGO50,Indicação de Amigo,50,false,,0,2026-01-15,,2026-01-15 04:22:15,2026-01-15 04:22:15
+0a57bd3a-2afd-45dc-9ab5-0f8ae8cd0f25,BEMVINDO,Boas-vindas,30,false,,0,2026-01-15,,2026-01-15 04:22:15,2026-01-15 04:22:15
+e0235e21-cba0-47c9-bed1-959c0e405dff,PROMO100,Promoção Especial,100,false,,0,2026-01-15,,2026-01-15 04:22:15,2026-01-15 04:22:15

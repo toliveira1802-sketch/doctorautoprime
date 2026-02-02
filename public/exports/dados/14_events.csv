@@ -1,0 +1,4 @@
+id,title,description,event_type,event_date,event_time,location,max_participants,is_active,created_at,updated_at
+d396174a-66dd-466d-a070-b3880cd6f717,Car Wash Day,Lavagem cortesia para clientes Prime,carwash,2026-01-25,09:00:00,Doctor Auto - Matriz,,true,2026-01-14 23:29:27,2026-01-14 23:29:27
+3008e3f8-e158-4fe7-9fec-a09adda888e3,Workshop Manutenção,Aprenda dicas básicas de manutenção do seu veículo,training,2026-02-08,14:00:00,Doctor Auto - Matriz,,true,2026-01-14 23:29:27,2026-01-14 23:29:27
+7c081d32-7913-4f4c-9f81-8273fa648b37,Encontro VW Club,Encontro exclusivo para proprietários VW,meetup,2026-02-13,10:00:00,Parque da Cidade,,true,2026-01-14 23:29:27,2026-01-14 23:29:27
