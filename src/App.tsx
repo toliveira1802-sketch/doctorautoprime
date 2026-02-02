@@ -212,9 +212,7 @@ export default function App() {
                 </ProtectedRoute>
             } />
             <Route path="/orcamento/:id" element={
-                <ProtectedRoute>
-                    <ClientLayout><OrcamentoCliente /></ClientLayout>
-                </ProtectedRoute>
+                <ClientLayout><OrcamentoCliente /></ClientLayout>
             } />
             <Route path="/reagendamento" element={
                 <ProtectedRoute>
