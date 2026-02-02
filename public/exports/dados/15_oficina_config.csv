@@ -1,0 +1,2 @@
+id,nome,capacidade_maxima,horario_entrada,horario_saida_semana,horario_saida_sabado,horario_almoco_inicio,horario_almoco_fim,margem_minima_pecas,margem_minima_servicos,logo_url,telefone,whatsapp,created_at,updated_at
+00000000-0000-0000-0000-000000000001,Doctor Auto Prime,20,08:00:00,17:30:00,12:00:00,12:15:00,13:30:00,40,50,,,,,2026-01-15 22:15:38,2026-01-15 22:15:38

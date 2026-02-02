@@ -1,0 +1,8 @@
+id,user_id,vehicle_id,appointment_date,appointment_time,status,notes,mechanic_id,subtotal,discount_amount,final_price,pay_in_advance,is_full_day,created_at,updated_at
+9f167d1d-d93b-4a3d-be99-2f56c1e05b23,46499ba3-d76c-4232-82a5-5e0e20d6056d,,2026-01-15,,confirmado,pneu murcho,,0.00,0.00,0.00,false,false,2026-01-15 10:22:45,2026-01-15 21:02:21
+cfe7ef04-49c7-4f5c-b999-91be56be74d7,c52c529a-65bc-4da9-875d-d06c030c229d,,2026-01-15,,confirmado,,,0.00,0.00,0.00,false,false,2026-01-15 10:49:06,2026-01-15 21:02:21
+d4e565a7-60f3-4a31-ad41-9b7edfbfcef9,c2e4243b-6831-46fb-81b6-6c52a4b63734,,2026-01-18,10:00:00,confirmado,Agendamento de teste,,0.00,0.00,0.00,false,false,2026-01-15 22:51:16,2026-01-15 22:51:16
+e8e78797-3381-41a7-9c54-0be82220fd9b,effb9d7a-1f21-4083-a99e-4653ba275731,,2026-01-20,10:00:00,pendente,,,150.00,0.00,150.00,false,false,2026-01-16 09:31:13,2026-01-16 19:35:33
+d1fdbde6-f8e0-4ce4-8128-16ed4e0fc330,ebaaea3a-de7d-4a85-87b1-d8c6e001af0a,,2026-01-17,08:00:00,pendente,,,120.00,0.00,114.00,true,false,2026-01-16 13:32:06,2026-01-16 19:35:33
+172bfa3e-2376-48d2-a1b7-6cec3a214285,ebaaea3a-de7d-4a85-87b1-d8c6e001af0a,,2026-01-17,08:00:00,pendente,,,120.00,0.00,114.00,true,false,2026-01-16 13:32:06,2026-01-16 19:35:33
+79a4c13f-5429-4adb-963a-3af80fad7401,ebaaea3a-de7d-4a85-87b1-d8c6e001af0a,,2026-01-17,08:00:00,pendente,,,120.00,0.00,114.00,true,false,2026-01-16 13:32:06,2026-01-16 19:35:33

@@ -1,0 +1,21 @@
+numero,arquivo,tabela,registros,observacoes
+1,01_companies.csv,companies,3,Empresas do grupo
+2,02_roles_enum.csv,app_role (enum),6,Papéis do sistema
+3,03_profiles.csv,profiles,5,Perfis de usuários
+4,04_user_roles.csv,user_roles,8,Vínculo usuário-role
+5,05_mechanics.csv,mechanics,12,Mecânicos cadastrados
+6,06_recursos.csv,recursos,18,Elevadores/boxes/equipamentos
+7,07_vehicles.csv,vehicles,2,Veículos de clientes
+8,08_workflow_etapas.csv,workflow_etapas,7,Status da OS (Kanban)
+9,09_services.csv,services,11,Catálogo de serviços
+10,10_appointments.csv,appointments,7,Agendamentos
+11,11_ordens_servico.csv,ordens_servico,5,Ordens de serviço
+12,12_ordens_servico_itens.csv,ordens_servico_itens,3,Itens das OS
+13,13_promotions.csv,promotions,3,Promoções ativas
+14,14_events.csv,events,3,Eventos programados
+15,15_oficina_config.csv,oficina_config,1,Configurações da oficina
+16,16_invites.csv,invites,2,Convites de acesso
+17,17_referral_campaigns.csv,referral_campaigns,3,Campanhas de indicação
+18,18_gestao_dashboards.csv,gestao_dashboards,1,Dashboards personalizados
+19,19_promo_clicks.csv,promo_clicks,2,Cliques em promoções
+20,20_waitlist_interests.csv,waitlist_interests,1,Lista de espera

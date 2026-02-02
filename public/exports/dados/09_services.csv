@@ -1,0 +1,12 @@
+id,name,description,service_type,duration_minutes,price,is_full_day,is_active,display_order,created_at,updated_at
+d46474e2-dd4b-4177-8640-96ad98a675f4,Troca de Óleo,Troca de óleo e verificação de níveis,revisao,30,150.00,false,true,1,2026-01-14 23:28:18,2026-01-14 23:28:18
+5ecd84dc-9ab5-45a7-b7f9-e539451d34b5,Diagnóstico Elétrico,Scanner e análise do sistema elétrico,diagnostico,480,150.00,true,true,1,2026-01-14 23:28:18,2026-01-14 23:28:18
+0d7a6a55-ceea-4d7b-8622-b988497e5649,Diagnóstico de Motor,Análise completa do motor,diagnostico,480,0.00,true,true,2,2026-01-14 23:28:18,2026-01-14 23:28:18
+a1c6a9fd-e6b1-4dea-9cff-bb546e481005,Troca de Filtros,Filtro de ar/ óleo e combustível,revisao,20,80.00,false,true,2,2026-01-14 23:28:18,2026-01-14 23:28:18
+3fbd2729-286d-4e9f-9f8c-7de4cd01826c,Diagnóstico de Injeção,Verificação do sistema de injeção eletrônica,diagnostico,480,180.00,true,true,3,2026-01-14 23:28:18,2026-01-14 23:28:18
+d786772a-ad7e-438a-80bb-754928342bfa,Revisão de Freios,Verificação completa do sistema de freios,revisao,60,200.00,false,true,3,2026-01-14 23:28:18,2026-01-14 23:28:18
+9938ff01-b378-47ef-b67f-bae5a194cf8f,Check-up Geral,Diagnóstico completo do veículo,diagnostico,480,250.00,true,true,4,2026-01-14 23:28:18,2026-01-14 23:28:18
+4fa8d870-173e-4ea2-aaea-70f692aeaeff,Revisão de Suspensão,Análise e orçamento da suspensão,revisao,90,0.00,false,true,4,2026-01-14 23:28:18,2026-01-14 23:28:18
+d03cd0a7-c1cf-43e4-863b-5afb6c5f5925,Perícia Completa,Perícia técnica detalhada,diagnostico,480,0.00,true,true,5,2026-01-14 23:28:18,2026-01-14 23:28:18
+a60c926f-6eb1-4123-9881-45bca7fa8151,Alinhamento e Balanceamento,Alinhamento 3D e balanceamento computadorizado,revisao,45,120.00,false,true,5,2026-01-14 23:28:18,2026-01-14 23:28:18
+8f9c2aa5-58bc-4116-85da-7c36228a1798,Revisão Completa,Revisão completa com todos os itens,revisao,480,0.00,true,true,6,2026-01-14 23:28:18,2026-01-14 23:28:18

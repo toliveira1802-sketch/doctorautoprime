@@ -1,0 +1,4 @@
+id,ordem_servico_id,tipo,descricao,quantidade,valor_custo,valor_unitario,valor_venda_sugerido,valor_total,margem_aplicada,status,prioridade,motivo_recusa,justificativa_desconto,data_retorno_estimada,created_at
+7d0625e5-4d83-46fa-953b-8d9385d39f01,6edd7109-b571-4796-bdc4-14f5a888e4ab,peca,FREIO,1,200,350,350,350,75,pendente,amarelo,,,2026-10-05,2026-01-16 04:38:03
+f7287811-4f66-4789-9b34-8e3706b96855,6edd7109-b571-4796-bdc4-14f5a888e4ab,peca,A,1,1,1.4,1.4,1.4,40,pendente,vermelho,,,2026-11-11,2026-01-16 04:38:24
+97874dd6-401c-4183-a66e-f17c3a850559,9a31de0c-bfc4-4652-9428-f383022453fc,peca,pastilha,1,100,140,140,140,40,pendente,verde,,,,,2026-01-17 15:36:40

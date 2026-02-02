@@ -1,0 +1,6 @@
+id,numero_os,plate,vehicle,client_name,client_phone,status,km_atual,descricao_problema,diagnostico,valor_orcado,valor_aprovado,valor_final,data_entrada,data_orcamento,data_aprovacao,data_conclusao,data_entrega,mechanic_id,observacoes,created_at,updated_at
+84dd2757-392f-418d-b083-127a4e3737ba,OS-20260116-003656,FKP,A identificar,,,diagnostico,,,,,0,0,0,2026-01-16 03:36:56,,,,,,,2026-01-16 03:36:56,2026-01-16 03:36:56
+6edd7109-b571-4796-bdc4-14f5a888e4ab,OS-20260116-013645,AAS1522,GOLF,SAD,111111111,diagnostico,45000,ACASACAS,,351.4,0,0,2026-01-16 04:36:45,,,,,,,2026-01-16 04:36:45,2026-01-16 04:38:25
+49c3083c-b8ae-438b-b3f5-2f4dc8e0cc3e,OS-20260116-085120,PENDENTE,A identificar,,,diagnostico,,,,,0,0,0,2026-01-16 11:51:20,,,,,,,2026-01-16 11:51:21,2026-01-16 11:51:21
+76a1e05f-908a-4519-8b6d-040cb2381e96,OS-20260116-091817,PENDENTE,A identificar,,,diagnostico,,,,,0,0,0,2026-01-16 12:18:17,,,,,,,2026-01-16 12:18:17,2026-01-16 12:18:17
+31dc5b59-fd82-4454-b78e-6872d7483fa2,OS-20260116-181906,PENDENTE,A identificar,,,diagnostico,,,,,0,0,0,2026-01-16 21:19:06,,,,,,,2026-01-16 21:19:06,2026-01-16 21:19:06

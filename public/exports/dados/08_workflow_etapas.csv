@@ -1,0 +1,8 @@
+id,nome,cor,icone,ordem,is_active,created_at
+519307a2-f04b-4eaa-817c-50b7c7b0438a,Diagnóstico,#3b82f6,search,1,true,2026-01-15 05:11:39
+c6c352b0-6b49-4618-ad28-f13bc6ed4422,Orçamento,#8b5cf6,file-text,2,true,2026-01-15 05:11:39
+3c45c736-ae47-45b4-9d3a-a1e08b1adb68,Aguardando Aprovação,#f59e0b,clock,3,true,2026-01-15 05:11:39
+67f922a7-d018-4783-9f56-cffbec7bb2e8,Aguardando Peças,#f97316,package,4,true,2026-01-15 05:11:39
+198b4248-8606-4b35-b744-2a5662d4884e,Pronto para Iniciar,#14b8a6,check-circle,5,true,2026-01-15 05:11:39
+91c615e6-6980-4c34-818b-2909d08c9e21,Em Execução,#6366f1,wrench,6,true,2026-01-15 05:11:39
+350f838f-94ff-47f7-a87f-4347745982fe,Pronto para Entrega,#22c55e,car,7,true,2026-01-15 05:11:39
