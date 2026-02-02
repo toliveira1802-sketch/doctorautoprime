@@ -1,0 +1,8 @@
+ordem,campo_atual,tipo,nullable,default,campo_novo,observacoes
+1,id,uuid,NO,gen_random_uuid(),,
+2,nome,text,NO,,,Nome do status
+3,cor,text,NO,#6b7280,,Cor hexadecimal
+4,icone,text,YES,,,Lucide icon name
+5,ordem,integer,NO,,,Ordem de exibicao
+6,is_active,boolean,NO,true,,
+7,created_at,timestamp,NO,now(),,

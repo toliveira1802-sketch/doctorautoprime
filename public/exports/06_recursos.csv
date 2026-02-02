@@ -1,0 +1,13 @@
+ordem,campo_atual,tipo,nullable,default,campo_novo,observacoes
+1,id,uuid,NO,gen_random_uuid(),,
+2,tipo,text,NO,,,Elevador/Box/Rampa/etc
+3,nome,text,NO,,,
+4,status,text,NO,livre,,livre/ocupado
+5,vehicle_id,uuid,YES,,,FK vehicles (se ocupado)
+6,ocupado_desde,timestamp,YES,,,
+7,created_at,timestamp,NO,now(),,
+8,updated_at,timestamp,NO,now(),,
+9,company_id,uuid,YES,,,FK companies
+10,ultima_manutencao,date,YES,,,
+11,horas_mes,numeric,YES,0,,
+12,valor_produzido,numeric,YES,0,,

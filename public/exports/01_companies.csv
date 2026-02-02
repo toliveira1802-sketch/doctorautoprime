@@ -1,0 +1,12 @@
+ordem,campo_atual,tipo,nullable,default,campo_novo,observacoes
+1,id,uuid,NO,gen_random_uuid(),,
+2,razao_social,text,YES,,,
+3,nome,text,NO,,,
+4,cnpj,text,YES,,,
+5,telefone,text,YES,,,
+6,email,text,YES,,,
+7,endereco,text,YES,,,
+8,logo_url,text,YES,,,
+9,is_active,boolean,NO,true,,
+10,created_at,timestamp,NO,now(),,
+11,updated_at,timestamp,NO,now(),,

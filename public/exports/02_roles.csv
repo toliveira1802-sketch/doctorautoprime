@@ -1,0 +1,7 @@
+ordem,valor_atual,descricao,valor_novo,observacoes
+1,dev,Desenvolvedor - acesso total,,
+2,gestao,Gestão - BI e estratégia,,
+3,admin,Administrador - operações,,
+4,oficina,Oficina - acesso operacional,,
+5,user,Cliente/Usuário final,,
+6,master,Master - acesso completo,,

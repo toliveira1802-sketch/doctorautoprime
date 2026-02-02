@@ -1,0 +1,16 @@
+ordem,campo_atual,tipo,nullable,default,campo_novo,observacoes
+1,id,uuid,NO,gen_random_uuid(),,
+2,user_id,uuid,NO,,,FK auth.users (dono)
+3,model,text,NO,,,
+4,plate,text,NO,,,
+5,year,text,YES,,,
+6,brand,text,YES,,,
+7,color,text,YES,,,
+8,is_active,boolean,NO,true,,
+9,created_at,timestamp,NO,now(),,
+10,updated_at,timestamp,NO,now(),,
+11,versao,text,YES,,,
+12,combustivel,text,YES,,,
+13,ultimo_km,integer,YES,,,
+14,km_atual,integer,YES,,,
+15,origem_contato,text,YES,,,
