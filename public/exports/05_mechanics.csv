@@ -1,0 +1,14 @@
+ordem,campo_atual,tipo,nullable,default,campo_novo,observacoes
+1,id,uuid,NO,gen_random_uuid(),,
+2,name,text,NO,,,
+3,specialty,text,YES,,,
+4,phone,text,YES,,,
+5,is_active,boolean,NO,true,,
+6,created_at,timestamp,NO,now(),,
+7,updated_at,timestamp,NO,now(),,
+8,company_id,uuid,YES,,,FK companies
+9,email,text,YES,,,
+10,cpf,text,YES,,,
+11,grau_conhecimento,text,YES,,,Junior/Pleno/Senior
+12,qtde_positivos,integer,YES,0,,
+13,qtde_negativos,integer,YES,0,,

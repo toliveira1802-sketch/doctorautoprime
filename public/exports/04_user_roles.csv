@@ -1,0 +1,5 @@
+ordem,campo_atual,tipo,nullable,default,campo_novo,observacoes
+1,id,uuid,NO,gen_random_uuid(),,
+2,user_id,uuid,NO,,,FK auth.users
+3,role,app_role (enum),NO,,,dev/gestao/admin/oficina/user
+4,created_at,timestamp,NO,now(),,
