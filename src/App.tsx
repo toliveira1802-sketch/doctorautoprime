@@ -448,22 +448,3 @@ export default function App() {
         </Routes>
     )
 }
-liente/dashboard" element={
-                <ProtectedRoute>
-                    <ClientLayout><ClienteDashboard /></ClientLayout>
-                </ProtectedRoute>
-            } />
-
-            {/* Catch all - 404 */}
-            <Route path="*" element={<NotFound />} />
-        </Routes>
-    )
-}
-tedRoute>
-            } />
-
-            {/* Catch all - 404 */}
-            <Route path="*" element={<NotFound />} />
-        </Routes>
-    )
-}
