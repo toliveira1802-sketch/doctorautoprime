@@ -34,6 +34,7 @@ import VerifyOTP from '@/pages/VerifyOTP'
 import NotFound from '@/pages/NotFound'
 import PaginaTeste from '@/pages/PaginaTeste'
 import TesteSimples from '@/pages/TesteSimples'
+import DashboardSelector from '@/pages/DashboardSelector'
 
 // Admin Pages
 import AdminLogin from '@/pages/admin/AdminLogin'
@@ -144,6 +145,7 @@ export default function App() {
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} />
             <Route path="/admin/login" element={!isAuthenticated ? <AdminLogin /> : <Navigate to="/admin" replace />} />
             <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/" replace />} />
+            <Route path="/dashboard" element={<DashboardSelector />} />
 
             {/* Root - Home do Cliente (pública) */}
             <Route path="/" element={<Index />} />
