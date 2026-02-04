@@ -68,6 +68,11 @@ import GestaoUsuarios from '@/pages/gestao/GestaoUsuarios'
 import IAConfiguracoes from '@/pages/gestao/ia/IAConfiguracoes'
 import MigracaoTrello from '@/pages/gestao/MigracaoTrello'
 
+// Dev Pages (Developer Tools)
+import DevDashboard from '@/pages/__dev/DevDashboard'
+import DevDatabase from '@/pages/__dev/DevDatabase'
+import DevSystem from '@/pages/__dev/DevSystem'
+
 // Cliente Pages
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 
@@ -414,11 +419,47 @@ export default function App() {
                 </ProtectedRoute>
             } />
 
+            {/* Dev Dashboard (Developer Tools) - Only for DEV role */}
+            <Route path="/__dev" element={
+                <ProtectedRoute requiredRoles={['dev']}>
+                    <DevDashboard />
+                </ProtectedRoute>
+            } />
+            <Route path="/__dev/database" element={
+                <ProtectedRoute requiredRoles={['dev']}>
+                    <DevDatabase />
+                </ProtectedRoute>
+            } />
+            <Route path="/__dev/system" element={
+                <ProtectedRoute requiredRoles={['dev']}>
+                    <DevSystem />
+                </ProtectedRoute>
+            } />
+
             {/* Cliente Dashboard (alternativo) */}
             <Route path="/cliente/dashboard" element={
                 <ProtectedRoute>
                     <ClientLayout><ClienteDashboard /></ClientLayout>
                 </ProtectedRoute>
+            } />
+
+            {/* Catch all - 404 */}
+            <Route path="*" element={<NotFound />} />
+        </Routes>
+    )
+}
+liente/dashboard" element={
+                <ProtectedRoute>
+                    <ClientLayout><ClienteDashboard /></ClientLayout>
+                </ProtectedRoute>
+            } />
+
+            {/* Catch all - 404 */}
+            <Route path="*" element={<NotFound />} />
+        </Routes>
+    )
+}
+tedRoute>
             } />
 
             {/* Catch all - 404 */}

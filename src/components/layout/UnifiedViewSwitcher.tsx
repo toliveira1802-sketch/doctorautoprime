@@ -1,10 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Settings, BarChart3 } from "lucide-react";
+import { Home, Settings, BarChart3, Code } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { cn } from "@/lib/utils";
 
-type ViewType = "cliente" | "admin" | "gestao";
+type ViewType = "cliente" | "admin" | "gestao" | "__dev";
 
 interface ViewConfig {
   id: ViewType;
@@ -36,6 +36,13 @@ const VIEWS: ViewConfig[] = [
     path: "/gestao",
     checkAccess: (role) => ["gestao", "dev"].includes(role || ""),
   },
+  {
+    id: "__dev",
+    label: "Dev",
+    icon: Code,
+    path: "/__dev",
+    checkAccess: (role) => role === "dev", // Apenas dev
+  },
 ];
 
 interface UnifiedViewSwitcherProps {
@@ -52,6 +59,7 @@ export function UnifiedViewSwitcher({
   const { role } = useUserRole();
 
   const getCurrentView = (): ViewType => {
+    if (location.pathname.startsWith("/__dev")) return "__dev";
     if (location.pathname.startsWith("/gestao")) return "gestao";
     if (location.pathname.startsWith("/admin")) return "admin";
     return "cliente";
