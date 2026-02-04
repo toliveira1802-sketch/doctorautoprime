@@ -71,26 +71,9 @@ import MigracaoTrello from '@/pages/gestao/MigracaoTrello'
 // Cliente Pages
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 
-// Protected Route wrapper
+// Protected Route wrapper - DEVELOPMENT MODE: Auth bypass enabled
 function ProtectedRoute({ children, requiredRoles }: { children: React.ReactNode; requiredRoles?: string[] }) {
-    const { isAuthenticated, isLoading, role } = useAuth()
-
-    if (isLoading) {
-        return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        )
-    }
-
-    if (!isAuthenticated) {
-        return <Navigate to="/login" replace />
-    }
-
-    if (requiredRoles && role && !requiredRoles.includes(role)) {
-        return <Navigate to="/" replace />
-    }
-
+    // DEV MODE: Skip authentication entirely
     return <>{children}</>
 }
 
