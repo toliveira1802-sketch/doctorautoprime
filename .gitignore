@@ -29,3 +29,7 @@ dist-ssr
 
 # Vercel
 .vercel
+
+# Core dumps
+core
+core.*
