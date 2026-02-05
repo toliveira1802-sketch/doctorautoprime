@@ -47,31 +47,24 @@ export default function DevDatabase() {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('execute_sql', { 
-        query_text: query 
-      });
-
-      if (error) {
-        // Fallback: tentar query direta (apenas SELECT)
-        if (query.trim().toUpperCase().startsWith('SELECT')) {
-          const tableName = query.match(/FROM\s+(\w+)/i)?.[1];
-          if (tableName) {
-            const { data: fallbackData, error: fallbackError } = await supabase
-              .from(tableName)
-              .select('*')
-              .limit(10);
-            
-            if (fallbackError) throw fallbackError;
-            setResult({ data: fallbackData, count: fallbackData?.length || 0 });
-            toast.success(`Query executada! ${fallbackData?.length || 0} resultados`);
-            return;
-          }
+      // Only allow SELECT queries for safety - extract table name and run direct query
+      if (query.trim().toUpperCase().startsWith('SELECT')) {
+        const tableName = query.match(/FROM\s+(\w+)/i)?.[1];
+        if (tableName) {
+          // Use type assertion to allow dynamic table names
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from(tableName as any)
+            .select('*')
+            .limit(10);
+          
+          if (fallbackError) throw fallbackError;
+          setResult({ data: fallbackData, count: fallbackData?.length || 0 });
+          toast.success(`Query executada! ${fallbackData?.length || 0} resultados`);
+          return;
         }
-        throw error;
       }
-
-      setResult(data);
-      toast.success("Query executada com sucesso!");
+      
+      toast.error("Apenas queries SELECT são permitidas nesta interface");
     } catch (error: any) {
       toast.error(`Erro: ${error.message}`);
       console.error("Query error:", error);
