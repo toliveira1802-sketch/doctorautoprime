@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
     cors: true,
+    allowedHosts: [".manus.computer"],
   },
   plugins: [
     react(),

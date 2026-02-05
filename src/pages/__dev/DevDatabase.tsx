@@ -14,7 +14,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
