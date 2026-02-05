@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUserRole } from '@/hooks/useUserRole'
@@ -77,10 +77,28 @@ import DevSystem from '@/pages/__dev/DevSystem'
 // Cliente Pages
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 
-// Protected Route wrapper - DEVELOPMENT MODE: Auth bypass enabled
+// Protected Route wrapper with proper authentication
 function ProtectedRoute({ children, requiredRoles }: { children: React.ReactNode; requiredRoles?: string[] }) {
-    // DEV MODE: Skip authentication entirely
-    return <>{children}</>
+    const { isAuthenticated, isLoading, role } = useAuth();
+    const location = useLocation();
+
+    if (isLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    if (requiredRoles && requiredRoles.length > 0 && role && !requiredRoles.includes(role)) {
+        return <Navigate to="/" replace />;
+    }
+
+    return <>{children}</>;
 }
 
 // Client Layout

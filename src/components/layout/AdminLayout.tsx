@@ -1,16 +1,19 @@
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { UnifiedViewSwitcher } from "./UnifiedViewSwitcher";
-import { Menu, Sun, Moon, ArrowLeft } from "lucide-react";
+import { Menu, Sun, Moon, ArrowLeft, LayoutDashboard, Users, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
