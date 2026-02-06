@@ -77,27 +77,9 @@ import DevSystem from '@/pages/__dev/DevSystem'
 // Cliente Pages
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 
-// Protected Route wrapper with proper authentication
+// Protected Route wrapper - BUILD MODE: Auth bypass for development
 function ProtectedRoute({ children, requiredRoles }: { children: React.ReactNode; requiredRoles?: string[] }) {
-    const { isAuthenticated, isLoading, role } = useAuth();
-    const location = useLocation();
-
-    if (isLoading) {
-        return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
-    }
-
-    if (!isAuthenticated) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-
-    if (requiredRoles && requiredRoles.length > 0 && role && !requiredRoles.includes(role)) {
-        return <Navigate to="/" replace />;
-    }
-
+    // BUILD MODE: Bypass authentication for development
     return <>{children}</>;
 }
 
