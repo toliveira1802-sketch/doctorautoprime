@@ -73,6 +73,7 @@ import MigracaoTrello from '@/pages/gestao/MigracaoTrello'
 import DevDashboard from '@/pages/__dev/DevDashboard'
 import DevDatabase from '@/pages/__dev/DevDatabase'
 import DevSystem from '@/pages/__dev/DevSystem'
+import DevLab from '@/pages/__dev/DevLab'
 
 // Cliente Pages
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
@@ -435,6 +436,11 @@ export default function App() {
             <Route path="/__dev/system" element={
                 <ProtectedRoute requiredRoles={['dev']}>
                     <DevSystem />
+                </ProtectedRoute>
+            } />
+            <Route path="/__dev/lab" element={
+                <ProtectedRoute requiredRoles={['dev']}>
+                    <DevLab />
                 </ProtectedRoute>
             } />
 
