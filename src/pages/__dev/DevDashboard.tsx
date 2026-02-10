@@ -90,6 +90,14 @@ export default function DevDashboard() {
       bgColor: "bg-pink-500/10"
     },
     {
+      title: "DevLab",
+      description: "Hub de rotas, componentes e ações rápidas",
+      icon: Zap,
+      path: "/__dev/lab",
+      color: "text-cyan-500",
+      bgColor: "bg-cyan-500/10"
+    },
+    {
       title: "Quick Actions",
       description: "Ações rápidas e utilitários",
       icon: Zap,
