@@ -1,548 +1,573 @@
-import { useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo, useRef, useCallback } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Sun,
+  Moon,
+  RefreshCw,
+  Maximize2,
+  ExternalLink,
+  X,
+  Eye,
+  EyeOff,
+  ChevronDown,
+  ChevronUp,
+  Lightbulb,
+  LayoutGrid,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Map,
-  Component,
-  Info,
-  Zap,
-  Search,
-  ExternalLink,
-  Layout,
-  Shield,
-  Users,
-  Settings,
-  Home,
-  Calendar,
-  FileText,
-  BarChart3,
-  Wrench,
-  Eye,
-  Trash2,
-  RotateCcw,
-  Copy,
-  ArrowRight,
-  CheckCircle2,
-  AlertCircle,
-  Package,
-} from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// ─── Route Map Data ───
-const allRoutes = [
-  { path: "/", label: "Home (Cliente)", icon: Home, area: "cliente" },
-  { path: "/login", label: "Login", icon: Shield, area: "auth" },
-  { path: "/register", label: "Registro", icon: Shield, area: "auth" },
-  { path: "/verify-otp", label: "Verificar OTP", icon: Shield, area: "auth" },
-  { path: "/agenda", label: "Agenda", icon: Calendar, area: "cliente" },
-  { path: "/profile", label: "Perfil", icon: Users, area: "cliente" },
-  { path: "/avisos", label: "Avisos", icon: AlertCircle, area: "cliente" },
-  { path: "/novo-agendamento", label: "Novo Agendamento", icon: Calendar, area: "cliente" },
-  { path: "/agendamento-sucesso", label: "Agendamento Sucesso", icon: CheckCircle2, area: "cliente" },
-  { path: "/historico", label: "Histórico", icon: FileText, area: "cliente" },
-  { path: "/configuracoes", label: "Configurações", icon: Settings, area: "cliente" },
-  { path: "/performance", label: "Performance", icon: BarChart3, area: "cliente" },
-  { path: "/veiculo/:id", label: "Detalhes Veículo", icon: Wrench, area: "cliente" },
-  { path: "/servico/:id", label: "Detalhes Serviço", icon: Wrench, area: "cliente" },
-  { path: "/orcamento/:id", label: "Orçamento Cliente", icon: FileText, area: "cliente" },
-  { path: "/reagendamento", label: "Reagendamento", icon: Calendar, area: "cliente" },
-  { path: "/blog", label: "Blog", icon: FileText, area: "cliente" },
-  { path: "/promocoes", label: "Promoções", icon: Zap, area: "cliente" },
-  { path: "/os-ultimate", label: "OS Ultimate", icon: FileText, area: "cliente" },
-  { path: "/demos", label: "Demo Index", icon: Eye, area: "dev" },
-  { path: "/install", label: "Install PWA", icon: Package, area: "cliente" },
-  { path: "/dashboard", label: "Dashboard Selector", icon: Layout, area: "cliente" },
-  { path: "/cliente/dashboard", label: "Cliente Dashboard", icon: Layout, area: "cliente" },
+// ─── Types ───
+interface RouteEntry {
+  path: string;
+  label: string;
+  active: boolean; // registered in router
+}
 
-  { path: "/admin", label: "Dashboard Admin", icon: Layout, area: "admin" },
-  { path: "/admin/login", label: "Login Admin", icon: Shield, area: "auth" },
-  { path: "/admin/patio", label: "Pátio", icon: Map, area: "admin" },
-  { path: "/admin/clientes", label: "Clientes", icon: Users, area: "admin" },
-  { path: "/admin/ordens-servico", label: "Ordens de Serviço", icon: FileText, area: "admin" },
-  { path: "/admin/nova-os", label: "Nova OS", icon: FileText, area: "admin" },
-  { path: "/admin/os/:osId", label: "Detalhes OS", icon: FileText, area: "admin" },
-  { path: "/admin/servicos", label: "Serviços", icon: Wrench, area: "admin" },
-  { path: "/admin/financeiro", label: "Financeiro", icon: BarChart3, area: "admin" },
-  { path: "/admin/configuracoes", label: "Configurações", icon: Settings, area: "admin" },
-  { path: "/admin/agenda-mecanicos", label: "Agenda Mecânicos", icon: Calendar, area: "admin" },
-  { path: "/admin/agendamentos", label: "Agendamentos", icon: Calendar, area: "admin" },
-  { path: "/admin/agendamentos-admin", label: "Agendamentos Admin", icon: Calendar, area: "admin" },
-  { path: "/admin/documentacao", label: "Documentação", icon: FileText, area: "admin" },
-  { path: "/admin/mechanic-analytics", label: "Mechanic Analytics", icon: BarChart3, area: "admin" },
-  { path: "/admin/mechanic-feedback", label: "Mechanic Feedback", icon: Users, area: "admin" },
-  { path: "/admin/operacional", label: "Operacional", icon: Wrench, area: "admin" },
-  { path: "/admin/painel-tv", label: "Painel TV", icon: Eye, area: "admin" },
-  { path: "/admin/patio/:patioId", label: "Pátio Detalhes", icon: Map, area: "admin" },
-  { path: "/admin/produtividade", label: "Produtividade", icon: BarChart3, area: "admin" },
+interface RouteCategory {
+  emoji: string;
+  label: string;
+  color: string;
+  activeBg: string;
+  routes: RouteEntry[];
+}
 
-  { path: "/gestao", label: "Dashboards Gestão", icon: Layout, area: "gestao" },
-  { path: "/gestao/agendamentos", label: "Agendamentos", icon: Calendar, area: "gestao" },
-  { path: "/gestao/patio", label: "Pátio", icon: Map, area: "gestao" },
-  { path: "/gestao/clientes", label: "Clientes", icon: Users, area: "gestao" },
-  { path: "/gestao/ordens-servico", label: "Ordens de Serviço", icon: FileText, area: "gestao" },
-  { path: "/gestao/nova-os", label: "Nova OS", icon: FileText, area: "gestao" },
-  { path: "/gestao/os/:osId", label: "Detalhes OS", icon: FileText, area: "gestao" },
-  { path: "/gestao/servicos", label: "Serviços", icon: Wrench, area: "gestao" },
-  { path: "/gestao/financeiro", label: "Financeiro", icon: BarChart3, area: "gestao" },
-  { path: "/gestao/configuracoes", label: "Configurações", icon: Settings, area: "gestao" },
-  { path: "/gestao/comercial", label: "Comercial", icon: BarChart3, area: "gestao" },
-  { path: "/gestao/melhorias", label: "Melhorias", icon: Zap, area: "gestao" },
-  { path: "/gestao/operacoes", label: "Operações", icon: Wrench, area: "gestao" },
-  { path: "/gestao/rh", label: "RH", icon: Users, area: "gestao" },
-  { path: "/gestao/tecnologia", label: "Tecnologia", icon: Settings, area: "gestao" },
-  { path: "/gestao/usuarios", label: "Usuários", icon: Users, area: "gestao" },
-  { path: "/gestao/ia-configuracoes", label: "IA Configurações", icon: Settings, area: "gestao" },
-  { path: "/gestao/migracao-trello", label: "Migração Trello", icon: Package, area: "gestao" },
+// ─── Route Data ───
+// Active routes = registered in App.tsx router
+// Orphan routes = pages that exist but aren't in the router
 
-  { path: "/__dev", label: "Dev Dashboard", icon: Layout, area: "dev" },
-  { path: "/__dev/database", label: "Dev Database", icon: Package, area: "dev" },
-  { path: "/__dev/system", label: "Dev System", icon: Info, area: "dev" },
-  { path: "/__dev/lab", label: "DevLab", icon: Component, area: "dev" },
+const routeCategories: RouteCategory[] = [
+  {
+    emoji: "🔴",
+    label: "Públicas",
+    color: "text-red-400",
+    activeBg: "bg-red-500/10",
+    routes: [
+      { path: "/login", label: "Login", active: true },
+      { path: "/register", label: "Registro", active: true },
+      { path: "/verify-otp", label: "Verificar OTP", active: true },
+      { path: "/admin/login", label: "Login Admin", active: true },
+      { path: "/orcamento/:id", label: "Orçamento Cliente", active: true },
+      { path: "/blog", label: "Blog", active: true },
+      { path: "/promocoes", label: "Promoções", active: true },
+      { path: "/install", label: "Instalar PWA", active: true },
+      { path: "/dashboard", label: "Dashboard Selector", active: true },
+    ],
+  },
+  {
+    emoji: "🚗",
+    label: "Cliente",
+    color: "text-blue-400",
+    activeBg: "bg-blue-500/10",
+    routes: [
+      { path: "/", label: "Home", active: true },
+      { path: "/agenda", label: "Agenda", active: true },
+      { path: "/profile", label: "Perfil", active: true },
+      { path: "/avisos", label: "Avisos", active: true },
+      { path: "/novo-agendamento", label: "Novo Agendamento", active: true },
+      { path: "/agendamento-sucesso", label: "Agendamento Sucesso", active: true },
+      { path: "/historico", label: "Histórico", active: true },
+      { path: "/configuracoes", label: "Configurações", active: true },
+      { path: "/performance", label: "Performance", active: true },
+      { path: "/veiculo/:id", label: "Detalhes Veículo", active: true },
+      { path: "/servico/:id", label: "Detalhes Serviço", active: true },
+      { path: "/reagendamento", label: "Reagendamento", active: true },
+      { path: "/os-ultimate", label: "OS Ultimate", active: true },
+      { path: "/biometric-setup", label: "Biometric Setup", active: true },
+      { path: "/cliente/dashboard", label: "Cliente Dashboard", active: true },
+    ],
+  },
+  {
+    emoji: "🏢",
+    label: "Admin",
+    color: "text-amber-400",
+    activeBg: "bg-amber-500/10",
+    routes: [
+      { path: "/admin", label: "Dashboard", active: true },
+      { path: "/admin/agendamentos", label: "Agendamentos", active: true },
+      { path: "/admin/patio", label: "Pátio", active: true },
+      { path: "/admin/clientes", label: "Clientes", active: true },
+      { path: "/admin/ordens-servico", label: "Ordens de Serviço", active: true },
+      { path: "/admin/nova-os", label: "Nova OS", active: true },
+      { path: "/admin/os/:osId", label: "OS Detalhes", active: true },
+      { path: "/admin/servicos", label: "Serviços", active: true },
+      { path: "/admin/financeiro", label: "Financeiro", active: true },
+      { path: "/admin/configuracoes", label: "Configurações", active: true },
+      { path: "/admin/agenda-mecanicos", label: "Agenda Mecânicos", active: true },
+      { path: "/admin/agendamentos-admin", label: "Agendamentos Admin", active: true },
+      { path: "/admin/documentacao", label: "Documentação", active: true },
+      { path: "/admin/mechanic-analytics", label: "Mechanic Analytics", active: true },
+      { path: "/admin/mechanic-feedback", label: "Mechanic Feedback", active: true },
+      { path: "/admin/operacional", label: "Operacional", active: true },
+      { path: "/admin/painel-tv", label: "Painel TV", active: true },
+      { path: "/admin/patio/:patioId", label: "Pátio Detalhes", active: true },
+      { path: "/admin/produtividade", label: "Produtividade", active: true },
+      // Orphan pages (exist but not in router)
+      { path: "/admin/dashboard-overview", label: "Dashboard Overview", active: false },
+    ],
+  },
+  {
+    emoji: "📋",
+    label: "Gestão",
+    color: "text-emerald-400",
+    activeBg: "bg-emerald-500/10",
+    routes: [
+      { path: "/gestao", label: "Hub Dashboards", active: true },
+      { path: "/gestao/agendamentos", label: "Agendamentos", active: true },
+      { path: "/gestao/patio", label: "Pátio", active: true },
+      { path: "/gestao/clientes", label: "Clientes", active: true },
+      { path: "/gestao/ordens-servico", label: "Ordens de Serviço", active: true },
+      { path: "/gestao/nova-os", label: "Nova OS", active: true },
+      { path: "/gestao/os/:osId", label: "OS Detalhes", active: true },
+      { path: "/gestao/servicos", label: "Serviços", active: true },
+      { path: "/gestao/financeiro", label: "Financeiro", active: true },
+      { path: "/gestao/configuracoes", label: "Configurações", active: true },
+      { path: "/gestao/comercial", label: "Comercial", active: true },
+      { path: "/gestao/melhorias", label: "Melhorias", active: true },
+      { path: "/gestao/operacoes", label: "Operações", active: true },
+      { path: "/gestao/rh", label: "RH", active: true },
+      { path: "/gestao/tecnologia", label: "Tecnologia", active: true },
+      { path: "/gestao/usuarios", label: "Usuários", active: true },
+      { path: "/gestao/ia-configuracoes", label: "IA Configurações", active: true },
+      { path: "/gestao/migracao-trello", label: "Migração Trello", active: true },
+      // Orphan pages
+      { path: "/gestao/dashboard-view", label: "Dashboard View", active: false },
+    ],
+  },
+  {
+    emoji: "⚙️",
+    label: "Sistema",
+    color: "text-violet-400",
+    activeBg: "bg-violet-500/10",
+    routes: [
+      { path: "/__dev", label: "Dev Dashboard", active: true },
+      { path: "/__dev/database", label: "Dev Database", active: true },
+      { path: "/__dev/system", label: "Dev System", active: true },
+      { path: "/__dev/lab", label: "DevLab (aqui)", active: true },
+      { path: "/demos", label: "Demo Index", active: true },
+      { path: "/pagina-teste", label: "Página Teste", active: true },
+      { path: "/teste-simples", label: "Teste Simples", active: true },
+      { path: "/teste-expandido", label: "Teste Expandido", active: true },
+      { path: "*", label: "404 Not Found", active: true },
+    ],
+  },
 ];
 
-const areaConfig: Record<string, { label: string; color: string; bg: string }> = {
-  cliente: { label: "Cliente", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
-  admin: { label: "Admin", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-  gestao: { label: "Gestão", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
-  auth: { label: "Auth", color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20" },
-  dev: { label: "Dev", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20" },
-};
+// ─── Viewport presets ───
+const viewports = [
+  { key: "desktop" as const, icon: Monitor, width: "100%", label: "Desktop" },
+  { key: "tablet" as const, icon: Tablet, width: "768px", label: "Tablet" },
+  { key: "mobile" as const, icon: Smartphone, width: "375px", label: "Mobile" },
+];
 
 // ─── Component ───
-
 export default function DevLab() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedArea, setSelectedArea] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedRoute, setSelectedRoute] = useState<RouteEntry | null>(null);
+  const [showOrphans, setShowOrphans] = useState(true);
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [viewport, setViewport] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [darkPreview, setDarkPreview] = useState(true);
+  const [iframeKey, setIframeKey] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const filteredRoutes = allRoutes.filter((r) => {
-    const matchesSearch =
-      r.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.label.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesArea = !selectedArea || r.area === selectedArea;
-    return matchesSearch && matchesArea;
-  });
-
-  const routeCounts = allRoutes.reduce(
-    (acc, r) => {
-      acc[r.area] = (acc[r.area] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
+  // ─── Computed ───
+  const allRoutes = useMemo(
+    () => routeCategories.flatMap((c) => c.routes),
+    []
   );
 
-  const handleCopyPath = (path: string) => {
-    navigator.clipboard.writeText(path);
-    toast.success(`Copiado: ${path}`);
+  const activeCount = useMemo(() => allRoutes.filter((r) => r.active).length, [allRoutes]);
+  const orphanCount = useMemo(() => allRoutes.filter((r) => !r.active).length, [allRoutes]);
+  const totalCount = allRoutes.length;
+
+  const flatFiltered = useMemo(() => {
+    return allRoutes.filter((r) => (showOrphans ? true : r.active));
+  }, [allRoutes, showOrphans]);
+
+  const currentIndex = selectedRoute
+    ? flatFiltered.findIndex((r) => r.path === selectedRoute.path)
+    : -1;
+
+  // ─── Handlers ───
+  const handleSelectRoute = useCallback((route: RouteEntry) => {
+    setSelectedRoute(route);
+    setIframeKey((k) => k + 1);
+  }, []);
+
+  const handleNavigate = useCallback(
+    (dir: -1 | 1) => {
+      if (flatFiltered.length === 0) return;
+      const next =
+        currentIndex === -1
+          ? 0
+          : (currentIndex + dir + flatFiltered.length) % flatFiltered.length;
+      handleSelectRoute(flatFiltered[next]);
+    },
+    [currentIndex, flatFiltered, handleSelectRoute]
+  );
+
+  const toggleCategory = (label: string) => {
+    setCollapsedCategories((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  const handleClearStorage = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    toast.success("LocalStorage e SessionStorage limpos!");
+  const getPreviewUrl = () => {
+    if (!selectedRoute) return "";
+    const path = selectedRoute.path.replace(/:[\w]+/g, "demo");
+    return `${path}${path.includes("?") ? "&" : "?"}dev=true`;
   };
 
-  const handleReload = () => {
-    window.location.reload();
-  };
+  const currentViewport = viewports.find((v) => v.key === viewport)!;
 
   return (
-    <AdminLayout>
-      <div className="container mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-              <span className="p-2 rounded-xl bg-primary/10">
-                <Component className="w-7 h-7 text-primary" />
-              </span>
-              DevLab
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Hub de desenvolvimento • {allRoutes.length} rotas • Visualização e ações rápidas
-            </p>
-          </div>
-          <Badge variant="outline" className="border-primary/30 text-primary">
-            DEV
-          </Badge>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="routes" className="space-y-4">
-          <TabsList className="bg-muted/50">
-            <TabsTrigger value="routes" className="gap-2">
-              <Map className="w-4 h-4" /> Rotas
-            </TabsTrigger>
-            <TabsTrigger value="components" className="gap-2">
-              <Component className="w-4 h-4" /> Componentes
-            </TabsTrigger>
-            <TabsTrigger value="system" className="gap-2">
-              <Info className="w-4 h-4" /> Sistema
-            </TabsTrigger>
-            <TabsTrigger value="actions" className="gap-2">
-              <Zap className="w-4 h-4" /> Ações
-            </TabsTrigger>
-          </TabsList>
-
-          {/* ═══ ROUTES TAB ═══ */}
-          <TabsContent value="routes" className="space-y-4">
-            {/* Search & Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar rota ou label..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+    <div className="h-screen w-screen flex overflow-hidden bg-background text-foreground">
+      {/* ═══ SIDEBAR ═══ */}
+      {sidebarOpen && (
+        <aside className="w-80 min-w-[320px] border-r border-border flex flex-col bg-card">
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-border space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="w-5 h-5 text-primary" />
+                <h2 className="font-bold text-lg">Telas</h2>
+                <Badge variant="outline" className="ml-1 text-xs font-mono">
+                  {totalCount}
+                </Badge>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant={selectedArea === null ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedArea(null)}
-                >
-                  Todas ({allRoutes.length})
-                </Button>
-                {Object.entries(areaConfig).map(([key, cfg]) => (
-                  <Button
-                    key={key}
-                    variant={selectedArea === key ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedArea(selectedArea === key ? null : key)}
-                  >
-                    {cfg.label} ({routeCounts[key] || 0})
-                  </Button>
-                ))}
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
             </div>
 
-            {/* Route List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-              {filteredRoutes.map((route) => {
-                const Icon = route.icon;
-                const area = areaConfig[route.area];
-                const isNavigable = !route.path.includes(":");
+            {/* Stats */}
+            <div className="flex gap-2">
+              <span className="text-xs px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 font-medium">
+                {activeCount} ativas
+              </span>
+              <span className="text-xs px-2 py-1 rounded bg-red-500/10 text-red-400 font-medium">
+                {orphanCount} órfãs
+              </span>
+            </div>
+
+            {/* Toggle orphans */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2 text-xs h-8"
+              onClick={() => setShowOrphans(!showOrphans)}
+            >
+              {showOrphans ? (
+                <Eye className="w-3.5 h-3.5" />
+              ) : (
+                <EyeOff className="w-3.5 h-3.5" />
+              )}
+              {showOrphans ? 'Mostrar "órfãs"' : 'Ocultar "órfãs"'}
+            </Button>
+          </div>
+
+          {/* Route List */}
+          <ScrollArea className="flex-1">
+            <div className="p-2 space-y-1">
+              {routeCategories.map((cat) => {
+                const visibleRoutes = cat.routes.filter((r) =>
+                  showOrphans ? true : r.active
+                );
+                if (visibleRoutes.length === 0) return null;
+                const isCollapsed = collapsedCategories[cat.label];
+
                 return (
-                  <div
-                    key={route.path}
-                    className={`flex items-center gap-3 p-3 rounded-lg border ${area.bg} group hover:ring-1 hover:ring-primary/30 transition-all`}
-                  >
-                    <Icon className={`w-4 h-4 shrink-0 ${area.color}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{route.label}</p>
-                      <p className="text-xs text-muted-foreground font-mono truncate">{route.path}</p>
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleCopyPath(route.path)}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                      {isNavigable && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => navigate(route.path)}
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
+                  <div key={cat.label}>
+                    {/* Category Header */}
+                    <button
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors"
+                      onClick={() => toggleCategory(cat.label)}
+                    >
+                      <span className="text-sm">{cat.emoji}</span>
+                      <span className={`text-xs font-semibold uppercase tracking-wider ${cat.color}`}>
+                        {cat.label}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ({visibleRoutes.length})
+                      </span>
+                      <span className="ml-auto">
+                        {isCollapsed ? (
+                          <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                        ) : (
+                          <ChevronUp className="w-3 h-3 text-muted-foreground" />
+                        )}
+                      </span>
+                    </button>
+
+                    {/* Routes */}
+                    {!isCollapsed &&
+                      visibleRoutes.map((route) => {
+                        const isSelected = selectedRoute?.path === route.path;
+                        const isOrphan = !route.active;
+                        return (
+                          <button
+                            key={route.path}
+                            className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ml-2 ${
+                              isSelected
+                                ? "bg-primary/15 text-primary font-medium"
+                                : "hover:bg-muted/50 text-foreground/80"
+                            } ${isOrphan ? "opacity-60 italic" : ""}`}
+                            onClick={() => handleSelectRoute(route)}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                isOrphan ? "bg-red-500" : "bg-emerald-500"
+                              }`}
+                            />
+                            <span className="truncate flex-1">{route.label}</span>
+                            {isOrphan && (
+                              <span className="text-[10px] text-red-400 shrink-0">órfã</span>
+                            )}
+                          </button>
+                        );
+                      })}
                   </div>
                 );
               })}
             </div>
-            {filteredRoutes.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">Nenhuma rota encontrada.</p>
+          </ScrollArea>
+
+          {/* Sidebar Footer */}
+          <div className="p-3 border-t border-border">
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+              <Lightbulb className="w-3 h-3 text-amber-400" />
+              <code className="bg-muted px-1 rounded text-[10px]">?dev=true</code> para bypass
+              auth
+            </p>
+          </div>
+        </aside>
+      )}
+
+      {/* ═══ MAIN AREA ═══ */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Toolbar */}
+        <div className="h-12 border-b border-border flex items-center px-3 gap-2 bg-card shrink-0">
+          {/* Collapse toggle */}
+          {!sidebarOpen && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          )}
+
+          {/* Navigation arrows */}
+          <TooltipProvider delayDuration={200}>
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleNavigate(-1)}
+                    disabled={flatFiltered.length === 0}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Anterior</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleNavigate(1)}
+                    disabled={flatFiltered.length === 0}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Próxima</TooltipContent>
+              </Tooltip>
+            </div>
+
+            {/* Counter */}
+            <span className="text-xs text-muted-foreground font-mono mx-1">
+              {currentIndex >= 0 ? `${currentIndex + 1}/${flatFiltered.length}` : `—/${flatFiltered.length}`}
+            </span>
+
+            {/* Selected route path */}
+            {selectedRoute && (
+              <span className="text-xs font-mono text-primary truncate max-w-[200px]">
+                {selectedRoute.path}
+              </span>
             )}
-          </TabsContent>
 
-          {/* ═══ COMPONENTS TAB ═══ */}
-          <TabsContent value="components" className="space-y-6">
-            {/* Buttons */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Botões</CardTitle>
-                <CardDescription>Variantes do componente Button</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-wrap gap-3">
-                <Button>Default</Button>
-                <Button variant="secondary">Secondary</Button>
-                <Button variant="destructive">Destructive</Button>
-                <Button variant="outline">Outline</Button>
-                <Button variant="ghost">Ghost</Button>
-                <Button variant="link">Link</Button>
-                <Button size="sm">Small</Button>
-                <Button size="lg">Large</Button>
-                <Button size="icon"><Zap className="w-4 h-4" /></Button>
-                <Button disabled>Disabled</Button>
-              </CardContent>
-            </Card>
+            <div className="flex-1" />
 
-            {/* Badges */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Badges</CardTitle>
-                <CardDescription>Variantes do componente Badge</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-wrap gap-3">
-                <Badge>Default</Badge>
-                <Badge variant="secondary">Secondary</Badge>
-                <Badge variant="destructive">Destructive</Badge>
-                <Badge variant="outline">Outline</Badge>
-              </CardContent>
-            </Card>
-
-            {/* Cards */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Cards</CardTitle>
-                <CardDescription>Variações de card com glass effect</CardDescription>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Card Padrão</CardTitle>
-                    <CardDescription>Com header e description</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">Conteúdo do card.</p>
-                  </CardContent>
-                </Card>
-                <div className="glass-card p-4 space-y-2">
-                  <p className="font-semibold">Glass Card</p>
-                  <p className="text-sm text-muted-foreground">Com efeito glass do design system.</p>
-                </div>
-                <div className="glass-card animated-border p-4 space-y-2">
-                  <p className="font-semibold">Animated Border</p>
-                  <p className="text-sm text-muted-foreground">Card com borda animada.</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Colors */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Paleta de Cores</CardTitle>
-                <CardDescription>Tokens do design system</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                  {[
-                    { name: "Primary", className: "bg-primary" },
-                    { name: "Secondary", className: "bg-secondary" },
-                    { name: "Accent", className: "bg-accent" },
-                    { name: "Muted", className: "bg-muted" },
-                    { name: "Destructive", className: "bg-destructive" },
-                    { name: "Background", className: "bg-background border" },
-                    { name: "Card", className: "bg-card border" },
-                    { name: "Success", className: "bg-[hsl(var(--success))]" },
-                    { name: "Warning", className: "bg-[hsl(var(--warning))]" },
-                    { name: "Violet", className: "bg-[hsl(var(--violet))]" },
-                    { name: "Brand Deep", className: "bg-[hsl(var(--brand-deep))]" },
-                    { name: "Brand Light", className: "bg-[hsl(var(--brand-light))]" },
-                  ].map((c) => (
-                    <div key={c.name} className="space-y-1.5">
-                      <div className={`h-10 rounded-lg ${c.className}`} />
-                      <p className="text-xs text-muted-foreground text-center">{c.name}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* ═══ SYSTEM TAB ═══ */}
-          <TabsContent value="system" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { label: "Total de Rotas", value: allRoutes.length, icon: Map },
-                { label: "Áreas", value: Object.keys(areaConfig).length, icon: Layout },
-                { label: "Rotas Cliente", value: routeCounts.cliente || 0, icon: Users },
-                { label: "Rotas Admin", value: routeCounts.admin || 0, icon: Shield },
-              ].map((stat) => (
-                <Card key={stat.label}>
-                  <CardContent className="pt-6 flex items-center gap-4">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <stat.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stat.value}</p>
-                      <p className="text-xs text-muted-foreground">{stat.label}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Informações do Ambiente</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[
-                  { k: "Framework", v: "React 18 + Vite" },
-                  { k: "Estilização", v: "Tailwind CSS + shadcn/ui" },
-                  { k: "Backend", v: "Lovable Cloud" },
-                  { k: "Linguagem", v: "TypeScript" },
-                  { k: "User Agent", v: navigator.userAgent.slice(0, 80) + "..." },
-                  { k: "Viewport", v: `${window.innerWidth}×${window.innerHeight}` },
-                  { k: "Rotas Gestão", v: String(routeCounts.gestao || 0) },
-                  { k: "Rotas Dev", v: String(routeCounts.dev || 0) },
-                ].map((item) => (
-                  <div key={item.k} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
-                    <span className="text-sm text-muted-foreground">{item.k}</span>
-                    <span className="text-sm font-mono">{item.v}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Rotas por Área</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {Object.entries(areaConfig).map(([key, cfg]) => {
-                    const count = routeCounts[key] || 0;
-                    const pct = Math.round((count / allRoutes.length) * 100);
-                    return (
-                      <div key={key} className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className={cfg.color}>{cfg.label}</span>
-                          <span className="text-muted-foreground">{count} ({pct}%)</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-primary transition-all"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* ═══ ACTIONS TAB ═══ */}
-          <TabsContent value="actions" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Limpeza</CardTitle>
-                  <CardDescription>Limpar caches e estados locais</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start gap-2" onClick={handleClearStorage}>
-                    <Trash2 className="w-4 h-4" /> Limpar Storage (local + session)
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start gap-2" onClick={handleReload}>
-                    <RotateCcw className="w-4 h-4" /> Recarregar Página
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Navegação Rápida</CardTitle>
-                  <CardDescription>Ir direto para áreas do sistema</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    { label: "Home Cliente", path: "/" },
-                    { label: "Admin Dashboard", path: "/admin" },
-                    { label: "Gestão", path: "/gestao" },
-                    { label: "Dev Dashboard", path: "/__dev" },
-                  ].map((link) => (
-                    <Button
-                      key={link.path}
-                      variant="outline"
-                      className="w-full justify-between"
-                      asChild
-                    >
-                      <Link to={link.path}>
-                        {link.label}
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </Button>
-                  ))}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Utilitários</CardTitle>
-                  <CardDescription>Ferramentas de desenvolvimento</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
+            {/* Viewport toggles */}
+            {viewports.map((vp) => (
+              <Tooltip key={vp.key}>
+                <TooltipTrigger asChild>
                   <Button
-                    variant="outline"
-                    className="w-full justify-start gap-2"
-                    onClick={() => {
-                      console.log("=== APP STATE DEBUG ===");
-                      console.log("Routes:", allRoutes.length);
-                      console.log("LocalStorage keys:", Object.keys(localStorage));
-                      console.log("URL:", window.location.href);
-                      toast.success("State logado no console (F12)");
-                    }}
+                    variant={viewport === vp.key ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setViewport(vp.key)}
                   >
-                    <Info className="w-4 h-4" /> Log App State no Console
+                    <vp.icon className="w-4 h-4" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start gap-2"
-                    onClick={() => {
-                      const data = JSON.stringify(allRoutes, null, 2);
-                      navigator.clipboard.writeText(data);
-                      toast.success("Mapa de rotas copiado como JSON!");
-                    }}
-                  >
-                    <Copy className="w-4 h-4" /> Copiar Mapa de Rotas (JSON)
-                  </Button>
-                </CardContent>
-              </Card>
+                </TooltipTrigger>
+                <TooltipContent>{vp.label}</TooltipContent>
+              </Tooltip>
+            ))}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Links Externos</CardTitle>
-                  <CardDescription>Recursos e documentação</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                    <a href="https://ui.shadcn.com" target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4" /> shadcn/ui Docs
-                    </a>
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                    <a href="https://tailwindcss.com/docs" target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4" /> Tailwind CSS Docs
-                    </a>
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                    <a href="https://lucide.dev/icons" target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4" /> Lucide Icons
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
+            <div className="w-px h-5 bg-border mx-1" />
+
+            {/* Theme toggle */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setDarkPreview(!darkPreview)}
+                >
+                  {darkPreview ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{darkPreview ? "Tema claro" : "Tema escuro"}</TooltipContent>
+            </Tooltip>
+
+            {/* Refresh */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setIframeKey((k) => k + 1)}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Recarregar</TooltipContent>
+            </Tooltip>
+
+            {/* Fullscreen */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => iframeRef.current?.requestFullscreen?.()}
+                  disabled={!selectedRoute}
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Fullscreen</TooltipContent>
+            </Tooltip>
+
+            {/* Open in new tab */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    if (selectedRoute) window.open(getPreviewUrl(), "_blank");
+                  }}
+                  disabled={!selectedRoute}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Abrir em nova aba</TooltipContent>
+            </Tooltip>
+
+            {/* Close preview */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setSelectedRoute(null)}
+                  disabled={!selectedRoute}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Fechar preview</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        {/* Preview Area */}
+        <div className="flex-1 flex items-center justify-center bg-muted/30 overflow-hidden p-4">
+          {selectedRoute ? (
+            <div
+              className="h-full rounded-lg overflow-hidden border border-border shadow-xl transition-all duration-300 bg-background"
+              style={{
+                width: currentViewport.width,
+                maxWidth: "100%",
+              }}
+            >
+              <iframe
+                ref={iframeRef}
+                key={iframeKey}
+                src={getPreviewUrl()}
+                className="w-full h-full border-0"
+                title={`Preview: ${selectedRoute.label}`}
+              />
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AdminLayout>
+          ) : (
+            /* Empty State */
+            <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-md">
+              <div className="p-6 rounded-2xl bg-muted/50 border border-border">
+                <Monitor className="w-16 h-16 text-muted-foreground/40" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold tracking-tight">
+                  DevLab — Doctor Auto Prime
+                </h2>
+                <p className="text-muted-foreground">
+                  Selecione uma tela na sidebar para visualizar e testar interações.
+                </p>
+              </div>
+              {/* Metrics */}
+              <div className="flex gap-4">
+                <div className="flex flex-col items-center p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 min-w-[80px]">
+                  <span className="text-2xl font-bold text-emerald-400">{activeCount}</span>
+                  <span className="text-[11px] text-emerald-400/80">Ativas</span>
+                </div>
+                <div className="flex flex-col items-center p-3 rounded-lg bg-red-500/10 border border-red-500/20 min-w-[80px]">
+                  <span className="text-2xl font-bold text-red-400">{orphanCount}</span>
+                  <span className="text-[11px] text-red-400/80">Órfãs</span>
+                </div>
+                <div className="flex flex-col items-center p-3 rounded-lg bg-muted border border-border min-w-[80px]">
+                  <span className="text-2xl font-bold text-foreground">{totalCount}</span>
+                  <span className="text-[11px] text-muted-foreground">Total</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
