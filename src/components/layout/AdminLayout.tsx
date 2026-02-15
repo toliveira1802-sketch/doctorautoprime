@@ -1,15 +1,15 @@
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { UnifiedViewSwitcher } from "./UnifiedViewSwitcher";
+import { ProfileSwitcher } from "./ProfileSwitcher";
 import { Menu, Sun, Moon, ArrowLeft, LayoutDashboard, Users, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -126,6 +126,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <ProfileSwitcher />
           </header>
           <main className="flex-1 overflow-auto">
             {children}

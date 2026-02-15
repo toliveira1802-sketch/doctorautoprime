@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUserRole } from '@/hooks/useUserRole'
@@ -34,7 +34,6 @@ import VerifyOTP from '@/pages/VerifyOTP'
 import NotFound from '@/pages/NotFound'
 import PaginaTeste from '@/pages/PaginaTeste'
 import TesteSimples from '@/pages/TesteSimples'
-import DashboardSelector from '@/pages/DashboardSelector'
 
 // Admin Pages
 import AdminLogin from '@/pages/admin/AdminLogin'
@@ -69,19 +68,13 @@ import GestaoUsuarios from '@/pages/gestao/GestaoUsuarios'
 import IAConfiguracoes from '@/pages/gestao/ia/IAConfiguracoes'
 import MigracaoTrello from '@/pages/gestao/MigracaoTrello'
 
-// Dev Pages (Developer Tools)
-import DevDashboard from '@/pages/__dev/DevDashboard'
-import DevDatabase from '@/pages/__dev/DevDatabase'
-import DevSystem from '@/pages/__dev/DevSystem'
-import DevLab from '@/pages/__dev/DevLab'
-
 // Cliente Pages
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 
-// Protected Route wrapper - BUILD MODE: Auth bypass for development
+// Protected Route wrapper - DEVELOPMENT MODE: Auth bypass enabled
 function ProtectedRoute({ children, requiredRoles }: { children: React.ReactNode; requiredRoles?: string[] }) {
-    // BUILD MODE: Bypass authentication for development
-    return <>{children}</>;
+    // DEV MODE: Skip authentication entirely
+    return <>{children}</>
 }
 
 // Client Layout
@@ -146,7 +139,6 @@ export default function App() {
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} />
             <Route path="/admin/login" element={!isAuthenticated ? <AdminLogin /> : <Navigate to="/admin" replace />} />
             <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/" replace />} />
-            <Route path="/dashboard" element={<DashboardSelector />} />
 
             {/* Root - Home do Cliente (pública) */}
             <Route path="/" element={<Index />} />
@@ -419,28 +411,6 @@ export default function App() {
             <Route path="/gestao/migracao-trello" element={
                 <ProtectedRoute requiredRoles={['gestao', 'dev']}>
                     <AdminLayoutWrapper><MigracaoTrello /></AdminLayoutWrapper>
-                </ProtectedRoute>
-            } />
-
-            {/* Dev Dashboard (Developer Tools) - Only for DEV role */}
-            <Route path="/__dev" element={
-                <ProtectedRoute requiredRoles={['dev']}>
-                    <DevDashboard />
-                </ProtectedRoute>
-            } />
-            <Route path="/__dev/database" element={
-                <ProtectedRoute requiredRoles={['dev']}>
-                    <DevDatabase />
-                </ProtectedRoute>
-            } />
-            <Route path="/__dev/system" element={
-                <ProtectedRoute requiredRoles={['dev']}>
-                    <DevSystem />
-                </ProtectedRoute>
-            } />
-            <Route path="/__dev/lab" element={
-                <ProtectedRoute requiredRoles={['dev']}>
-                    <DevLab />
                 </ProtectedRoute>
             } />
 

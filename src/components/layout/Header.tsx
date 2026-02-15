@@ -2,9 +2,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { UnifiedViewSwitcher } from './UnifiedViewSwitcher'
 import { getInitials } from '@/lib/utils'
-import { Bell, Menu, LogOut, Settings, User } from 'lucide-react'
+import { Bell, Menu, LogOut, Settings, User, LayoutDashboard, Users, Briefcase } from 'lucide-react'
 import { useState } from 'react'
 
 interface HeaderProps {
@@ -15,7 +14,30 @@ interface HeaderProps {
 export function Header({ onMenuClick, showMenu = true }: HeaderProps) {
     const { profile, signOut, isAuthenticated, role, user } = useAuth()
     const [showDropdown, setShowDropdown] = useState(false)
+    const location = useLocation()
     const navigate = useNavigate()
+
+    const isAdmin = location.pathname.startsWith('/admin')
+    const isGestao = location.pathname.startsWith('/gestao')
+
+    // Determine which views the user can access based on their role
+    const canAccessCliente = role === 'user' || role === 'admin' || role === 'gestao' || role === 'dev'
+    const canAccessAdmin = role === 'admin' || role === 'dev'
+    const canAccessGestao = role === 'gestao' || role === 'dev'
+
+    const handleViewSwitch = (view: 'cliente' | 'admin' | 'gestao') => {
+        switch (view) {
+            case 'cliente':
+                navigate('/')
+                break
+            case 'admin':
+                navigate('/admin')
+                break
+            case 'gestao':
+                navigate('/gestao')
+                break
+        }
+    }
 
     const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Usuário'
     const displayEmail = user?.email || ''
@@ -38,10 +60,42 @@ export function Header({ onMenuClick, showMenu = true }: HeaderProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* View Switcher Unificado */}
-                    {isAuthenticated && (
-                        <div className="hidden md:flex mr-2">
-                            <UnifiedViewSwitcher variant="buttons" />
+                    {/* View Switcher for users with multiple roles */}
+                    {isAuthenticated && (canAccessAdmin || canAccessGestao) && (
+                        <div className="hidden md:flex items-center gap-1 mr-2">
+                            {canAccessCliente && (
+                                <Button
+                                    variant={!isAdmin && !isGestao ? 'default' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => handleViewSwitch('cliente')}
+                                    className="gap-1"
+                                >
+                                    <User className="h-4 w-4" />
+                                    Cliente
+                                </Button>
+                            )}
+                            {canAccessAdmin && (
+                                <Button
+                                    variant={isAdmin ? 'default' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => handleViewSwitch('admin')}
+                                    className="gap-1"
+                                >
+                                    <Briefcase className="h-4 w-4" />
+                                    Admin
+                                </Button>
+                            )}
+                            {canAccessGestao && (
+                                <Button
+                                    variant={isGestao ? 'default' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => handleViewSwitch('gestao')}
+                                    className="gap-1"
+                                >
+                                    <LayoutDashboard className="h-4 w-4" />
+                                    Gestão
+                                </Button>
+                            )}
                         </div>
                     )}
 
