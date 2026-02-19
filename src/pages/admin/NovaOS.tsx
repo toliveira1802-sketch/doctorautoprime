@@ -63,6 +63,7 @@ export default function NovaOS() {
                     vehicle: vehicleName,
                     client_name: selectedClient?.full_name || '',
                     client_phone: selectedClient?.phone || '',
+                    user_id: selectedClient?.id || null,
                     status: 'orcamento',
                     descricao_problema: notes || null,
                     observacoes: notes || null,
