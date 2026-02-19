@@ -1069,6 +1069,7 @@ export type Database = {
           trello_card_id: string | null
           trello_card_url: string | null
           updated_at: string
+          user_id: string | null
           valor_aprovado: number | null
           valor_final: number | null
           valor_orcado: number | null
@@ -1108,6 +1109,7 @@ export type Database = {
           trello_card_id?: string | null
           trello_card_url?: string | null
           updated_at?: string
+          user_id?: string | null
           valor_aprovado?: number | null
           valor_final?: number | null
           valor_orcado?: number | null
@@ -1147,6 +1149,7 @@ export type Database = {
           trello_card_id?: string | null
           trello_card_url?: string | null
           updated_at?: string
+          user_id?: string | null
           valor_aprovado?: number | null
           valor_final?: number | null
           valor_orcado?: number | null
