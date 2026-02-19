@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { mockUsers, mockVehicles, mockServices } from '@/lib/mock-data'
 import { formatPlate, formatCurrency } from '@/lib/utils'
+import { supabase } from '@/integrations/supabase/client'
+import { toast } from 'sonner'
 import {
     ClipboardList,
     ArrowLeft,
@@ -15,7 +17,8 @@ import {
     Trash2,
     Car,
     User,
-    Check
+    Check,
+    Loader2
 } from 'lucide-react'
 
 type Step = 'client' | 'vehicle' | 'services' | 'review'
@@ -28,6 +31,7 @@ export default function NovaOS() {
     const [selectedVehicle, setSelectedVehicle] = useState<typeof mockVehicles[0] | null>(null)
     const [selectedServices, setSelectedServices] = useState<typeof mockServices>([])
     const [notes, setNotes] = useState('')
+    const [isCreating, setIsCreating] = useState(false)
 
     const clients = mockUsers.filter((u) => u.role === 'user')
     const filteredClients = clients.filter((c) =>
@@ -41,15 +45,60 @@ export default function NovaOS() {
 
     const total = selectedServices.reduce((acc, s) => acc + s.price, 0)
 
-    const handleCreateOS = () => {
-        // In real app, would create OS in database and get the ID
-        // For now, using a mock ID
-        const mockOSId = 'os-' + Date.now()
+    const handleCreateOS = async () => {
+        if (isCreating) return
+        setIsCreating(true)
         
-        // Redirect to OS details page with new=true to open all sections
-        const currentPath = window.location.pathname
-        const basePath = currentPath.includes('/gestao') ? '/gestao' : '/admin'
-        navigate(`${basePath}/os/${mockOSId}?new=true`)
+        try {
+            const vehicleName = selectedVehicle 
+                ? `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.year})`
+                : 'A identificar'
+            const plate = selectedVehicle?.plate || 'PENDENTE'
+
+            const { data, error } = await supabase
+                .from('ordens_servico')
+                .insert([{
+                    numero_os: 'TEMP',
+                    plate,
+                    vehicle: vehicleName,
+                    client_name: selectedClient?.full_name || '',
+                    client_phone: selectedClient?.phone || '',
+                    status: 'orcamento',
+                    descricao_problema: notes || null,
+                    observacoes: notes || null,
+                    valor_orcado: total,
+                }])
+                .select('id')
+                .single()
+
+            if (error) throw error
+
+            // Insert OS items for selected services
+            if (selectedServices.length > 0 && data?.id) {
+                const items = selectedServices.map(s => ({
+                    ordem_servico_id: data.id,
+                    descricao: s.name,
+                    tipo: 'servico',
+                    quantidade: 1,
+                    valor_unitario: s.price,
+                    valor_total: s.price,
+                    status: 'pendente',
+                }))
+                
+                await supabase.from('ordens_servico_itens').insert(items)
+            }
+
+            toast.success('OS criada com sucesso!')
+            
+            const currentPath = window.location.pathname
+            const basePath = currentPath.includes('/gestao') ? '/gestao' : '/admin'
+            navigate(`${basePath}/os/${data.id}?new=true`)
+        } catch (err: any) {
+            console.error('Erro ao criar OS:', err)
+            toast.error('Erro ao criar OS: ' + (err.message || 'Tente novamente'))
+        } finally {
+            setIsCreating(false)
+        }
     }
 
     const toggleService = (service: typeof mockServices[0]) => {
@@ -298,9 +347,13 @@ export default function NovaOS() {
                                 <ArrowLeft className="h-4 w-4 mr-2" />
                                 Voltar
                             </Button>
-                            <Button className="flex-1" onClick={handleCreateOS}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Criar OS
+                            <Button className="flex-1" onClick={handleCreateOS} disabled={isCreating}>
+                                {isCreating ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Plus className="h-4 w-4 mr-2" />
+                                )}
+                                {isCreating ? 'Criando...' : 'Criar OS'}
                             </Button>
                         </div>
                     </CardContent>
