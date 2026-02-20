@@ -40,7 +40,7 @@ export default function NovaOS() {
     )
 
     const clientVehicles = selectedClient
-        ? mockVehicles.filter((v) => v.user_id === selectedClient.id)
+        ? mockVehicles.filter((v) => v.user_id === selectedClient.user_id)
         : []
 
     const total = selectedServices.reduce((acc, s) => acc + s.price, 0)
@@ -63,7 +63,7 @@ export default function NovaOS() {
                     vehicle: vehicleName,
                     client_name: selectedClient?.full_name || '',
                     client_phone: selectedClient?.phone || '',
-                    user_id: selectedClient?.id || null,
+                    user_id: selectedClient?.user_id || null,
                     status: 'orcamento',
                     descricao_problema: notes || null,
                     observacoes: notes || null,
