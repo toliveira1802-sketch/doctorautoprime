@@ -4,6 +4,7 @@ import { Profile, Vehicle, Service, Appointment, ServiceOrder, PatioVehicle } fr
 export const mockUsers: Profile[] = [
     {
         id: '00000000-0000-0000-0000-000000000000',
+        user_id: '10000000-0000-0000-0000-000000000000',
         email: 'master@doctorautoprime.com',
         full_name: 'Master Admin',
         phone: '11999999999',
@@ -14,6 +15,7 @@ export const mockUsers: Profile[] = [
     },
     {
         id: '00000000-0000-0000-0000-000000000001',
+        user_id: '10000000-0000-0000-0000-000000000001',
         email: 'gestao@doctorautoprime.com',
         full_name: 'Carlos Silva',
         phone: '11999998888',
@@ -24,6 +26,7 @@ export const mockUsers: Profile[] = [
     },
     {
         id: '00000000-0000-0000-0000-000000000002',
+        user_id: '10000000-0000-0000-0000-000000000002',
         email: 'admin@doctorautoprime.com',
         full_name: 'Pedro Admin',
         phone: '11999997777',
@@ -34,6 +37,7 @@ export const mockUsers: Profile[] = [
     },
     {
         id: '00000000-0000-0000-0000-000000000003',
+        user_id: '10000000-0000-0000-0000-000000000003',
         email: 'joao@email.com',
         full_name: 'João Santos',
         phone: '11988887777',
@@ -44,6 +48,7 @@ export const mockUsers: Profile[] = [
     },
     {
         id: '00000000-0000-0000-0000-000000000004',
+        user_id: '10000000-0000-0000-0000-000000000004',
         email: 'maria@email.com',
         full_name: 'Maria Oliveira',
         phone: '11977776666',
@@ -58,7 +63,7 @@ export const mockUsers: Profile[] = [
 export const mockVehicles: Vehicle[] = [
     {
         id: 'v1',
-        user_id: '00000000-0000-0000-0000-000000000003',
+        user_id: '10000000-0000-0000-0000-000000000003',
         brand: 'Honda',
         model: 'Civic',
         year: 2022,
@@ -70,7 +75,7 @@ export const mockVehicles: Vehicle[] = [
     },
     {
         id: 'v2',
-        user_id: '00000000-0000-0000-0000-000000000003',
+        user_id: '10000000-0000-0000-0000-000000000003',
         brand: 'Toyota',
         model: 'Corolla',
         year: 2021,
@@ -82,7 +87,7 @@ export const mockVehicles: Vehicle[] = [
     },
     {
         id: 'v3',
-        user_id: '00000000-0000-0000-0000-000000000004',
+        user_id: '10000000-0000-0000-0000-000000000004',
         brand: 'Volkswagen',
         model: 'Golf',
         year: 2023,
@@ -152,7 +157,7 @@ export const mockServices: Service[] = [
 export const mockAppointments: Appointment[] = [
     {
         id: 'a1',
-        user_id: '00000000-0000-0000-0000-000000000003',
+        user_id: '10000000-0000-0000-0000-000000000003',
         vehicle_id: 'v1',
         service_id: 's1',
         scheduled_date: '2026-01-25',
@@ -164,7 +169,7 @@ export const mockAppointments: Appointment[] = [
     },
     {
         id: 'a2',
-        user_id: '00000000-0000-0000-0000-000000000003',
+        user_id: '10000000-0000-0000-0000-000000000003',
         vehicle_id: 'v2',
         service_id: 's3',
         scheduled_date: '2026-01-28',
@@ -176,7 +181,7 @@ export const mockAppointments: Appointment[] = [
     },
     {
         id: 'a3',
-        user_id: '00000000-0000-0000-0000-000000000004',
+        user_id: '10000000-0000-0000-0000-000000000004',
         vehicle_id: 'v3',
         service_id: 's2',
         scheduled_date: '2026-01-22',
@@ -193,7 +198,7 @@ export const mockServiceOrders: ServiceOrder[] = [
     {
         id: 'os1',
         order_number: 'OS-2026-0001',
-        user_id: '00000000-0000-0000-0000-000000000003',
+        user_id: '10000000-0000-0000-0000-000000000003',
         vehicle_id: 'v1',
         status: 'in_progress',
         total: 450,
@@ -205,7 +210,7 @@ export const mockServiceOrders: ServiceOrder[] = [
     {
         id: 'os2',
         order_number: 'OS-2026-0002',
-        user_id: '00000000-0000-0000-0000-000000000004',
+        user_id: '10000000-0000-0000-0000-000000000004',
         vehicle_id: 'v3',
         status: 'waiting_approval',
         total: 1200,
@@ -217,7 +222,7 @@ export const mockServiceOrders: ServiceOrder[] = [
     {
         id: 'os3',
         order_number: 'OS-2026-0003',
-        user_id: '00000000-0000-0000-0000-000000000003',
+        user_id: '10000000-0000-0000-0000-000000000003',
         vehicle_id: 'v2',
         status: 'completed',
         total: 320,
